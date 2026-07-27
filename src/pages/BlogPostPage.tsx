@@ -74,8 +74,8 @@ export default function BlogPostPage() {
         description={post.excerpt}
         canonical={canonical}
         ogType="article"
-        ogImage={post.image || undefined}
-        keywords={post.category}
+        ogImage={post.ogImage || post.image || undefined}
+        keywords={post.keywords || post.category}
         jsonLd={[
           buildArticleSchema(post),
           buildBreadcrumbSchema([
