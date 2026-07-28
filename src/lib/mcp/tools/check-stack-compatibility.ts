@@ -6,7 +6,7 @@ export default defineTool({
   name: "check_stack_compatibility",
   title: "Check peptide stack compatibility",
   description:
-    "Check the compatibility (synergistic, compatible, caution, avoid) between two peptides using the Ride The Tide stacking matrix.",
+    "Check the compatibility (synergistic, compatible, caution, avoid) between two peptides using the Peptide South Africa stacking matrix.",
   inputSchema: {
     peptideId1: z.string().trim().min(1).describe("First peptide id (e.g. 'bpc157')."),
     peptideId2: z.string().trim().min(1).describe("Second peptide id (e.g. 'tb500')."),

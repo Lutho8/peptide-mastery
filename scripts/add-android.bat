@@ -1,6 +1,6 @@
 @echo off
 REM ============================================================
-REM  Ride The Tide - One-click Android bootstrap
+REM  Peptide South Africa - One-click Android bootstrap
 REM  Run AFTER you have done: git pull
 REM  Requires: Node 18+, JDK 17, Android Studio with SDK installed
 REM ============================================================

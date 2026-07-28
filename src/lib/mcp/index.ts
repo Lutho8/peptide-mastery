@@ -5,10 +5,10 @@ import checkStackCompatibility from "./tools/check-stack-compatibility";
 import recommendForGoal from "./tools/recommend-for-goal";
 
 export default defineMcp({
-  name: "ride-the-tide-mcp",
-  title: "Ride The Tide Peptide Research",
+  name: "peptide-south-africa-mcp",
+  title: "Peptide South Africa — Peptide Research",
   version: "0.1.0",
   instructions:
-    "Tools for exploring the Ride The Tide peptide research catalog: browse peptides, get full research profiles, check stacking compatibility, and get goal-based recommendations. All information is for research and educational purposes only — peptides are not FDA approved for human consumption.",
+    "Tools for exploring the Peptide South Africa peptide research catalog: browse peptides, get full research profiles, check stacking compatibility, and get goal-based recommendations. All information is for research and educational purposes only — peptides are not FDA approved for human consumption.",
   tools: [listPeptides, getPeptide, checkStackCompatibility, recommendForGoal],
 });

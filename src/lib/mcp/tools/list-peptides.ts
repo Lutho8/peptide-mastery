@@ -8,7 +8,7 @@ export default defineTool({
   name: "list_peptides",
   title: "List peptides",
   description:
-    "Browse the Ride The Tide peptide research catalog. Optionally filter by category or search term (matches name, short name, or mechanism).",
+    "Browse the Peptide South Africa peptide research catalog. Optionally filter by category or search term (matches name, short name, or mechanism).",
   inputSchema: {
     category: z
       .enum(categoryValues)

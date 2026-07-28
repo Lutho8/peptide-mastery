@@ -5,7 +5,7 @@ const POINTS = [
   { icon: Globe2, title: 'Open analysis', body: 'No black-box scoring — every signal is shown.' },
   { icon: Heart, title: 'Free for members', body: 'No paywall, no premium tier, ever.' },
   { icon: MapPin, title: 'Cape Town built', body: 'Researched & maintained in South Africa 🇿🇦.' },
-  { icon: Link2, title: 'Ecosystem-integrated', body: 'One-tap stack handoff to the RTD shop & Club.' },
+  { icon: Link2, title: 'Ecosystem-integrated', body: 'One-tap stack handoff to the Peptide South Africa shop & Club.' },
 ];
 
 export function WhyRTDStrip() {

@@ -9,7 +9,7 @@ export default defineTool({
   name: "recommend_peptides_for_goal",
   title: "Recommend peptides for a goal",
   description:
-    "Return peptides from the Ride The Tide catalog that map to a user goal (fat-loss, muscle-gain, recovery, longevity, cognitive, energy, sleep, metabolic), sorted by longevity score.",
+    "Return peptides from the Peptide South Africa catalog that map to a user goal (fat-loss, muscle-gain, recovery, longevity, cognitive, energy, sleep, metabolic), sorted by longevity score.",
   inputSchema: {
     goal: z.enum(goalIds).describe("User goal id."),
     limit: z.number().int().min(1).max(20).optional().describe("Max results (default 8)."),

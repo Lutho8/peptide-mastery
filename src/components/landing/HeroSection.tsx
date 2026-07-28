@@ -108,7 +108,7 @@ export function HeroSection({ onCategoryClick, onSignInClick }: HeroSectionProps
                 Are You Still Guessing Your Peptide Doses?
               </h2>
               <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
-                RideTheTide is the first protocol tracker built for the South African peptide
+                Peptide South Africa is the first protocol tracker built for the South African peptide
                 research community.
               </p>
               <ul className="mt-3 space-y-2">

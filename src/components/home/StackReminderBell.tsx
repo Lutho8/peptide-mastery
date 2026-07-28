@@ -46,7 +46,7 @@ export function StackReminderBell({ cycle, doses }: StackReminderBellProps) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const next = useMemo(() => getNextDose(cycle, doses), [cycle, doses]);
+  const next = useMemo(() => getNextDose(cycle, doses, new Date(), times), [cycle, doses, times]);
   const progress = useMemo(() => getCycleProgress(cycle, doses), [cycle, doses]);
 
   const stateLabel =

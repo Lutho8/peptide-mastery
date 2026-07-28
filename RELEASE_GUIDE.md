@@ -1,6 +1,6 @@
 # Peptide South Africa — Google Play Release Guide
 
-**App ID:** `info.ridethetide.app` (PERMANENT — never change)
+**App ID:** `app.peptidesa` (PERMANENT — never change)
 **Track:** Production
 **Content rating:** Mature 17+ / Adult
 **Developer account ID:** 8427019085313968947
@@ -40,8 +40,8 @@ npx cap open android
 
 ```bash
 keytool -genkey -v \
-  -keystore ride-the-tide-release.keystore \
-  -alias ridethetide \
+  -keystore peptidesa-release.keystore \
+  -alias peptidesa \
   -keyalg RSA -keysize 2048 -validity 10000
 ```
 
@@ -53,7 +53,7 @@ When prompted:
 
 Move the file somewhere safe (NOT inside the git repo):
 ```bash
-mv ride-the-tide-release.keystore ~/keys/
+mv peptidesa-release.keystore ~/keys/
 ```
 
 ---
@@ -63,9 +63,9 @@ mv ride-the-tide-release.keystore ~/keys/
 ### 1. Create `android/keystore.properties` (DO NOT commit to git)
 
 ```properties
-storeFile=/Users/YOUR_USER/keys/ride-the-tide-release.keystore
+storeFile=/Users/YOUR_USER/keys/peptidesa-release.keystore
 storePassword=YOUR_KEYSTORE_PASSWORD
-keyAlias=ridethetide
+keyAlias=peptidesa
 keyPassword=YOUR_KEY_PASSWORD
 ```
 
@@ -233,8 +233,8 @@ npx cap sync android
 
 ## Troubleshooting
 
-- **"Package name already exists"**: Someone (likely you in a previous attempt) registered `info.ridethetide.app`. Use a variant or contact Play support.
-- **"App not signed with upload key"**: Wrong keystore. You MUST use the original `ride-the-tide-release.keystore`.
+- **"Package name already exists"**: Someone (likely you in a previous attempt) registered `app.peptidesa`. Use a variant or contact Play support.
+- **"App not signed with upload key"**: Wrong keystore. You MUST use the original `peptidesa-release.keystore`.
 - **Build fails — "minSdkVersion"**: Open `android/variables.gradle`, ensure `minSdkVersion = 23` or higher.
 - **White screen on launched APK**: Confirm `capacitor.config.ts` has NO `server.url` set (it's already removed).
 

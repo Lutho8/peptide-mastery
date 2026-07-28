@@ -2,10 +2,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "info.ridethetide.app"
+    namespace = "app.peptidesa"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "info.ridethetide.app"
+        applicationId "app.peptidesa"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -20,9 +20,9 @@ android {
 
     signingConfigs {
         release {
-            storeFile file('release/ride-the-tide-release.keystore')
+            storeFile file('release/peptidesa-release.keystore')
             storePassword 'Ranger1992!'
-            keyAlias 'ridethetide'
+            keyAlias 'peptidesa'
             keyPassword 'Ranger1992!'
         }
     }

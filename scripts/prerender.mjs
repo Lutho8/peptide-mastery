@@ -44,7 +44,7 @@ const guides = ["reconstitution","injection","bloodwork"];
 function blogSlugs() {
   try {
     const src = readFileSync(resolve("src/data/blogPosts.ts"), "utf8");
-    return [...new Set([...src.matchAll(/slug:\s*["']([^"']+)["']/g)].map((m) => m[1]))];
+    return [...new Set([...src.matchAll(/["']?slug["']?\s*:\s*["']([^"']+)["']/g)].map((m) => m[1]))];
   } catch { return []; }
 }
 
@@ -80,7 +80,14 @@ async function main() {
       let page = template.replace('<div id="root"></div>', `<div id="root">${html}</div>`);
       const headTags = [head.title, head.meta, head.link, head.script].filter(Boolean).join("\n    ");
       if (headTags) {
+        // Remove the static template <title> and the static (non-Helmet)
+        // canonical/og:url/description so the per-route Helmet tags are the
+        // only ones present. Without this, every page also carries the
+        // homepage canonical/og:url, and crawlers may honour that first tag.
         page = page.replace(/<title>.*?<\/title>/s, "");
+        page = page.replace(/\n?\s*<link rel="canonical"[^>]*>/i, "");
+        page = page.replace(/\n?\s*<meta property="og:url"[^>]*>/i, "");
+        page = page.replace(/\n?\s*<meta name="description"[^>]*>/i, "");
         page = page.replace("</head>", `    ${headTags}\n  </head>`);
       }
       const outPath = route === "/"

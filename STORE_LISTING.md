@@ -120,7 +120,7 @@ Visit https://peptide-south-africa.co.za for more.
 
 ## Contact details
 
-- **Email**: privacy@ridethetide.app
+- **Email**: privacy@peptide-south-africa.co.za
 - **Website**: https://peptide-south-africa.co.za
 - **Phone**: (optional)
 

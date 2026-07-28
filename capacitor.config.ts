@@ -1,10 +1,10 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  // NOTE: appId still tied to the Android Java package (info.ridethetide.app).
+  // NOTE: appId is the Android Java package (app.peptidesa).
   // Rebranding the Java package requires a full native rebuild + Play Store re-publish.
   // Keep appId stable for OTA continuity; only user-visible appName changes for now.
-  appId: 'info.ridethetide.app',
+  appId: 'app.peptidesa',
   appName: 'Peptide South Africa',
   webDir: 'dist',
   plugins: {

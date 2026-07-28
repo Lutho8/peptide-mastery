@@ -1,10 +1,10 @@
 @echo off
 setlocal enabledelayedexpansion
-title Ride The Tide - Android Setup
+title Peptide South Africa - Android Setup
 
 echo.
 echo ============================================================
-echo   Ride The Tide - One-Click Android Setup
+echo   Peptide South Africa - One-Click Android Setup
 echo ============================================================
 echo.
 

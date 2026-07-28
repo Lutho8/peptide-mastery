@@ -94,7 +94,7 @@ export function ProtocolSections({ protocol, goals: _goals, labReportId }: Props
                   {allInCart ? 'All peptides in your stack' : 'Add all to stack'}
                 </p>
                 <p className="text-[11px] text-muted-foreground truncate">
-                  Review at the cart, then buy on RideTheTide.site/shop
+                  Review at the cart, then buy on peptide-south-africa.com/shop
                 </p>
               </div>
             </div>

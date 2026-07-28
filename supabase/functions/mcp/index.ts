@@ -5452,7 +5452,7 @@ var categoryValues = Object.keys(categoryConfig);
 var list_peptides_default = defineTool({
   name: "list_peptides",
   title: "List peptides",
-  description: "Browse the Ride The Tide peptide research catalog. Optionally filter by category or search term (matches name, short name, or mechanism).",
+  description: "Browse the Peptide South Africa peptide research catalog. Optionally filter by category or search term (matches name, short name, or mechanism).",
   inputSchema: {
     category: z.enum(categoryValues).optional().describe("Filter by peptide category (e.g. 'weight-loss', 'healing', 'cognitive')."),
     search: z.string().trim().min(1).optional().describe("Free-text search across name, short name and mechanism."),
@@ -5696,7 +5696,7 @@ var stackingInteractions = [
 var check_stack_compatibility_default = defineTool3({
   name: "check_stack_compatibility",
   title: "Check peptide stack compatibility",
-  description: "Check the compatibility (synergistic, compatible, caution, avoid) between two peptides using the Ride The Tide stacking matrix.",
+  description: "Check the compatibility (synergistic, compatible, caution, avoid) between two peptides using the Peptide South Africa stacking matrix.",
   inputSchema: {
     peptideId1: z3.string().trim().min(1).describe("First peptide id (e.g. 'bpc157')."),
     peptideId2: z3.string().trim().min(1).describe("Second peptide id (e.g. 'tb500').")
@@ -5766,7 +5766,7 @@ var goalIds = Object.keys(goalToCategories);
 var recommend_for_goal_default = defineTool4({
   name: "recommend_peptides_for_goal",
   title: "Recommend peptides for a goal",
-  description: "Return peptides from the Ride The Tide catalog that map to a user goal (fat-loss, muscle-gain, recovery, longevity, cognitive, energy, sleep, metabolic), sorted by longevity score.",
+  description: "Return peptides from the Peptide South Africa catalog that map to a user goal (fat-loss, muscle-gain, recovery, longevity, cognitive, energy, sleep, metabolic), sorted by longevity score.",
   inputSchema: {
     goal: z4.enum(goalIds).describe("User goal id."),
     limit: z4.number().int().min(1).max(20).optional().describe("Max results (default 8).")
@@ -5800,10 +5800,10 @@ Research use only. Not medical advice.`
 
 // src/lib/mcp/index.ts
 var mcp_default = defineMcp({
-  name: "ride-the-tide-mcp",
-  title: "Ride The Tide Peptide Research",
+  name: "peptide-south-africa-mcp",
+  title: "Peptide South Africa \u2014 Peptide Research",
   version: "0.1.0",
-  instructions: "Tools for exploring the Ride The Tide peptide research catalog: browse peptides, get full research profiles, check stacking compatibility, and get goal-based recommendations. All information is for research and educational purposes only \u2014 peptides are not FDA approved for human consumption.",
+  instructions: "Tools for exploring the Peptide South Africa peptide research catalog: browse peptides, get full research profiles, check stacking compatibility, and get goal-based recommendations. All information is for research and educational purposes only \u2014 peptides are not FDA approved for human consumption.",
   tools: [list_peptides_default, get_peptide_default, check_stack_compatibility_default, recommend_for_goal_default]
 });
 

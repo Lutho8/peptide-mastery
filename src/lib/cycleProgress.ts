@@ -68,6 +68,15 @@ function daysBetween(start: Date, end: Date): number {
   return Math.max(0, Math.floor(ms / (1000 * 60 * 60 * 24)));
 }
 
+/** Local YYYY-MM-DD (avoids UTC drift from toISOString().split('T')[0]). */
+function localIso(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+
 /**
  * Count logged doses for a cycle's peptide between startDate and now.
  * Daily peptides collapse multiple same-day logs into one occurrence so a
@@ -226,43 +235,61 @@ export function getNextDose(
   cycle: Cycle,
   doses: DailyDoseEntry[] = [],
   now: Date = new Date(),
+  doseTimes?: string[],
 ): NextDoseInfo | null {
   if (cycle.status === 'break') return null;
   const perWeek = parseFrequencyPerWeek(cycle.frequency);
   if (perWeek <= 0) return null;
   const intervalDays = 7 / perWeek;
 
+  const slots = (doseTimes && doseTimes.length > 0)
+    ? doseTimes
+    : (cycle.doseTimes && cycle.doseTimes.length > 0 ? cycle.doseTimes : []);
+
   const logs = matchedDoses(cycle, doses);
+  const todayIso = localIso(now);
+  const nowHM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  // Same-day upcoming slot beats a next-interval calculation.
+  if (slots.length > 0) {
+    const upcomingToday = slots.filter(t => t > nowHM).sort();
+    if (upcomingToday.length > 0) {
+      // Only offer today's next slot if we haven't already logged all today's slots.
+      const loggedToday = logs.filter(l => l.date === todayIso).length;
+      if (loggedToday < slots.length) {
+        return formatNextDose(new Date(todayIso + 'T00:00:00'), upcomingToday[0], now);
+      }
+    }
+  }
+
   let anchor: Date;
-  let time: string | null = null;
+  let time: string | null = slots[0] || null;
 
   if (logs.length === 0) {
     anchor = new Date(cycle.startDate);
-    // No prior log → "next" dose is today (or start date if future)
-    const todayIso = now.toISOString().split('T')[0];
-    const next = anchor > now ? anchor : new Date(todayIso);
+    const next = anchor > now ? anchor : new Date(todayIso + 'T00:00:00');
     return formatNextDose(next, time, now);
   }
 
   const last = logs[logs.length - 1];
-  anchor = new Date(last.date);
-  time = last.time || null;
+  anchor = new Date(last.date + 'T00:00:00');
   const next = new Date(anchor);
   next.setDate(next.getDate() + Math.max(1, Math.round(intervalDays)));
-  return formatNextDose(next, time, now);
+  return formatNextDose(next, time ?? last.time ?? null, now);
 }
 
 function formatNextDose(next: Date, time: string | null, now: Date): NextDoseInfo {
-  const today = new Date(now.toISOString().split('T')[0]);
-  const nextDay = new Date(next.toISOString().split('T')[0]);
+  const today = new Date(localIso(now) + 'T00:00:00');
+  const nextDay = new Date(localIso(next) + 'T00:00:00');
   const days = Math.round((nextDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   let label: string;
   if (days < 0) label = `${Math.abs(days)}d overdue`;
   else if (days === 0) label = time ? `Today ${time}` : 'Today';
   else if (days === 1) label = time ? `Tomorrow ${time}` : 'Tomorrow';
   else label = `in ${days} days`;
-  return { date: nextDay.toISOString().split('T')[0], time, daysFromToday: days, label };
+  return { date: localIso(nextDay), time, daysFromToday: days, label };
 }
+
 
 export type BackdateConflictReason =
   | 'before_start'
@@ -411,7 +438,7 @@ export function computeNextFireAt(
   leadMinutes: number = 0,
   now: Date = new Date(),
 ): number | null {
-  const next = getNextDose(cycle, doses, now);
+  const next = getNextDose(cycle, doses, now, [preferredTime]);
   if (!next) return null;
   const time = next.time || preferredTime;
   const [h, m] = time.split(':').map(Number);
@@ -419,7 +446,9 @@ export function computeNextFireAt(
   dt.setHours(Number.isFinite(h) ? h : 9, Number.isFinite(m) ? m : 0, 0, 0);
   let fireAt = dt.getTime() - leadMinutes * 60_000;
   if (fireAt <= now.getTime()) {
-    fireAt += 24 * 60 * 60_000;
+    const perWeek = parseFrequencyPerWeek(cycle.frequency);
+    const stepDays = perWeek > 0 ? Math.max(1, Math.round(7 / perWeek)) : 1;
+    fireAt += stepDays * 24 * 60 * 60_000;
   }
   return fireAt;
 }

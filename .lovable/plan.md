@@ -1,85 +1,44 @@
-## Scope
+# Fix Semax/Selank dosing display + mobile tap targets
 
-Three additive upgrades: peptide search sort/saved-searches, audit log filters + pagination, and complete dose-audit coverage across stack/cycle screens.
+## Problem
+1. Peptide entity + Dosage screen show Semax/Selank only in **mcg** and users can't tell the SubQ dose in **mg/units** — even though `ROUTE_DOSING` already contains a `subcutaneous` table, its values are also in mcg, so the SubQ tab looks like "just more intranasal numbers".
+2. Project standard (Core memory) is: **mg, IU, or units only — never mcg.**
+3. Mobile users report unclickable CTAs on the dosing card: the route toggle (36px), sex toggle (32px), and tier chips are below the 44px minimum, and the whole card is narrow on 360px screens.
 
----
+## Changes
 
-### 1. Peptide Database — sort options + saved searches
+### 1. `src/data/dosingRoutes.ts` — mg-first for SubQ, mg + mcg reference for intranasal
+Rewrite the Semax, Selank, NA-Selank-Amidate, NA-Semax-Amidate (and any other mcg-only entries: DSIP, Oxytocin, PT-141, Kisspeptin, VIP, P21 where applicable) so every `DoseCell.male/female` string is expressed in **mg** as the primary unit, with the mcg equivalent appended in parentheses for intranasal micro-doses only.
 
-`src/screens/PeptidesScreen.tsx`:
+Examples:
+- Selank SubQ intermediate male: `0.2 mg / day` (was `200 mcg / day`)
+- Selank intranasal intermediate male: `0.5 mg / day (500 mcg)`
+- Semax SubQ athlete male: `0.25 mg × 2 / day`
+- Semax intranasal beginner: `0.3 mg / day (300 mcg)`
 
-- **Sort options** (extend existing `sortBy`): add `janoshikPurity`, `recentlyAdded`, `priceAsc`, `priceDesc`. Expose via a shadcn `Select` in the filter row.
-- **Saved searches** — new lightweight local store `src/lib/savedPeptideSearches.ts` (localStorage key `rtd-peptide-saved-searches`):
-  - Shape: `{ id, name, query, activeFilter, researchFilter, sortBy, createdAt }`.
-  - Helpers: `list()`, `save(entry)`, `remove(id)`, `rename(id, name)`.
-- **UI** in the filters strip:
-  - "Save search" button (opens a small inline popover with a name field, defaults to a summary like `"fda + score>=8"`). Disabled when no filters differ from defaults.
-  - "Saved" dropdown listing entries — clicking one applies its query/filters/sort in a single state update. Each row has a trash icon to delete.
-  - Toast on save/apply/delete.
-- No schema changes; entirely client-side per device (matches existing `rtd-peptides-filters` pattern from the previous plan).
+Update the file header comment to reflect the mg-first rule and remove the "mcg allowed" carve-out. Update `sourceNotes` where they reference mcg. Keep frequencies/cycle strings untouched.
 
----
+### 2. `src/components/dosage/DosingSchedule.tsx` — SubQ-first default + mg/units helper + bigger touch targets
+- When both routes exist, default the selected route to **subcutaneous** (users complained SubQ was hidden). Intranasal remains one tap away.
+- Under each active tier cell, render a small "≈ X units (U-40)" line by feeding the parsed dose through the existing `parseDose` + `convertDose` helpers from `src/lib/doseMath.ts` (same pattern as `RecommendedDoseDisplay`). Skip the units line for intranasal (no syringe).
+- Raise minimum tap sizes to meet the 44px rule from Core memory:
+  - Route tabs: `min-h-[44px]`, `px-3`, larger icon + label
+  - Sex tabs: `min-h-[44px]`, `px-3`
+  - Tier cards: `min-h-[80px]` and full-width tap area (already button, just enlarge)
+- Add `touch-manipulation` class to all interactive elements to remove the 300ms tap delay on iOS.
+- Ensure the card lays out cleanly at 360px: switch tier grid to `grid-cols-2` on mobile (already), but reduce inner padding on `<sm` so nothing overflows.
 
-### 2. Audit Log tab — filters + pagination
+### 3. Peptide entity + Dosage screen — no logic changes
+`PeptideEntityPage` and `DosageScreen` already mount `<DosingSchedule>` when routes exist. They pick up the SubQ-first default automatically. No changes required beyond a quick visual verification.
 
-`src/components/admin/AuditLogViewer.tsx`:
+### 4. Verify with typecheck
+Run `tsgo` after edits — nothing else to test since this is a pure data + presentation change.
 
-- **Filter controls** above the table (all optional, AND-combined):
-  - **Action type**: multi-select of distinct actions present in the current window plus known constants from `AuditAction` union.
-  - **Date range**: two shadcn date pickers (`from`, `to`) — sends `created_at >= from` / `< to+1d`.
-  - **Target user**: text input matching against `user_id` (UUID prefix) OR a display name via join to `profiles` (fetched once).
-- **Pagination**:
-  - Page size 50, server-side using `.range(offset, offset+49)` and `count: 'exact'` on the query.
-  - Prev / Next buttons + `Page X of Y` + total count.
-  - Reset to page 1 whenever any filter changes.
-- **Query building**: single `buildQuery()` helper composes `.eq('action', ...)` / `.in('action', ...)`, `.gte`/`.lt` on `created_at`, `.ilike` on joined profile name (via `profiles!inner(display_name)` select), and `.or('user_id.ilike.%q%')` when the input parses as a UUID fragment.
-- Preserve existing free-text `filter` input as a client-side narrowing over the current page.
-- Fire `admin.view_audit_log` once per mount (unchanged), plus a per-filter `admin.audit_log.filter` ping with the applied criteria (debounced, best-effort).
+## Files touched
+- `src/data/dosingRoutes.ts` (data rewrite, mcg → mg)
+- `src/components/dosage/DosingSchedule.tsx` (default route, units line, 44px targets)
 
----
-
-### 3. Complete dosage-change audit coverage
-
-Goal: every path that creates, edits, or removes a scheduled or logged dose emits an audit entry.
-
-**Storage-layer helper** `src/services/storage.ts` (or a thin wrapper next to the existing dose CRUD): add opt-in audit hooks so we don't have to instrument every caller. Where `storage.ts` already exposes `saveCycle`, `updateCycle`, `deleteCycle`, `saveActiveStack`, wrap each with a `logAudit` call:
-
-- `saveCycle` → `dose.cycle.create` with `{ cycleId, peptideId, peptideName, doseMg, frequency }`.
-- `updateCycle` → `dose.cycle.update` with a diff (`{ before: {...}, after: {...} }`) for `doseMg`, `frequency`, `status`, `startDate`, `endDate`.
-- `deleteCycle` → `dose.cycle.delete` with `{ cycleId, peptideId }`.
-- `saveActiveStack` → `dose.stack.update` with `{ addedIds, removedIds, changedIds }` computed against previous stack snapshot.
-
-**Screen-level call sites** that bypass the storage helpers (or need richer metadata):
-
-- `src/screens/CycleManagementScreen.tsx`:
-  - `handleAddCycle`, `handleTogglePause`, `handleMarkComplete`, `handleDelete`, `handleReset` → each already calls `saveCycle`/`updateCycle`/`deleteCycle`. Rely on the wrapper.
-  - Additionally emit `dose.cycle.status_change` when status transitions (pause/resume/complete) with explicit before/after status.
-- `src/screens/MyStackScreen.tsx`:
-  - `saveActiveStack` wrapper covers stack edits.
-  - `handlePauseCycle`, `handleStartCycle`, `handleCompleteCycle`, `handleSavePauseEdit`, and the recalculation path each already go through `updateCycle`/`saveCycle` — wrapper covers them; add extra `dose.cycle.recalculate` when `recalculateCycle` reports `changed`.
-- `src/components/doses/EditDoseModal.tsx` — inspect and add `dose.update` for its save handler (metadata: `doseId`, `before`, `after`).
-- `src/components/doses/EditCyclePanel.tsx` — add `dose.cycle.update` on its submit (in addition to whatever storage call runs, to guarantee coverage if it takes an alternate path).
-- `src/screens/DailyLogScreen.tsx` — existing `dose.create|update|delete` unchanged.
-
-**New audit actions** added to the `AuditAction` union in `src/lib/auditLog.ts`:
-
-```
-dose.cycle.create
-dose.cycle.update
-dose.cycle.delete
-dose.cycle.status_change
-dose.cycle.recalculate
-dose.stack.update
-admin.audit_log.filter
-```
-
-All inserts remain fire-and-forget via `logAudit`.
-
----
-
-## Technical notes
-
-- No schema/migration changes; `audit_logs` already exists with correct RLS/GRANTs.
-- Saved-search store is local per browser to match the existing filter-persistence pattern.
-- Audit wrapper in `storage.ts` must swallow errors so audit failures never break dose writes.
-- Verification: `tsgo` typecheck; Playwright smoke on `/admin` audit tab (apply date range + action filter, page next/prev, screenshot); on Peptides screen (save a search, reload, re-apply from dropdown).
+## Out of scope (not requested)
+- No changes to intranasal-only peptides that legitimately have no SubQ route
+- No changes to Daily Log, cycle scheduler, or reminder logic
+- No broader mobile audit beyond the dosing card the user pointed to

@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 interface DosingReferenceProps {
   peptideId: string;
   dose: string;
-  /** Optional override of syringe type. Defaults to U-40 (insulin) per RTD standard. */
+  /** Optional override of syringe type. Defaults to U-40 (insulin) per Peptide South Africa standard. */
   syringe?: SyringeType;
   className?: string;
 }

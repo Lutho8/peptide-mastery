@@ -479,7 +479,7 @@ export function PeptideDetailModal({ peptide, open, onOpenChange }: PeptideDetai
               </div>
             </div>
             <Button className="w-full gap-2" asChild>
-              <a href="https://peptide-south-africa.com" target="_blank" rel="noopener noreferrer">
+              <a href="https://peptide-south-africa.com?utm_source=tracker&utm_medium=peptide_modal&utm_campaign=buy_peptides" target="_blank" rel="noopener noreferrer">
                 <ShoppingCart size={16} />
                 Buy Peptides
                 <ExternalLink size={14} />

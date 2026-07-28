@@ -3,14 +3,14 @@
 // can fall back to Tagadapay (src/lib/billing.ts).
 //
 // Setup checklist:
-//  1. Create product `info.ridethetide.app.premium.weekly` in Play Console.
+//  1. Create product `app.peptidesa.premium.weekly` in Play Console.
 //  2. In RevenueCat dashboard: entitlement `premium`, attached to the product,
 //     placed in offering `default`.
 //  3. Set VITE_REVENUECAT_ANDROID_KEY (goog_…) in Project Settings → Env Vars.
 import { Capacitor } from '@capacitor/core';
 
 const RC_PKG: string = '@revenuecat/purchases-capacitor';
-export const PRODUCT_ID = 'info.ridethetide.app.premium.weekly';
+export const PRODUCT_ID = 'app.peptidesa.premium.weekly';
 export const OFFERING_ID = 'default';
 export const ENTITLEMENT_ID = 'premium';
 

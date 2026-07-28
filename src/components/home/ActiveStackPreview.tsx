@@ -165,9 +165,18 @@ export function ActiveStackPreview({ onViewStack }: ActiveStackPreviewProps) {
               : splitParts === 2 ? ['08:00', '20:00'] : splitParts === 3 ? ['08:00', '14:00', '20:00'] : ['09:00'];
           const loggedDates = cycle ? getLoggedDoseDates(cycle, doses) : new Set<string>();
           const todayIso = new Date().toISOString().split('T')[0];
-          const todaySubdoseCount = doses.filter(
+          const todaysLogs = doses.filter(
             d => d.date === todayIso && (d.peptide_id === item.peptideId || d.peptide_name === peptide.name)
-          ).length;
+          );
+          const todaySubdoseCount = todaysLogs.length;
+          // Convert HH:MM to minutes for tolerant matching.
+          const toMin = (t: string) => {
+            const [h, m] = t.split(':').map(Number);
+            return (Number.isFinite(h) ? h : 0) * 60 + (Number.isFinite(m) ? m : 0);
+          };
+          const loggedSlotMins = todaysLogs
+            .map(l => (l.time ? toMin(l.time) : null))
+            .filter((v): v is number => v !== null);
           const expandable = !!cycle;
 
           return (
@@ -230,7 +239,12 @@ export function ActiveStackPreview({ onViewStack }: ActiveStackPreviewProps) {
                       Today · {splitParts > 1 ? `${splitParts} sub-doses = 1 complete dose` : '1 administration = 1 complete dose'}
                     </p>
                     {doseTimes.map((t, i) => {
-                      const subLogged = todaySubdoseCount > i;
+                      const slotMin = toMin(t);
+                      // Match a logged dose within ±90 min of this slot. Fall back
+                      // to positional count only when no logs have a timestamp.
+                      const subLogged = loggedSlotMins.length > 0
+                        ? loggedSlotMins.some(m => Math.abs(m - slotMin) <= 90)
+                        : todaySubdoseCount > i;
                       return (
                         <div key={i} className="flex items-center justify-between text-[11px]">
                           <span className="text-foreground">

@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
   let html = "";
   let status = 0;
   try {
-    const res = await fetch(parsedUrl.toString(), { headers: { "User-Agent": "RideTheTide-SEO-Check/1.0" } });
+    const res = await fetch(parsedUrl.toString(), { headers: { "User-Agent": "PeptideSA-SEO-Check/1.0" } });
     status = res.status;
     html = await res.text();
   } catch (e) {

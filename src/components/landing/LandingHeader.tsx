@@ -13,7 +13,7 @@ interface LandingHeaderProps {
   onBlendsClick?: () => void;
 }
 
-const SHOP_URL = 'https://peptide-south-africa.com';
+const SHOP_URL = 'https://peptide-south-africa.com?utm_source=tracker&utm_medium=header&utm_campaign=buy_peptides';
 
 type NavItem = {
   label: string;

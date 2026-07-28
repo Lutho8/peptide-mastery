@@ -21,7 +21,7 @@ export function NextClubEventCard() {
           <Calendar size={18} className="text-[#0ea5e9]" />
         </div>
         <div className="flex-1">
-          <h3 className="text-sm font-semibold text-foreground">Next RTD Workshop</h3>
+          <h3 className="text-sm font-semibold text-foreground">Next Peptide South Africa Workshop</h3>
           <p className="mt-0.5 text-xs text-muted-foreground whitespace-pre-line">
             November 2025 · Cape Town{'\n'}Milnerton / Blouberg
           </p>

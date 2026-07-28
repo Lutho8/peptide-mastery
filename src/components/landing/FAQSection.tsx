@@ -184,7 +184,7 @@ export const faqCategories = [
       },
       {
         q: 'Where do I buy research peptides?',
-        a: 'Our sister site Peptide South Africa Research Peptides at peptide-south-africa.com stocks COA-verified peptides and ships from South Africa. The tracker and the shop are separate properties but built by the same team.',
+        a: 'Our sister site Peptide South Africa Research Peptides at peptide-south-africa.com stocks COA-verified peptides and ships from South Africa. The tracker and the shop are separate properties but built by the same team. New to peptides? Take the 2-minute protocol quiz at peptide-south-africa.com/quiz — every protocol is reviewed by a GP before anything ships.',
       },
       {
         q: 'Is Peptide South Africa South African?',

@@ -569,6 +569,6 @@ Interpret abnormal values conservatively. Include all readable biomarkers. If te
     return jsonResponse({ success: true, data: { ...parsed, biomarkers, insights: insightsArr, insights_de: insightsDeArr, detected_language: detectedLang, health_score: healthScore, protocol } });
   } catch (e) {
     console.error("[analyze-lab-report] unhandled error:", e);
-    return jsonResponse({ ok: false, code: "INTERNAL_ERROR", retryable: true, message: (e as Error)?.message?.slice(0, 200) || "Unexpected error. Please retry." });
+    return jsonResponse({ ok: false, code: "INTERNAL_ERROR", retryable: true, message: "Unexpected error. Please retry." });
   }
 });

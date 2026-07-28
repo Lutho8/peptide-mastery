@@ -1,10 +1,10 @@
 @echo off
 setlocal
-title Ride The Tide - Build Release AAB
+title Peptide South Africa - Build Release AAB
 
 echo.
 echo ============================================================
-echo   Ride The Tide - Rebuild for Release
+echo   Peptide South Africa - Rebuild for Release
 echo ============================================================
 echo.
 
@@ -44,7 +44,7 @@ echo.
 echo   In Android Studio:
 echo     Build  ^>  Generate Signed Bundle / APK
 echo     -^> Android App Bundle
-echo     -^> Select your ride-the-tide-release.keystore
+echo     -^> Select your peptidesa-release.keystore
 echo     -^> Build variant: release
 echo     -^> Finish
 echo.

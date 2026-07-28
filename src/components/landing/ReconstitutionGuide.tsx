@@ -47,7 +47,7 @@ const steps = [
     icon: Snowflake,
     color: 'text-sky-400',
     description: 'Label the vial with peptide name, date, concentration, and dose. Store refrigerated at 2–8°C. Use within 30 days.',
-    tips: ['Use the RTD Label Maker to create a label', 'Keep away from light', 'Never freeze reconstituted peptides'],
+    tips: ['Use the Peptide South Africa Label Maker to create a label', 'Keep away from light', 'Never freeze reconstituted peptides'],
   },
 ];
 

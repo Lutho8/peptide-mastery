@@ -1,4 +1,4 @@
-package info.ridethetide.app;
+package app.peptidesa;
 
 import com.getcapacitor.BridgeActivity;
 

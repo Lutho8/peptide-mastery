@@ -62,17 +62,17 @@ Print this or keep it open. Tick each box as you go. Total time: ~1 hour the fir
 - Paste this command (one line) and press Enter:
 
 ```
-keytool -genkey -v -keystore "%USERPROFILE%\ride-the-tide-release.keystore" -alias ridethetide -keyalg RSA -keysize 2048 -validity 10000
+keytool -genkey -v -keystore "%USERPROFILE%\peptidesa-release.keystore" -alias peptidesa -keyalg RSA -keysize 2048 -validity 10000
 ```
 
 - It'll ask for a password — type a strong one and **save it in your password manager NOW**.
 - It'll ask the same questions again (name, org, city, country) — fill them in.
-- When done, the file lives at `C:\Users\YourName\ride-the-tide-release.keystore`.
+- When done, the file lives at `C:\Users\YourName\peptidesa-release.keystore`.
 
 > If `keytool` is not recognized → it ships with Java. Open Android Studio → File → Project Structure → SDK Location → copy the JDK path. Then use the full path: `"C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe" -genkey ...`
 
 ### ☐ 7. Back up the keystore
-- Copy `ride-the-tide-release.keystore` to:
+- Copy `peptidesa-release.keystore` to:
   - A USB stick
   - A cloud drive (Google Drive, Dropbox)
   - Email it to yourself
@@ -86,9 +86,9 @@ keytool -genkey -v -keystore "%USERPROFILE%\ride-the-tide-release.keystore" -ali
 In Android Studio:
 - Top menu → **Build → Generate Signed Bundle / APK…**
 - Select **Android App Bundle** → Next.
-- **Key store path**: click folder icon → select your `ride-the-tide-release.keystore`.
+- **Key store path**: click folder icon → select your `peptidesa-release.keystore`.
 - **Key store password**: paste from password manager.
-- **Key alias**: `ridethetide`.
+- **Key alias**: `peptidesa`.
 - **Key password**: same as keystore password (or whatever you set).
 - Tick **"Remember passwords"** → Next.
 - Build variant: **release**.

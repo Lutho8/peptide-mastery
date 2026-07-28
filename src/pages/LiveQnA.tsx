@@ -373,7 +373,7 @@ export default function LiveQnA() {
                           'VERSION:2.0',
                           'PRODID:-//Peptide South Africa//Live Q&A//EN',
                           'BEGIN:VEVENT',
-                          `UID:rtd-qna-${start.getTime()}@ridethetide`,
+                          `UID:psa-qna-${start.getTime()}@peptide-south-africa.co.za`,
                           `DTSTAMP:${dt(new Date())}`,
                           `DTSTART:${dt(start)}`,
                           `DTEND:${dt(end)}`,
@@ -387,7 +387,7 @@ export default function LiveQnA() {
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.href = url;
-                        a.download = `ride-the-tide-qna-${sessionMonth.replace(/\s+/g, '-').toLowerCase()}.ics`;
+                        a.download = `peptide-south-africa-qna-${sessionMonth.replace(/\s+/g, '-').toLowerCase()}.ics`;
                         document.body.appendChild(a);
                         a.click();
                         document.body.removeChild(a);
