@@ -8,6 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { findBlendData } from '@/data/blendAdapters';
 import { RecommendedDoseDisplay } from '@/components/dosage/RecommendedDoseDisplay';
+import { SyringeVisual } from '@/components/dosage/SyringeVisual';
 
 interface InsulinNeedleGuideProps {
   dose: number;
