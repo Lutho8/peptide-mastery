@@ -8,6 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { findBlendData } from '@/data/blendAdapters';
 import { RecommendedDoseDisplay } from '@/components/dosage/RecommendedDoseDisplay';
+import { SyringeVisual } from '@/components/dosage/SyringeVisual';
 
 interface InsulinNeedleGuideProps {
   dose: number;
@@ -254,6 +255,15 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
                   </div>
                 </div>
               </div>
+
+              {/* Visual syringe draw-up guide */}
+              <SyringeVisual
+                doseMg={doseMg}
+                mgPerMl={activeConcentrationMgPerMl}
+                syringe={syringeType}
+                presets={QUICK_REF_DOSES}
+                concentrationNote={`${activeTotalMg} mg vial + ${activeWaterMl} mL BAC water`}
+              />
 
               {/* Quick reference strip */}
               <div className="space-y-1.5">
