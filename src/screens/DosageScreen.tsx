@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { RecommendedDoseDisplay } from '@/components/dosage/RecommendedDoseDisplay';
 import { DosingSchedule } from '@/components/dosage/DosingSchedule';
+import { PeptideSyringeVisual } from '@/components/dosage/PeptideSyringeVisual';
 import { getAvailableRoutes } from '@/data/dosingRoutes';
 import { cn } from '@/lib/utils';
 import { WidgetHint } from '@/components/onboarding/WidgetHint';

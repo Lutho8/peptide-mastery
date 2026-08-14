@@ -255,6 +255,15 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
                 </div>
               </div>
 
+              {/* Visual syringe draw-up guide */}
+              <SyringeVisual
+                doseMg={doseMg}
+                mgPerMl={activeConcentrationMgPerMl}
+                syringe={syringeType}
+                presets={QUICK_REF_DOSES}
+                concentrationNote={`${activeTotalMg} mg vial + ${activeWaterMl} mL BAC water`}
+              />
+
               {/* Quick reference strip */}
               <div className="space-y-1.5">
                 <div className="text-xs font-semibold text-foreground">
