@@ -970,6 +970,12 @@ export function DosageScreen() {
                       <DosingSchedule peptideId={peptide.id} tier={experienceLevel as any} />
                     )}
 
+                    <PeptideSyringeVisual
+                      peptideId={peptide.id}
+                      doseStr={peptide.dosing[experienceLevel]}
+                    />
+
+
 
                     <div className="text-xs space-y-1">
                       <p><span className="text-muted-foreground">Frequency:</span> <span className="text-foreground">{peptide.frequency}</span></p>
