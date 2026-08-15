@@ -106,6 +106,8 @@ function ReconstitutionCalculator({
 }) {
   const [totalMg, setTotalMg] = useState(defaultTotalMg);
   const [waterMl, setWaterMl] = useState(defaultWaterMl);
+  const fieldId = useId();
+
 
   const concentrationMgPerMl = waterMl > 0 ? totalMg / waterMl : 0;
   const mgPerUnit = concentrationMgPerMl > 0 ? concentrationMgPerMl / unitsPerMl : 0;
