@@ -121,28 +121,33 @@ function ReconstitutionCalculator({
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <Label className="text-xs text-muted-foreground">Total mg in vial</Label>
+          <Label htmlFor={`${fieldId}-mg`} className="text-xs text-muted-foreground">Total mg in vial</Label>
           <Input
+            id={`${fieldId}-mg`}
             type="number"
+            inputMode="decimal"
             value={totalMg}
             onChange={(e) => setTotalMg(parseFloat(e.target.value) || 0)}
-            className="h-8 text-sm"
+            className="h-11 text-sm touch-manipulation focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             min={0}
             step={1}
           />
         </div>
         <div>
-          <Label className="text-xs text-muted-foreground">mL BAC water</Label>
+          <Label htmlFor={`${fieldId}-ml`} className="text-xs text-muted-foreground">mL BAC water</Label>
           <Input
+            id={`${fieldId}-ml`}
             type="number"
+            inputMode="decimal"
             value={waterMl}
             onChange={(e) => setWaterMl(parseFloat(e.target.value) || 0)}
-            className="h-8 text-sm"
+            className="h-11 text-sm touch-manipulation focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             min={0.1}
             step={0.5}
           />
         </div>
       </div>
+
 
       {concentrationMgPerMl > 0 && (
         <div className="space-y-2">
