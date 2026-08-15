@@ -195,6 +195,7 @@ function ReconstitutionCalculator({
 export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: InsulinNeedleGuideProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [syringeType, setSyringeType] = useState<SyringeType>('U-40');
+  const panelId = useId();
 
   const unitsPerMl = syringeType === 'U-40' ? 40 : 100;
 
@@ -214,30 +215,42 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
 
   if (dose <= 0) return null;
 
+  const title = isBlend
+    ? `${blendData?.shortName || 'Blend'} ${syringeType} Dosage Guide`
+    : `${syringeType} Syringe Dosage Guide`;
+
   return (
     <div className="border border-border rounded-lg overflow-hidden bg-card">
       <button
+        type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
+        aria-expanded={isExpanded}
+        aria-controls={panelId}
+        aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${title}`}
+        className={cn(
+          'w-full min-h-12 flex items-center justify-between gap-2 px-3 py-3 text-left touch-manipulation',
+          'transition-colors hover:bg-muted/50 active:bg-muted',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+        )}
       >
         <div className="flex items-center gap-2">
           <Syringe size={16} className="text-primary" />
-          <span className="text-sm font-medium text-foreground">
-            {isBlend ? `${blendData?.shortName || 'Blend'} ${syringeType} Dosage Guide` : `${syringeType} Syringe Dosage Guide`}
-          </span>
+          <span className="text-sm font-medium text-foreground">{title}</span>
         </div>
-        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        {isExpanded ? <ChevronUp size={18} aria-hidden="true" /> : <ChevronDown size={18} aria-hidden="true" />}
       </button>
 
       <AnimatePresence>
         {isExpanded && (
           <motion.div
+            id={panelId}
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
+
             <div className="p-3 pt-0 space-y-3">
               {/* Syringe type selector */}
               <SyringeTypeToggle value={syringeType} onChange={setSyringeType} />
