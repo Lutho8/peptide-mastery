@@ -360,7 +360,12 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
                     bacWaterMl={activeWaterMl}
                   />
                 )}
-                <div className="p-3 rounded-md bg-background border border-border text-center">
+                <div
+                  className="p-3 rounded-md bg-background border border-border text-center"
+                  aria-live="polite"
+                  aria-label={`Draw ${drawUnits.toFixed(1)} units on a ${syringeType} syringe`}
+                >
+
                   <div className="text-muted-foreground text-xs">{syringeType} Syringe</div>
                   <div className="text-2xl font-bold text-primary">{drawUnits.toFixed(1)}</div>
                   <div className="text-muted-foreground text-xs">units to draw</div>
