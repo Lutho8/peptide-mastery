@@ -100,25 +100,33 @@ export function SyringeVisual({
           <span className="text-sm font-semibold text-foreground">Draw-up Guide</span>
         </div>
         {!syringeProp && (
-          <div className="flex rounded-lg border border-border bg-muted/50 p-0.5">
+          <div
+            className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1"
+            role="group"
+            aria-label="Syringe scale"
+          >
             {(['U-40', 'U-100'] as SyringeType[]).map((opt) => (
               <button
                 key={opt}
                 type="button"
                 onClick={() => setSyringe(opt)}
                 className={cn(
-                  'relative min-h-[36px] px-3 text-xs font-medium rounded-md touch-manipulation transition-colors',
+                  'relative min-h-11 min-w-11 px-4 text-sm font-medium rounded-md touch-manipulation',
+                  'transition-[transform,background-color,color] active:scale-[0.97]',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                   syringe === opt
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground',
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground active:bg-muted',
                 )}
                 aria-pressed={syringe === opt}
+                aria-label={`Use ${opt} syringe scale`}
               >
                 {opt}
               </button>
             ))}
           </div>
         )}
+
       </div>
 
       <svg
@@ -216,7 +224,7 @@ export function SyringeVisual({
         </motion.g>
       </svg>
 
-      <div className="text-xs text-foreground font-medium text-center">
+      <div className="text-xs text-foreground font-medium text-center" aria-live="polite">
         {activeDose} mg = <span className="text-primary font-bold">{unitLabel} units</span> ({syringe}) ·{' '}
         <span className="text-muted-foreground font-normal">{mL.toFixed(2)} mL @ {(mgPerMl > 0 ? mgPerMl : 5).toFixed(2)} mg/mL</span>
       </div>
@@ -231,17 +239,21 @@ export function SyringeVisual({
       )}
 
       {presets.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 justify-center">
+        <div className="flex flex-wrap gap-2 justify-center" role="group" aria-label="Preset doses">
           {presets.map((p) => (
             <button
               key={p}
               type="button"
               onClick={() => setDose(p)}
+              aria-pressed={Math.abs(p - activeDose) < 0.0001}
+              aria-label={`Set dose to ${p} mg`}
               className={cn(
-                'min-h-[36px] px-3 rounded-lg border text-xs font-medium touch-manipulation transition-colors',
+                'min-h-11 min-w-11 px-4 rounded-lg border text-sm font-medium touch-manipulation',
+                'transition-[transform,background-color,border-color,color] active:scale-[0.97]',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                 Math.abs(p - activeDose) < 0.0001
-                  ? 'border-primary bg-primary/15 text-primary'
-                  : 'border-border bg-muted/40 text-muted-foreground hover:text-foreground',
+                  ? 'border-primary bg-primary/15 text-primary ring-1 ring-primary/40'
+                  : 'border-border bg-muted/40 text-muted-foreground hover:text-foreground active:bg-muted',
               )}
             >
               {p} mg
@@ -251,13 +263,19 @@ export function SyringeVisual({
             <button
               type="button"
               onClick={() => setInternalDose(null)}
-              className="min-h-[36px] px-3 rounded-lg border border-border bg-muted/40 text-xs text-muted-foreground touch-manipulation"
+              aria-label="Reset to recommended dose"
+              className={cn(
+                'min-h-11 min-w-11 px-4 rounded-lg border border-border bg-muted/40 text-sm text-muted-foreground touch-manipulation',
+                'transition-[transform,background-color,color] active:scale-[0.97] hover:text-foreground active:bg-muted',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+              )}
             >
               Reset
             </button>
           )}
         </div>
       )}
+
 
       {concentrationNote && (
         <p className="text-[10px] text-muted-foreground text-center">{concentrationNote}</p>

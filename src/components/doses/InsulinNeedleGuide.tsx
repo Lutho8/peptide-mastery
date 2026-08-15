@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Syringe, Info, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -51,7 +51,11 @@ function SyringeTypeToggle({ value, onChange }: { value: SyringeType; onChange: 
   const options: SyringeType[] = ['U-40', 'U-100'];
   return (
     <div className="space-y-1.5">
-      <div className="relative flex rounded-lg border border-border bg-muted/50 p-0.5">
+      <div
+        className="relative flex gap-1 rounded-lg border border-border bg-muted/50 p-1"
+        role="group"
+        aria-label="Syringe scale"
+      >
         {options.map((opt) => {
           const isActive = value === opt;
           return (
@@ -59,9 +63,13 @@ function SyringeTypeToggle({ value, onChange }: { value: SyringeType; onChange: 
               key={opt}
               type="button"
               onClick={() => onChange(opt)}
+              aria-pressed={isActive}
+              aria-label={`Use ${opt} syringe scale`}
               className={cn(
-                "relative z-10 flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200",
-                isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                "relative z-10 flex-1 min-h-11 px-4 text-sm font-medium rounded-md touch-manipulation",
+                "transition-[transform,color] active:scale-[0.97]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground active:bg-muted"
               )}
             >
               {isActive && (
@@ -83,6 +91,7 @@ function SyringeTypeToggle({ value, onChange }: { value: SyringeType; onChange: 
   );
 }
 
+
 // Dynamic calculator section — uses active syringe type
 function ReconstitutionCalculator({
   defaultTotalMg,
@@ -97,6 +106,8 @@ function ReconstitutionCalculator({
 }) {
   const [totalMg, setTotalMg] = useState(defaultTotalMg);
   const [waterMl, setWaterMl] = useState(defaultWaterMl);
+  const fieldId = useId();
+
 
   const concentrationMgPerMl = waterMl > 0 ? totalMg / waterMl : 0;
   const mgPerUnit = concentrationMgPerMl > 0 ? concentrationMgPerMl / unitsPerMl : 0;
@@ -112,28 +123,33 @@ function ReconstitutionCalculator({
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <Label className="text-xs text-muted-foreground">Total mg in vial</Label>
+          <Label htmlFor={`${fieldId}-mg`} className="text-xs text-muted-foreground">Total mg in vial</Label>
           <Input
+            id={`${fieldId}-mg`}
             type="number"
+            inputMode="decimal"
             value={totalMg}
             onChange={(e) => setTotalMg(parseFloat(e.target.value) || 0)}
-            className="h-8 text-sm"
+            className="h-11 text-sm touch-manipulation focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             min={0}
             step={1}
           />
         </div>
         <div>
-          <Label className="text-xs text-muted-foreground">mL BAC water</Label>
+          <Label htmlFor={`${fieldId}-ml`} className="text-xs text-muted-foreground">mL BAC water</Label>
           <Input
+            id={`${fieldId}-ml`}
             type="number"
+            inputMode="decimal"
             value={waterMl}
             onChange={(e) => setWaterMl(parseFloat(e.target.value) || 0)}
-            className="h-8 text-sm"
+            className="h-11 text-sm touch-manipulation focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             min={0.1}
             step={0.5}
           />
         </div>
       </div>
+
 
       {concentrationMgPerMl > 0 && (
         <div className="space-y-2">
@@ -179,6 +195,7 @@ function ReconstitutionCalculator({
 export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: InsulinNeedleGuideProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [syringeType, setSyringeType] = useState<SyringeType>('U-40');
+  const panelId = useId();
 
   const unitsPerMl = syringeType === 'U-40' ? 40 : 100;
 
@@ -198,30 +215,42 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
 
   if (dose <= 0) return null;
 
+  const title = isBlend
+    ? `${blendData?.shortName || 'Blend'} ${syringeType} Dosage Guide`
+    : `${syringeType} Syringe Dosage Guide`;
+
   return (
     <div className="border border-border rounded-lg overflow-hidden bg-card">
       <button
+        type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
+        aria-expanded={isExpanded}
+        aria-controls={panelId}
+        aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${title}`}
+        className={cn(
+          'w-full min-h-12 flex items-center justify-between gap-2 px-3 py-3 text-left touch-manipulation',
+          'transition-colors hover:bg-muted/50 active:bg-muted',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+        )}
       >
         <div className="flex items-center gap-2">
           <Syringe size={16} className="text-primary" />
-          <span className="text-sm font-medium text-foreground">
-            {isBlend ? `${blendData?.shortName || 'Blend'} ${syringeType} Dosage Guide` : `${syringeType} Syringe Dosage Guide`}
-          </span>
+          <span className="text-sm font-medium text-foreground">{title}</span>
         </div>
-        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        {isExpanded ? <ChevronUp size={18} aria-hidden="true" /> : <ChevronDown size={18} aria-hidden="true" />}
       </button>
 
       <AnimatePresence>
         {isExpanded && (
           <motion.div
+            id={panelId}
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
+
             <div className="p-3 pt-0 space-y-3">
               {/* Syringe type selector */}
               <SyringeTypeToggle value={syringeType} onChange={setSyringeType} />
@@ -331,7 +360,12 @@ export function InsulinNeedleGuide({ dose, unit, concentration, peptideId }: Ins
                     bacWaterMl={activeWaterMl}
                   />
                 )}
-                <div className="p-3 rounded-md bg-background border border-border text-center">
+                <div
+                  className="p-3 rounded-md bg-background border border-border text-center"
+                  aria-live="polite"
+                  aria-label={`Draw ${drawUnits.toFixed(1)} units on a ${syringeType} syringe`}
+                >
+
                   <div className="text-muted-foreground text-xs">{syringeType} Syringe</div>
                   <div className="text-2xl font-bold text-primary">{drawUnits.toFixed(1)}</div>
                   <div className="text-muted-foreground text-xs">units to draw</div>
