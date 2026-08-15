@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Syringe, Info, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
