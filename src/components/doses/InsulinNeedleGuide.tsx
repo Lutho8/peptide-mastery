@@ -51,7 +51,11 @@ function SyringeTypeToggle({ value, onChange }: { value: SyringeType; onChange: 
   const options: SyringeType[] = ['U-40', 'U-100'];
   return (
     <div className="space-y-1.5">
-      <div className="relative flex rounded-lg border border-border bg-muted/50 p-0.5">
+      <div
+        className="relative flex gap-1 rounded-lg border border-border bg-muted/50 p-1"
+        role="group"
+        aria-label="Syringe scale"
+      >
         {options.map((opt) => {
           const isActive = value === opt;
           return (
@@ -59,9 +63,13 @@ function SyringeTypeToggle({ value, onChange }: { value: SyringeType; onChange: 
               key={opt}
               type="button"
               onClick={() => onChange(opt)}
+              aria-pressed={isActive}
+              aria-label={`Use ${opt} syringe scale`}
               className={cn(
-                "relative z-10 flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200",
-                isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                "relative z-10 flex-1 min-h-11 px-4 text-sm font-medium rounded-md touch-manipulation",
+                "transition-[transform,color] active:scale-[0.97]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground active:bg-muted"
               )}
             >
               {isActive && (
@@ -82,6 +90,7 @@ function SyringeTypeToggle({ value, onChange }: { value: SyringeType; onChange: 
     </div>
   );
 }
+
 
 // Dynamic calculator section — uses active syringe type
 function ReconstitutionCalculator({
