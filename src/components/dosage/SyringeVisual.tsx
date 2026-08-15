@@ -100,25 +100,33 @@ export function SyringeVisual({
           <span className="text-sm font-semibold text-foreground">Draw-up Guide</span>
         </div>
         {!syringeProp && (
-          <div className="flex rounded-lg border border-border bg-muted/50 p-0.5">
+          <div
+            className="flex gap-1 rounded-lg border border-border bg-muted/50 p-1"
+            role="group"
+            aria-label="Syringe scale"
+          >
             {(['U-40', 'U-100'] as SyringeType[]).map((opt) => (
               <button
                 key={opt}
                 type="button"
                 onClick={() => setSyringe(opt)}
                 className={cn(
-                  'relative min-h-[36px] px-3 text-xs font-medium rounded-md touch-manipulation transition-colors',
+                  'relative min-h-11 min-w-11 px-4 text-sm font-medium rounded-md touch-manipulation',
+                  'transition-[transform,background-color,color] active:scale-[0.97]',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                   syringe === opt
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground',
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground active:bg-muted',
                 )}
                 aria-pressed={syringe === opt}
+                aria-label={`Use ${opt} syringe scale`}
               >
                 {opt}
               </button>
             ))}
           </div>
         )}
+
       </div>
 
       <svg
