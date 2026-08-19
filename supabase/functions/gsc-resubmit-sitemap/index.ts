@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { googleAuthHeaders, GOOGLE_API_BASE } from "../_shared/google.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,15 +7,13 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const GATEWAY = "https://connector-gateway.lovable.dev/google_search_console";
+const GSC_API = `${GOOGLE_API_BASE}/webmasters/v3`;
 const SITE_URL = "https://peptide-south-africa.co.za/";
 const SITEMAP_URL = "https://peptide-south-africa.co.za/sitemap.xml";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  const GSC_KEY = Deno.env.get("GOOGLE_SEARCH_CONSOLE_API_KEY");
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
   const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
   const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -37,8 +36,12 @@ Deno.serve(async (req) => {
     });
   }
 
-  if (!LOVABLE_API_KEY || !GSC_KEY) {
-    return new Response(JSON.stringify({ error: "Missing connector credentials" }), {
+  let gscHeaders: Record<string, string>;
+  try {
+    gscHeaders = await googleAuthHeaders();
+  } catch (err) {
+    console.error("[gsc-resubmit-sitemap] Google auth failed", String(err));
+    return new Response(JSON.stringify({ error: "Google Search Console credentials are not configured" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
@@ -49,21 +52,15 @@ Deno.serve(async (req) => {
   const encSite = encodeURIComponent(SITE_URL);
   const encSitemap = encodeURIComponent(SITEMAP_URL);
 
-  const putRes = await fetch(`${GATEWAY}/webmasters/v3/sites/${encSite}/sitemaps/${encSitemap}`, {
+  const putRes = await fetch(`${GSC_API}/sites/${encSite}/sitemaps/${encSitemap}`, {
     method: "PUT",
-    headers: {
-      "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-      "X-Connection-Api-Key": GSC_KEY,
-    },
+    headers: gscHeaders,
   });
 
   let getJson: any = null;
   if (putRes.ok || putRes.status === 204) {
-    const getRes = await fetch(`${GATEWAY}/webmasters/v3/sites/${encSite}/sitemaps/${encSitemap}`, {
-      headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-        "X-Connection-Api-Key": GSC_KEY,
-      },
+    const getRes = await fetch(`${GSC_API}/sites/${encSite}/sitemaps/${encSitemap}`, {
+      headers: gscHeaders,
     });
     if (getRes.ok) getJson = await getRes.json().catch(() => null);
   }

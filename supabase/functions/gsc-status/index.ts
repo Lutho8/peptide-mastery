@@ -1,19 +1,18 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { googleAuthHeaders, GOOGLE_API_BASE } from "../_shared/google.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const GATEWAY = "https://connector-gateway.lovable.dev/google_search_console";
+const GSC_API = `${GOOGLE_API_BASE}/webmasters/v3`;
 const SITE_URL = "https://peptide-south-africa.co.za/";
 const SITEMAP_URL = "https://peptide-south-africa.co.za/sitemap.xml";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
-  const GSC_KEY = Deno.env.get("GOOGLE_SEARCH_CONSOLE_API_KEY")!;
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
   const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -30,18 +29,23 @@ Deno.serve(async (req) => {
   const encSite = encodeURIComponent(SITE_URL);
   const encSitemap = encodeURIComponent(SITEMAP_URL);
 
-  const gscHeaders = {
-    "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-    "X-Connection-Api-Key": GSC_KEY,
-  };
+  let gscHeaders: Record<string, string>;
+  try {
+    gscHeaders = await googleAuthHeaders();
+  } catch (err) {
+    console.error("[gsc-status] Google auth failed", String(err));
+    return new Response(JSON.stringify({ error: "Google Search Console credentials are not configured" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   const [sitemapRes, saRes] = await Promise.all([
-    fetch(`${GATEWAY}/webmasters/v3/sites/${encSite}/sitemaps/${encSitemap}`, { headers: gscHeaders }),
+    fetch(`${GSC_API}/sites/${encSite}/sitemaps/${encSitemap}`, { headers: gscHeaders }),
     (async () => {
       const end = new Date();
       const start = new Date(); start.setDate(end.getDate() - 28);
       const fmt = (d: Date) => d.toISOString().slice(0, 10);
-      return fetch(`${GATEWAY}/webmasters/v3/sites/${encSite}/searchAnalytics/query`, {
+      return fetch(`${GSC_API}/sites/${encSite}/searchAnalytics/query`, {
         method: "POST",
         headers: { ...gscHeaders, "Content-Type": "application/json" },
         body: JSON.stringify({

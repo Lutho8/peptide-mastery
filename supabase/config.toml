@@ -1,6 +1,9 @@
-project_id = "lwrvuszozhhpteyrxenl"
+project_id = "eutszmrsukoqqeilzrbv"
 
 [functions.peptide-ai-agent]
+verify_jwt = false
+
+[functions.mcp]
 verify_jwt = false
 
 [functions.nocobase-sync]
