@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "predev": "node scripts/generate-sitemap.mjs && node scripts/check-independence.mjs",
-    "prebuild": "node scripts/generate-sitemap.mjs && node scripts/check-independence.mjs",
+    "prebuild": "node scripts/generate-sitemap.mjs && node scripts/check-independence.mjs && node scripts/check-production-env.mjs",
     "dev": "vite",
     "build": "vite build && node scripts/prerender.mjs",
     "build:dev": "vite build --mode development",

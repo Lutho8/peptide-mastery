@@ -1,6 +1,6 @@
 // Peptide Tracker Service Worker - PWA + Background Notifications
 
-const CACHE_NAME = 'peptide-tracker-v10-psa';
+const CACHE_NAME = 'peptide-tracker-v11-psa';
 
 // Always-fresh assets: branding/manifest/shell files that must update for installed users
 const NETWORK_FIRST_PATHS = [
