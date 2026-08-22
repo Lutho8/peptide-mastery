@@ -1,18 +1,24 @@
-project_id = "lwrvuszozhhpteyrxenl"
+project_id = "peptide-south-africa"
 
 [functions.peptide-ai-agent]
-verify_jwt = false
+verify_jwt = true
 
-[functions.nocobase-sync]
-verify_jwt = false
+[functions.mcp]
+verify_jwt = true
+
+[functions.crm-capture]
+verify_jwt = true
+
+[functions.crm-admin]
+verify_jwt = true
 
 [functions.analyze-lab-report]
-verify_jwt = false
+verify_jwt = true
 
 [functions.gsc-resubmit-sitemap]
-verify_jwt = false
+verify_jwt = true
 
 [functions.gsc-verify-live]
-verify_jwt = false
+verify_jwt = true
 [functions.process-email-queue]
 verify_jwt = true

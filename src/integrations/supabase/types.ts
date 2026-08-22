@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+type GeneratedDatabase = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
@@ -1327,6 +1327,13 @@ export type Database = {
       [_ in never]: never
     }
   }
+}
+
+// The tracker database is namespaced in the company-owned Supabase project to
+// avoid colliding with commerce tables in `public`. Its shape matches the
+// original generated schema, so keep one strict source of row/table types.
+export type Database = GeneratedDatabase & {
+  tracker: GeneratedDatabase["public"]
 }
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">

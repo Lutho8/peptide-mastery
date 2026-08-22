@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { chatCompletion, requireApiKey, MODEL_DEFAULT, MODEL_VISION, PDF_PLUGIN } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -278,25 +279,19 @@ function buildFallbackResult(text: string, scanType: string, detectedLanguage?: 
   };
 }
 
-async function extractTextWithGateway(base64: string, fileName: string, apiKey: string): Promise<string | null> {
+async function extractTextFromPdf(base64: string, fileName: string): Promise<string | null> {
   const prompt = "Extract all readable text and lab table rows from this PDF. Return plain text only, preserving biomarker rows as: name | result | reference range | unit. Do not summarize.";
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
-      messages: [{
-        role: "user",
-        content: [
-          { type: "text", text: prompt },
-          { type: "file", file: { filename: fileName, file_data: `data:application/pdf;base64,${base64}` } },
-        ],
-      }],
-    }),
-    signal: AbortSignal.timeout(25_000),
+  const response = await chatCompletion({
+    model: MODEL_VISION,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "text", text: prompt },
+        { type: "file", file: { filename: fileName, file_data: `data:application/pdf;base64,${base64}` } },
+      ],
+    }],
+    plugins: PDF_PLUGIN,
+    timeoutMs: 25_000,
   });
   if (!response.ok) return null;
   const data = await response.json();
@@ -313,8 +308,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    requireApiKey();
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Missing authorization header");
@@ -322,6 +316,7 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey, {
+      db: { schema: "tracker" },
       global: { headers: { Authorization: authHeader } },
     });
 
@@ -425,7 +420,7 @@ serve(async (req) => {
     if (resolvedMime === "application/pdf") {
       try {
         const textStart = Date.now();
-        extractedText = await extractTextWithGateway(base64, effectiveFileName, LOVABLE_API_KEY);
+        extractedText = await extractTextFromPdf(base64, effectiveFileName);
         if (extractedText) {
           deterministicFallback = buildFallbackResult(extractedText, scanType, languageHint === "de" || languageHint === "en" ? languageHint : undefined);
           console.log("[analyze-lab-report] extracted pdf text", { chars: extractedText.length, biomarkers: deterministicFallback.biomarkers.length, durationMs: Date.now() - textStart });
@@ -468,18 +463,15 @@ Interpret abnormal values conservatively. Do not diagnose, prescribe, or tell th
             : { type: "image_url", image_url: { url: `data:${resolvedMime};base64,${base64}` } },
         ];
 
-      response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: extractedText ? "google/gemini-3-flash-preview" : "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content },
-          ],
-          response_format: { type: "json_object" },
-        }),
-        signal: AbortSignal.timeout(extractedText ? 35_000 : 55_000),
+      response = await chatCompletion({
+        model: extractedText ? MODEL_DEFAULT : MODEL_VISION,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content },
+        ],
+        jsonMode: true,
+        plugins: extractedText ? undefined : PDF_PLUGIN,
+        timeoutMs: extractedText ? 35_000 : 55_000,
       });
     } catch (e) {
       const isTimeout = (e as Error)?.name === "TimeoutError" || /timeout|abort/i.test(String(e));

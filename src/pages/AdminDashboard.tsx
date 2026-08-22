@@ -153,7 +153,7 @@ export default function AdminDashboard() {
             </TabsTrigger>
             <TabsTrigger value="crm" className="gap-1.5">
               <GraduationCap className="h-4 w-4" />
-              Course CRM
+              CRM
             </TabsTrigger>
             <TabsTrigger value="labels" className="gap-1.5">
               <Tag className="h-4 w-4" />

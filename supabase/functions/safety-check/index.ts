@@ -1,8 +1,9 @@
-// Lovable AI-assisted safety check for a peptide against a user safety profile.
+// AI-assisted safety check for a peptide against a user safety profile.
 // Caches the result per (user_id, peptide_id, profile_hash) in public.safety_checks for 7 days.
 // Disclaimer: research-only summary. Not medical advice.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { chatCompletion } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -86,7 +87,11 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      { db: { schema: "tracker" } },
+    );
     const { data: userData, error: userErr } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
     if (userErr || !userData?.user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -122,36 +127,27 @@ Deno.serve(async (req) => {
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!lovableKey) {
-      return new Response(JSON.stringify({ error: "Missing LOVABLE_API_KEY" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (!Deno.env.get("OPENROUTER_API_KEY")) {
+      return new Response(JSON.stringify({ error: "Missing OPENROUTER_API_KEY" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Lovable-API-Key": lovableKey,
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: "You are a clinical safety reviewer for research peptides. Reply with strict JSON only — no markdown fences." },
-          { role: "user", content: buildPrompt(peptideId, peptideName, profile) },
-        ],
-        response_format: { type: "json_object" },
-      }),
+    const aiRes = await chatCompletion({
+      messages: [
+        { role: "system", content: "You are a clinical safety reviewer for research peptides. Reply with strict JSON only — no markdown fences." },
+        { role: "user", content: buildPrompt(peptideId, peptideName, profile) },
+      ],
+      jsonMode: true,
     });
 
     if (aiRes.status === 429) {
       return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again shortly." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     if (aiRes.status === 402) {
-      return new Response(JSON.stringify({ error: "AI credits exhausted. Add credits in Workspace settings." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "AI credits exhausted. Top up your OpenRouter balance." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     if (!aiRes.ok) {
       const t = await aiRes.text();
-      console.error("[safety-check] AI gateway error", { status: aiRes.status, body: t });
+      console.error("[safety-check] AI provider error", { status: aiRes.status, body: t });
       return new Response(JSON.stringify({ error: "AI service error. Please try again." }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 

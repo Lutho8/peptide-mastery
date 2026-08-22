@@ -1,4 +1,4 @@
-import { defineMcp } from "@lovable.dev/mcp-js";
+import { defineMcp } from "./types";
 import listPeptides from "./tools/list-peptides";
 import getPeptide from "./tools/get-peptide";
 import checkStackCompatibility from "./tools/check-stack-compatibility";

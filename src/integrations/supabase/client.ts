@@ -2,8 +2,16 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const CONFIGURED_SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const CONFIGURED_SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+
+// Keep prerender/local-first screens buildable when deployment variables are
+// absent. The browser receives a visible configuration warning below; no real
+// request is sent successfully until both production values are configured.
+const SUPABASE_URL = CONFIGURED_SUPABASE_URL || 'https://unconfigured.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = CONFIGURED_SUPABASE_KEY || 'unconfigured-publishable-key';
+
+export const isSupabaseConfigured = Boolean(CONFIGURED_SUPABASE_URL && CONFIGURED_SUPABASE_KEY);
 
 const PLACEHOLDER_PATTERNS = [
   /^your-?supabase-?url$/i,
@@ -46,8 +54,8 @@ function warnIfMissingOrPlaceholder(
   }
 }
 
-warnIfMissingOrPlaceholder('VITE_SUPABASE_URL', SUPABASE_URL);
-warnIfMissingOrPlaceholder('VITE_SUPABASE_PUBLISHABLE_KEY', SUPABASE_PUBLISHABLE_KEY);
+warnIfMissingOrPlaceholder('VITE_SUPABASE_URL', CONFIGURED_SUPABASE_URL);
+warnIfMissingOrPlaceholder('VITE_SUPABASE_PUBLISHABLE_KEY', CONFIGURED_SUPABASE_KEY);
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
@@ -66,6 +74,9 @@ const authStorage = isBrowser
     };
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  db: {
+    schema: 'tracker',
+  },
   auth: {
     storage: authStorage,
     persistSession: isBrowser,

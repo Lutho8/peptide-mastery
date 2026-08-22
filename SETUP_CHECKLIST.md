@@ -135,7 +135,7 @@ Typically 1–7 days for the first submission. You'll get an email.
 
 ## Future updates (after first release)
 
-1. Make changes in Lovable → push to GitHub.
+1. Create a branch in GitHub and merge the reviewed pull request.
 2. In GitHub Desktop: **Pull origin**.
 3. Open `android\app\build.gradle`, bump:
    - `versionCode 1` → `versionCode 2`

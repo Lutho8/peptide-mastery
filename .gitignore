@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local environment files — never commit real values.
+# Set these in the Vercel dashboard (Project Settings -> Environment Variables)
+# and in Supabase (Edge Functions -> Secrets) instead.
+.env
+.env.*
+!.env.example

@@ -29,10 +29,16 @@ function namespacedKey(baseKey: string): string {
   return `${baseKey}::${scope}`;
 }
 
+function getLocalStorage(): Storage | null {
+  return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
+    ? window.localStorage
+    : null;
+}
+
 // Generic storage functions (auto-namespaced)
 export function getStoredData<T>(key: string, defaultValue: T): T {
   try {
-    const stored = localStorage.getItem(namespacedKey(key));
+    const stored = getLocalStorage()?.getItem(namespacedKey(key));
     if (stored) {
       return JSON.parse(stored) as T;
     }
@@ -45,7 +51,7 @@ export function getStoredData<T>(key: string, defaultValue: T): T {
 
 export function setStoredData<T>(key: string, data: T): void {
   try {
-    localStorage.setItem(namespacedKey(key), JSON.stringify(data));
+    getLocalStorage()?.setItem(namespacedKey(key), JSON.stringify(data));
   } catch (error) {
     console.error(`Error writing to localStorage (${key}):`, error);
   }
@@ -53,7 +59,7 @@ export function setStoredData<T>(key: string, data: T): void {
 
 export function removeStoredData(key: string): void {
   try {
-    localStorage.removeItem(namespacedKey(key));
+    getLocalStorage()?.removeItem(namespacedKey(key));
   } catch (error) {
     console.error(`Error removing from localStorage (${key}):`, error);
   }
@@ -64,6 +70,8 @@ export function removeStoredData(key: string): void {
 // so the next user starts with a clean slate.
 export function clearAllUserScopedStorage(): void {
   try {
+    const localStorage = getLocalStorage();
+    if (!localStorage) return;
     const baseKeys = Object.values(STORAGE_KEYS);
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
@@ -84,6 +92,8 @@ export function clearAllUserScopedStorage(): void {
 // so leftover data from before per-user namespacing can't leak.
 export function clearLegacyGlobalKeys(): void {
   try {
+    const localStorage = getLocalStorage();
+    if (!localStorage) return;
     const baseKeys = Object.values(STORAGE_KEYS);
     baseKeys.forEach(base => {
       // Only remove the bare key (no "::userId" suffix)
@@ -362,6 +372,8 @@ export function toggleReminderEnabled(reminderId: string): void {
 
 // Initialize storage with defaults if empty (per current user's namespace)
 export function initializeStorage(): void {
+  const localStorage = getLocalStorage();
+  if (!localStorage) return;
   if (localStorage.getItem(namespacedKey(STORAGE_KEYS.BODY_COMPOSITION)) === null) {
     setStoredData(STORAGE_KEYS.BODY_COMPOSITION, defaultBodyComp);
   }
