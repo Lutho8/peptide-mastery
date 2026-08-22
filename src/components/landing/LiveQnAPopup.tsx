@@ -62,10 +62,10 @@ export function LiveQnAPopup() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 80, scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="fixed right-4 md:right-6 z-50 max-w-sm w-[calc(100%-2rem)] md:w-full"
-          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 88px)' }}
+          className="fixed bottom-3 left-3 right-3 z-40 md:bottom-6 md:left-auto md:right-6 md:max-w-sm"
+          style={{ bottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
         >
-          <div className="relative rounded-xl border border-accent/40 bg-card/95 backdrop-blur-md shadow-2xl p-5">
+          <div className="relative rounded-xl border border-accent/40 bg-card/95 backdrop-blur-md shadow-2xl p-4 md:p-5">
             <button
               onClick={dismiss}
               className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
@@ -87,10 +87,10 @@ export function LiveQnAPopup() {
                 </p>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              Live monthly Zoom session with a peptide expert. Get protocol reviews, dosage guidance, and stacking advice — free for registered researchers.
+            <p className="hidden text-sm text-muted-foreground mb-4 sm:block">
+              A monthly educational Zoom session for research questions, product handling, and help using the tracker. Individual medical advice is not provided.
             </p>
-            <div className="flex gap-2">
+            <div className="flex gap-2 pr-8 sm:pr-0">
               <Link to="/live-qna" className="flex-1">
                 <Button
                   size="sm"

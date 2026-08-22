@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { BloodworkStepper, StepDef } from './BloodworkStepper';
 import { ScanProgress } from './ScanProgress';
 import { ScanError } from './ScanError';
-import type { ScanFormState, Goal, Sex } from './ScanForm';
+import type { ScanFormState, Goal, Sex, ReportCountry, ReportLanguage } from './ScanForm';
 import { GOALS } from './ScanForm';
 import type { ScanStage } from '@/hooks/useScanProgress';
 
@@ -292,7 +292,38 @@ function StepUpload({ state, onChange }: { state: ScanFormState; onChange: (s: S
       <div className="mt-5 flex items-start gap-2 text-xs text-muted-foreground">
         <ShieldCheck size={14} className="text-primary mt-0.5 shrink-0" />
         <p>
-          Your file is encrypted in transit and at rest. Used only to generate your protocol — never shared.
+          Your file is encrypted in transit and at rest. Used only for your private educational review — never shared.
+        </p>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-4 rounded-2xl border border-border bg-card p-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="bw-country">Report country</Label>
+          <select
+            id="bw-country"
+            value={state.reportCountry}
+            onChange={(e) => onChange({ ...state, reportCountry: e.target.value as ReportCountry })}
+            className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="ZA">South Africa</option>
+            <option value="DE">Deutschland</option>
+          </select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="bw-language">Feedback language</Label>
+          <select
+            id="bw-language"
+            value={state.languageHint}
+            onChange={(e) => onChange({ ...state, languageHint: e.target.value as ReportLanguage })}
+            className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="auto">Auto-detect / Automatisch</option>
+            <option value="en">English</option>
+            <option value="de">Deutsch</option>
+          </select>
+        </div>
+        <p className="text-[11px] leading-relaxed text-muted-foreground sm:col-span-2">
+          We keep the units and reference ranges printed by your laboratory. Country selection improves context; it never replaces the report's own ranges.
         </p>
       </div>
 
@@ -477,7 +508,7 @@ function StepReview({
         icon={ClipboardCheck}
         eyebrow="Step 4 of 4"
         title="Review & run your scan"
-        subtitle="Confirm your details and pick a scan depth."
+        subtitle="Confirm your details and choose how much detail you want."
       />
 
       {/* Summary card */}
@@ -490,6 +521,8 @@ function StepReview({
             label="Sex"
             value={state.sex === 'male' ? 'Male' : state.sex === 'female' ? 'Female' : 'Not provided'}
           />
+          <SummaryRow label="Country" value={state.reportCountry === 'DE' ? 'Germany' : 'South Africa'} />
+          <SummaryRow label="Feedback" value={state.languageHint === 'de' ? 'Deutsch' : state.languageHint === 'en' ? 'English' : 'Auto-detect'} />
           <SummaryRow label="Peptide history" value={state.peptideHistoryUsed === null ? '—' : state.peptideHistoryUsed ? 'Yes' : 'No'} />
         </dl>
         <div className="mt-3 pt-3 border-t border-border/40">
@@ -514,7 +547,7 @@ function StepReview({
           duration="< 60 seconds"
           biomarkers="Key biomarkers"
           followups="No follow-ups"
-          description="Instant biomarker extraction with personalised health insights and a curated peptide stack."
+          description="A simple extraction of key biomarkers with plain-language educational feedback."
           cta="Run Baseline"
           running={running === 'baseline'}
           disabled={running !== null}
@@ -527,7 +560,7 @@ function StepReview({
           duration="2–3 minutes"
           biomarkers="32 biomarkers · 8 panels"
           followups="4 follow-ups · 12 months"
-          description="Full health report scored by category with a personalised optimisation protocol."
+          description="A more detailed category review with bilingual discussion points for your healthcare professional."
           cta="Run Deep Decode"
           running={running === 'deep'}
           disabled={running !== null}

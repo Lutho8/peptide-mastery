@@ -19,13 +19,13 @@ export function InstallBanner() {
         className="fixed left-4 right-4 z-40 max-w-lg mx-auto"
         style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 88px)' }}
       >
-        <div className="glass-card rounded-2xl p-4 flex items-center gap-3 shadow-xl border border-primary/20">
+        <div className="glass-card rounded-2xl p-3 sm:p-4 flex items-center gap-2 sm:gap-3 shadow-xl border border-primary/20">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
             <Smartphone size={20} className="text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground">Install Peptide South Africa</p>
-            <p className="text-xs text-muted-foreground">Add to home screen for the best experience</p>
+            <p className="hidden text-xs text-muted-foreground sm:block">Add to home screen for the best experience</p>
           </div>
           <Button
             size="sm"

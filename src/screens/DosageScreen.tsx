@@ -16,6 +16,7 @@ import { Switch } from '@/components/ui/switch';
 import { RecommendedDoseDisplay } from '@/components/dosage/RecommendedDoseDisplay';
 import { DosingSchedule } from '@/components/dosage/DosingSchedule';
 import { PeptideSyringeVisual } from '@/components/dosage/PeptideSyringeVisual';
+import { SyringeVisual } from '@/components/dosage/SyringeVisual';
 import { getAvailableRoutes } from '@/data/dosingRoutes';
 import { cn } from '@/lib/utils';
 import { WidgetHint } from '@/components/onboarding/WidgetHint';
@@ -101,7 +102,11 @@ export function DosageScreen() {
   
   const [vialSize, setVialSize] = useState(savedSettings.lastVialSize || '5');
   const [bacWater, setBacWater] = useState(savedSettings.lastBacWater || '2');
-  const [targetDose, setTargetDose] = useState(savedSettings.lastTargetDose || '2');
+  const [targetDose, setTargetDose] = useState(
+    savedSettings.lastTargetDose === '250' && !savedSettings.savedAt
+      ? '0.25'
+      : savedSettings.lastTargetDose || '0.25'
+  );
   const [selectedBlendForCalc, setSelectedBlendForCalc] = useState<string>('');
   const [selectedPeptideForCalc, setSelectedPeptideForCalc] = useState<string>('');
   const [syringeType, setSyringeType] = useState<SyringeType>(savedSettings.syringeType || 'u40');
@@ -414,12 +419,12 @@ export function DosageScreen() {
 
       <WidgetHint
         id="dosage-intro"
-        title="Turn a mg dose into an exact syringe unit count"
-        body="Pick your peptide, vial size, and syringe type — we'll show you the exact units to draw and the recommended schedule for your experience level."
+        title="See a confirmed dose on your syringe"
+        body="Enter the dose from your clinician or protocol, the vial strength, and BAC-water volume. We convert those values into a clear U-40 or U-100 draw line."
         steps={[
           'Select a peptide from the picker below.',
           'Set your vial mg and bacteriostatic water volume.',
-          'Read your units-per-dose on a U-100 or U-40 syringe — and enable reminders.',
+          'Match the highlighted line on your U-40 or U-100 syringe, then independently verify it.',
         ]}
         goalHooks={{
           'fat-loss': 'GLP-1 dosing needs weekly titration — start low, use the beginner schedule.',
@@ -448,13 +453,13 @@ export function DosageScreen() {
       )}
 
       {/* Safety Warning */}
-      <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-3 sm:p-4">
+      <div className="rounded-xl border border-warning/35 bg-warning/10 p-3 sm:p-4">
         <div className="flex items-start gap-2 sm:gap-3">
-          <AlertTriangle size={18} className="text-yellow-500 flex-shrink-0 mt-0.5" />
+          <AlertTriangle size={18} className="text-warning flex-shrink-0 mt-0.5" />
           <div>
-            <h3 className="font-medium text-yellow-400 text-sm sm:text-base">Safety First</h3>
-            <p className="text-xs text-yellow-200/80 mt-1">
-              Always verify calculations independently. Start with the lowest recommended dose.
+            <h3 className="font-medium text-foreground text-sm sm:text-base">Confirm before you draw</h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              This tool converts values you enter; it does not select or prescribe a dose. Verify the vial label, syringe scale, and confirmed dose with a qualified professional.
             </p>
           </div>
         </div>
@@ -630,6 +635,17 @@ export function DosageScreen() {
           <span className="text-muted-foreground"> - {selectedSyringe.description} ({selectedSyringe.unitsPerMl} units = 1ml)</span>
         </div>
 
+        {concentrationMgPerMl > 0 && targetMg > 0 && syringeType !== 'u50' && (
+          <SyringeVisual
+            doseMg={targetMg}
+            mgPerMl={concentrationMgPerMl}
+            syringe={syringeType === 'u40' ? 'U-40' : 'U-100'}
+            presets={[]}
+            concentrationNote="Visual guide only · based on the values entered above · verify against the physical syringe scale"
+            className="mb-4 border-accent/30 bg-secondary/40"
+          />
+        )}
+
         <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-4 border-t border-border/50">
           <div className="text-center p-2 sm:p-3 rounded-lg bg-muted/50">
             <Droplets size={16} className="mx-auto text-primary mb-1" />
@@ -681,7 +697,7 @@ export function DosageScreen() {
                 className={cn(
                   "flex items-start gap-2 p-2.5 rounded-lg text-xs",
                   msg.level === 'error' && "bg-destructive/15 text-destructive border border-destructive/30",
-                  msg.level === 'warn' && "bg-yellow-500/15 text-yellow-300 border border-yellow-500/30",
+                  msg.level === 'warn' && "bg-warning/10 text-foreground border border-warning/35",
                   msg.level === 'info' && "bg-muted/50 text-muted-foreground border border-border"
                 )}
               >

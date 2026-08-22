@@ -28,7 +28,48 @@ const INITIAL_STATE: ScanFormState = {
   goals: [],
   peptideHistoryUsed: null,
   peptideHistoryNotes: '',
+  reportCountry: 'ZA',
+  languageHint: 'auto',
 };
+
+type FunctionEnvelope = {
+  message: string;
+  code: string;
+  retryable: boolean;
+};
+
+function safeStorageName(name: string): string {
+  const extension = name.match(/\.[a-z0-9]{2,5}$/i)?.[0]?.toLowerCase() ?? '';
+  const stem = name
+    .replace(/\.[a-z0-9]{2,5}$/i, '')
+    .normalize('NFKD')
+    .replace(/[^a-z0-9_-]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 72) || 'lab-report';
+  return `${stem}${extension}`;
+}
+
+async function readFunctionError(error: unknown): Promise<FunctionEnvelope> {
+  const fallbackMessage = error instanceof Error ? error.message : 'Could not reach the bloodwork service.';
+  const context = error && typeof error === 'object' && 'context' in error
+    ? (error as { context?: Response }).context
+    : undefined;
+
+  if (context) {
+    try {
+      const body = await context.clone().json() as Partial<FunctionEnvelope>;
+      return {
+        message: body.message || fallbackMessage,
+        code: body.code || `HTTP_${context.status}`,
+        retryable: body.retryable ?? context.status >= 500,
+      };
+    } catch {
+      // Some relays return plain text; the transport fallback below stays actionable.
+    }
+  }
+
+  return { message: fallbackMessage, code: 'TRANSPORT', retryable: true };
+}
 
 function mapScanError(e: unknown): { message: string; code?: string } {
   if (e && typeof e === 'object' && 'code' in (e as any)) {
@@ -153,8 +194,12 @@ export default function BloodworkPage() {
           progress.advance('extract');
           progress.advance('generate');
         } else {
-          const filePath = `${user.id}/${Date.now()}-${form.file!.name}`;
-          const { error: uploadError } = await supabase.storage.from('lab-reports').upload(filePath, form.file!);
+          const filePath = `${user.id}/${crypto.randomUUID()}-${safeStorageName(form.file!.name)}`;
+          const { error: uploadError } = await supabase.storage.from('lab-reports').upload(filePath, form.file!, {
+            cacheControl: '3600',
+            contentType: form.file!.type || undefined,
+            upsert: false,
+          });
           if (uploadError) {
             console.error('[bloodwork] upload failed:', uploadError);
             throw { message: uploadError.message, code: 'STORAGE_DOWNLOAD_FAILED' };
@@ -172,6 +217,7 @@ export default function BloodworkPage() {
             .single();
           if (insertError) {
             console.error('[bloodwork] insert failed:', insertError);
+            await supabase.storage.from('lab-reports').remove([filePath]);
             throw { message: insertError.message, code: 'STORAGE_DOWNLOAD_FAILED' };
           }
           reportId = report.id;
@@ -182,7 +228,7 @@ export default function BloodworkPage() {
           progress.advance('generate');
         }
 
-        // 3-attempt exponential backoff (2s, 4s, 8s) on retryable errors.
+        // Initial attempt plus 2s and 4s backoff on retryable errors.
         const BACKOFFS = [0, 2000, 4000];
         let payload: any = null;
         let lastEnvelope: any = null;
@@ -203,15 +249,19 @@ export default function BloodworkPage() {
               goals: form.goals,
               peptideHistoryUsed: form.peptideHistoryUsed ?? undefined,
               peptideHistoryNotes: form.peptideHistoryNotes || undefined,
+              reportCountry: form.reportCountry,
+              languageHint: form.languageHint === 'auto' ? undefined : form.languageHint,
             },
           });
 
           if (abortRef.current?.signal.aborted) { progress.reset(); return; }
 
           if (fnError) {
-            console.error('[bloodwork] edge fn transport error', { attempt, fnError });
-            lastEnvelope = { ok: false, code: 'TRANSPORT', retryable: true, message: fnError.message };
-            continue;
+            const functionError = await readFunctionError(fnError);
+            console.error('[bloodwork] edge function error', { attempt, functionError, fnError });
+            lastEnvelope = { ok: false, ...functionError };
+            if (functionError.retryable && attempt < BACKOFFS.length - 1) continue;
+            throw functionError;
           }
           if ((data as any)?.ok === false) {
             lastEnvelope = data;
@@ -320,19 +370,19 @@ export default function BloodworkPage() {
   return (
     <div className="min-h-dvh bg-background">
       <SEOHead
-        title="AI Bloodwork Decoding & Peptide Protocols | Peptide South Africa"
-        description="Upload a lab report and get an AI-decoded biomarker breakdown with a personalised peptide stack, supplement plan, and retest schedule. Free baseline scan."
+        title="Bloodwork Guide | Peptide South Africa"
+        description="Upload a South African or German lab report for a bilingual, educational biomarker review that keeps your laboratory's own units and reference ranges."
         canonical="https://peptide-south-africa.co.za/bloodwork"
       />
       <JsonLd data={{
         '@context': 'https://schema.org',
         '@type': 'Service',
-        name: 'AI Bloodwork Decoding',
+        name: 'Bilingual Bloodwork Guide',
         provider: { '@type': 'Organization', name: 'Peptide South Africa', url: 'https://peptide-south-africa.co.za' },
-        serviceType: 'Biomarker analysis and peptide protocol generation',
+        serviceType: 'Educational biomarker review',
         url: 'https://peptide-south-africa.co.za/bloodwork',
-        description: 'AI-powered lab report analysis that decodes 20+ biomarkers and generates a personalised peptide protocol, supplement plan, and retest schedule.',
-        areaServed: 'Worldwide',
+        description: 'Bilingual educational lab-report review for South African and German reports, preserving the laboratory supplied units and reference ranges.',
+        areaServed: ['ZA', 'DE'],
       }} />
 
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border/50">
@@ -343,9 +393,9 @@ export default function BloodworkPage() {
           <div className="flex-1 min-w-0">
             <h1 className="text-base font-bold text-foreground flex items-center gap-2">
               <FlaskConical size={18} className="text-primary" />
-              Bloodwork → Protocol
+              Bloodwork guide
             </h1>
-            <p className="text-[11px] text-muted-foreground">Free · AI biomarker decoding · personalised stack</p>
+            <p className="text-[11px] text-muted-foreground">ZA + DE reports · English + Deutsch · educational feedback</p>
           </div>
         </div>
       </header>
@@ -398,7 +448,12 @@ export default function BloodworkPage() {
                   <ArrowLeft size={14} /> Run another scan
                 </button>
               </div>
-              <BloodworkResults result={result} onDownload={handleDownload} labReportId={labReportId} />
+              <BloodworkResults
+                result={result}
+                onDownload={handleDownload}
+                labReportId={labReportId}
+                preferredLanguage={form.languageHint === 'auto' ? undefined : form.languageHint}
+              />
             </main>
           )}
         </>
