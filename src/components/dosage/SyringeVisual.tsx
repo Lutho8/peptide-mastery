@@ -233,7 +233,7 @@ export function SyringeVisual({
         <div className="flex items-start gap-1.5 rounded-lg border border-destructive/40 bg-destructive/10 p-2 text-[11px] text-destructive">
           <AlertTriangle size={12} className="mt-0.5 flex-shrink-0" />
           <span>
-            Exceeds {capacity} units — split into {Math.ceil(units / capacity)} injections or use a more concentrated vial.
+            This result exceeds the {capacity}-unit scale. Do not estimate or split it in-app; stop and verify the dose, concentration, and syringe with a qualified professional.
           </span>
         </div>
       )}

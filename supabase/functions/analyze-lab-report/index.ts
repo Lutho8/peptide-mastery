@@ -335,6 +335,7 @@ serve(async (req) => {
       fileName,
       mimeType,
       languageHint,
+      reportCountry,
       scanType = "baseline",
       age,
       sex,
@@ -434,11 +435,11 @@ serve(async (req) => {
       }
     }
 
-    const systemPrompt = `You analyze lab reports for Peptide South Africa. Return ONLY valid JSON. Lab reports may be English or German; always output English and German fields. Dosing units must be mg, IU, or units only.
+    const systemPrompt = `You provide an educational lab-report review for Peptide South Africa. Return ONLY valid JSON. Lab reports may be English or German; always output English and German fields. Dosing units must be mg, IU, or units only.
 
 JSON shape: {"summary":"English overview","summary_de":"German overview","report_date":"YYYY-MM-DD or null","detected_language":"en|de","health_score":0-100,"biomarkers":[{"name":"English name","name_de":"German name","short_name":"abbr","value":1.2,"unit":"unit","reference_range":"range","status":"normal|high|low|critical","category":"hormone|liver|kidney|lipid|metabolic|thyroid|inflammation|other","layman_explanation":"English","layman_explanation_de":"German"}],"insights":["English findings"],"insights_de":["German findings"],"protocol":{"stack_summary":"research-only summary","stack":[],"supplements":[],"nutrition":[],"exercise":[],"stress":[],"environment":[],"retest":[]},"recommended_stack_peptides":[]}
 
-Interpret abnormal values conservatively. Include all readable biomarkers. If text extraction already supplied biomarkers, preserve them and improve names/explanations without dropping rows.`;
+Interpret abnormal values conservatively. Do not diagnose, prescribe, or tell the user to change treatment. Keep the laboratory's printed value, unit, and reference range as the source of truth; country context must never replace the supplied range. Peptide content must remain research-only and be framed as a discussion prompt for a qualified healthcare professional. Include all readable biomarkers. If text extraction already supplied biomarkers, preserve them and improve names/explanations without dropping rows.`;
 
     const userText = [
       `Analyze this lab report (${effectiveFileName}).`,
@@ -448,6 +449,7 @@ Interpret abnormal values conservatively. Include all readable biomarkers. If te
       Array.isArray(goals) && goals.length ? `Goals: ${goals.join(", ")}.` : "",
       typeof peptideHistoryUsed === "boolean" ? (peptideHistoryUsed ? `Prior peptide use: yes${peptideHistoryNotes ? ` — ${peptideHistoryNotes}` : ""}.` : "Prior peptide use: no.") : "",
       languageHint === "en" || languageHint === "de" ? `Document language confirmed: ${languageHint === "de" ? "German" : "English"}.` : "",
+      reportCountry === "DE" ? "Report country: Germany." : reportCountry === "ZA" ? "Report country: South Africa." : "",
       extractedText
         ? `Extracted lab text follows. Use it as the source of truth and return structured JSON.\n\n${extractedText.slice(0, 14000)}`
         : "No text extraction was available; read the attached file/image and return structured JSON.",

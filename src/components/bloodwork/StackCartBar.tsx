@@ -38,18 +38,18 @@ export function StackCartBar({ patternIds = [] }: Props) {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-          className="fixed left-1/2 -translate-x-1/2 z-40 w-[min(720px,calc(100vw-2rem))]"
-          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 88px)' }}
+          className="fixed left-1/2 -translate-x-1/2 z-30 w-[min(720px,calc(100vw-1.5rem))]"
+          style={{ bottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
           id="bloodwork-stack-cart"
         >
           <div className="rounded-2xl border border-primary/40 bg-background/95 backdrop-blur-xl shadow-2xl shadow-primary/10 p-3">
-            <div className="flex items-center gap-3">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary shrink-0">
+            <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:gap-3">
+              <div className="hidden h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary shrink-0 sm:inline-flex">
                 <ShoppingBag size={18} />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-bold uppercase tracking-wider text-foreground">
-                  Your stack · {items.length} peptide{items.length === 1 ? '' : 's'}
+                  Research list · {items.length} item{items.length === 1 ? '' : 's'}
                 </p>
                 <div className="mt-1 flex flex-wrap gap-1">
                   {items.slice(0, 4).map((i) => (
@@ -71,16 +71,16 @@ export function StackCartBar({ patternIds = [] }: Props) {
               <button
                 type="button"
                 onClick={clear}
-                className="text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground px-2 shrink-0"
+                className="min-h-11 px-2 text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground shrink-0"
               >
                 Clear
               </button>
               <button
                 type="button"
                 onClick={handleBuy}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold uppercase tracking-wider text-primary-foreground hover:bg-primary/90 transition-colors shrink-0"
               >
-                Buy Stack <ArrowRight size={12} />
+                View products <ArrowRight size={12} />
               </button>
             </div>
           </div>

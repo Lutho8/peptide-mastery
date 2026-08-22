@@ -1,19 +1,18 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Rocket, X, ArrowRight, Syringe, BarChart3, Calendar, BookOpen, Sparkles } from 'lucide-react';
+import { Rocket, X, ArrowRight, Syringe, Calendar, BookOpen, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { resetDashboardTour } from '@/components/onboarding/DashboardTour';
 
 interface WelcomeGuideProps {
-  onDoseTracker: () => void;
-  onBodyStats: () => void;
   onCycles: () => void;
+  onDosage: () => void;
   onResearch?: () => void;
 }
 
 const STORAGE_KEY = 'rtd-welcome-dismissed';
 
-export function WelcomeGuide({ onDoseTracker, onBodyStats, onCycles, onResearch }: WelcomeGuideProps) {
+export function WelcomeGuide({ onCycles, onDosage, onResearch }: WelcomeGuideProps) {
   const [dismissed, setDismissed] = useState(true);
 
   useEffect(() => {
@@ -30,36 +29,28 @@ export function WelcomeGuide({ onDoseTracker, onBodyStats, onCycles, onResearch 
 
   const steps = [
     {
-      icon: Syringe,
-      title: 'Log Your First Dose',
-      description: 'Track peptide doses with reminders',
-      action: onDoseTracker,
-      color: 'text-violet-500',
-      bg: 'bg-violet-500/10',
-    },
-    {
-      icon: BarChart3,
-      title: 'Record Body Stats',
-      description: 'Monitor weight & body composition',
-      action: onBodyStats,
-      color: 'text-emerald-500',
-      bg: 'bg-emerald-500/10',
+      icon: BookOpen,
+      title: 'Learn the basics',
+      description: 'Plain-language research first',
+      action: onResearch || (() => {}),
+      color: 'text-accent',
+      bg: 'bg-accent/10',
     },
     {
       icon: Calendar,
-      title: 'Set Up a Cycle',
-      description: 'Plan your peptide protocol',
+      title: 'Add your confirmed plan',
+      description: 'Track what was agreed with you',
       action: onCycles,
-      color: 'text-rose-500',
-      bg: 'bg-rose-500/10',
+      color: 'text-primary',
+      bg: 'bg-primary/10',
     },
     {
-      icon: BookOpen,
-      title: 'Explore Research',
-      description: 'Browse 98+ peptide profiles',
-      action: onResearch || (() => {}),
-      color: 'text-blue-500',
-      bg: 'bg-blue-500/10',
+      icon: Syringe,
+      title: 'See the syringe draw',
+      description: 'Visual U-40 / U-100 units',
+      action: onDosage,
+      color: 'text-accent',
+      bg: 'bg-secondary',
     },
   ];
 
@@ -87,7 +78,7 @@ export function WelcomeGuide({ onDoseTracker, onBodyStats, onCycles, onResearch 
               <h3 className="font-semibold text-foreground text-sm">Quick Start Guide</h3>
             </div>
             <p className="text-xs text-muted-foreground mb-3">
-              New here? Get started in 4 easy steps:
+              New to peptides? Follow these three steps in order:
             </p>
 
             <Button
@@ -102,7 +93,7 @@ export function WelcomeGuide({ onDoseTracker, onBodyStats, onCycles, onResearch 
               Take the 60-second guided tour
             </Button>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2">
               {steps.map((step, i) => (
                 <button
                   key={i}
@@ -114,7 +105,7 @@ export function WelcomeGuide({ onDoseTracker, onBodyStats, onCycles, onResearch 
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-medium text-foreground leading-tight">{step.title}</p>
-                    <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{step.description}</p>
+                    <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{step.description}</p>
                   </div>
                 </button>
               ))}

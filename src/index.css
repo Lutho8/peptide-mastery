@@ -4,39 +4,39 @@
 
 @layer base {
   :root {
-    /* Elegant White & Sapphire Blue Theme */
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    /* Peptide South Africa BrandKit — clinical, calm and human */
+    --background: 180 22% 96%; /* Ice #F4F8F8 */
+    --foreground: 210 65% 12%; /* Ink #0B1F33 */
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 210 65% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 210 65% 12%;
 
-    /* Sapphire Blue primary */
-    --primary: 217 91% 60%;
+    /* Precision Navy is the primary authority colour */
+    --primary: 210 83% 19%; /* #082B57 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 214 32% 91%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 172 48% 94%; /* Mist #E8F7F5 */
+    --secondary-foreground: 210 83% 19%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 180 22% 96%;
+    --muted-foreground: 208 17% 44%; /* Slate #5D7182 */
 
-    /* Deep sapphire accent */
-    --accent: 224 76% 48%;
-    --accent-foreground: 0 0% 100%;
+    /* Clinical Teal is used for guidance and positive actions */
+    --accent: 177 77% 35%; /* Signal Teal #149F99 */
+    --accent-foreground: 210 87% 11%; /* Navy Deep keeps teal controls accessible */
 
-    --destructive: 0 84% 60%;
+    --destructive: 354 85% 54%; /* Alert Red #EE2438 */
     --destructive-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 222 47% 11%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 217 91% 60%;
+    --border: 182 20% 88%; /* Line #DBE6E7 */
+    --input: 182 20% 88%;
+    --ring: 177 77% 35%;
 
     --radius: 0.75rem;
 
@@ -54,10 +54,10 @@
     --sa-red: 4 78% 56%;       /* #E53935 */
     --sa-navy: 222 64% 15%;    /* #0F1B3D — credible heading tone */
 
-    /* Elegant gradient definitions */
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(210 40% 98%) 100%);
-    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(224 76% 48%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(224 76% 48%) 0%, hsl(230 85% 40%) 100%);
+    /* Brand gradients stay restrained and functional */
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(180 22% 96%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(210 83% 19%) 0%, hsl(177 77% 35%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(175 51% 56%) 0%, hsl(177 77% 35%) 100%);
     --gradient-immune: linear-gradient(135deg, hsl(243 70% 65%) 0%, hsl(250 75% 55%) 100%);
     --gradient-longevity: linear-gradient(135deg, hsl(160 75% 45%) 0%, hsl(155 80% 35%) 100%);
     --gradient-cognitive: linear-gradient(135deg, hsl(200 80% 55%) 0%, hsl(210 85% 45%) 100%);
@@ -67,44 +67,44 @@
 
     /* Premium glass effects - light mode */
     --glass-bg: hsla(0, 0%, 100%, 0.9);
-    --glass-border: hsla(217, 91%, 60%, 0.15);
-    --glass-glow: hsla(217, 91%, 60%, 0.08);
+    --glass-border: hsla(182, 20%, 60%, 0.22);
+    --glass-glow: hsla(177, 77%, 35%, 0.08);
 
-    /* Sapphire accent for premium elements */
-    --sapphire: 217 91% 60%;
-    --sapphire-glow: hsla(217, 91%, 60%, 0.25);
+    /* Compatibility aliases for existing premium elements */
+    --sapphire: 177 77% 35%;
+    --sapphire-glow: hsla(177, 77%, 35%, 0.22);
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 217 91% 60%;
+    --sidebar-foreground: 210 65% 12%;
+    --sidebar-primary: 210 83% 19%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-accent: 172 48% 94%;
+    --sidebar-accent-foreground: 210 65% 12%;
+    --sidebar-border: 182 20% 88%;
+    --sidebar-ring: 177 77% 35%;
   }
 
   .dark {
-    /* Dark mode - Deep sapphire */
-    --background: 222 47% 8%;
+    /* Dark mode — Navy Deep with accessible teal guidance */
+    --background: 210 87% 11%;
     --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
+    --card: 210 65% 12%;
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
+    --popover: 210 65% 12%;
     --popover-foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 175 51% 56%;
+    --primary-foreground: 210 87% 11%;
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
-    --accent: 224 76% 48%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 175 51% 56%;
+    --accent-foreground: 210 87% 11%;
     --destructive: 0 62% 55%;
     --destructive-foreground: 0 0% 100%;
     --border: 217 33% 17%;
     --input: 217 33% 17%;
-    --ring: 217 91% 60%;
+    --ring: 175 51% 56%;
   }
 }
 
@@ -116,6 +116,14 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', 'Inter-fallback', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
   }
 }
 

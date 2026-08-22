@@ -30,6 +30,7 @@ interface HomeScreenProps {
   onOpenInventory: () => void;
   onNavigatePeptides: () => void;
   onNavigateStack: () => void;
+  onNavigateDosage: () => void;
   onOpenSettings: () => void;
   onNavigateResearch?: () => void;
 }
@@ -66,6 +67,7 @@ export function HomeScreen({
   onOpenInventory,
   onNavigatePeptides,
   onNavigateStack,
+  onNavigateDosage,
   onOpenSettings,
   onNavigateResearch
 }: HomeScreenProps) {
@@ -127,9 +129,8 @@ export function HomeScreen({
       {/* Beginner Welcome Guide */}
       <motion.div variants={itemVariants}>
         <WelcomeGuide
-          onDoseTracker={onOpenDoseTracker}
-          onBodyStats={onOpenBodyComposition}
           onCycles={onOpenCycles}
+          onDosage={onNavigateDosage}
           onResearch={onNavigateResearch}
         />
       </motion.div>

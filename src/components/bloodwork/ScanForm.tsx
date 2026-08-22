@@ -17,6 +17,8 @@ export const GOALS = [
 
 export type Goal = typeof GOALS[number];
 export type Sex = 'male' | 'female' | 'na';
+export type ReportCountry = 'ZA' | 'DE';
+export type ReportLanguage = 'auto' | 'en' | 'de';
 
 export interface ScanFormState {
   file: File | null;
@@ -25,6 +27,8 @@ export interface ScanFormState {
   goals: Goal[];
   peptideHistoryUsed: boolean | null;
   peptideHistoryNotes: string;
+  reportCountry: ReportCountry;
+  languageHint: ReportLanguage;
 }
 
 interface Props {

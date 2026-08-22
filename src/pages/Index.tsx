@@ -14,15 +14,8 @@ import { useScreenTransition } from '@/hooks/useScreenTransition';
 import { HomeSkeleton, ListSkeleton, CardSkeleton } from '@/components/ui/ScreenSkeleton';
 import { InstallBanner } from '@/components/pwa/InstallBanner';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { Settings, User, LogOut, Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
 // Lazy load screens for code splitting
 const HomeScreen = lazy(() => import('@/screens/HomeScreen').then(m => ({ default: m.HomeScreen })));
@@ -242,6 +235,7 @@ const Index = () => {
               onOpenInventory={() => setInventoryOpen(true)}
               onNavigatePeptides={() => setActiveTab('daily-log')}
               onNavigateStack={() => setActiveTab('stack')}
+              onNavigateDosage={() => setActiveTab('dosage')}
               onOpenSettings={() => setShowSettings(true)}
               onNavigateResearch={() => setShowResearch(true)}
             />
@@ -277,22 +271,21 @@ const Index = () => {
   if (showLandingPage) {
     return (
       <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
-        <div className="relative">
-          <LandingPage />
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+        <div className="relative bg-background">
+          <div
+            className="sticky top-0 z-[70] flex items-center border-b border-border bg-background/95 px-3 py-2 backdrop-blur-xl"
+            style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0px))' }}
           >
             <Button
               onClick={handleBackToDashboard}
-              className="gap-2 bg-primary text-primary-foreground shadow-lg hover:shadow-xl px-6 py-3 rounded-full touch-target"
-              size="lg"
+              variant="outline"
+              className="min-h-11 gap-2 rounded-xl bg-card text-primary shadow-sm"
             >
               <ArrowLeft size={18} />
-              Back to Dashboard
+              Return to tracker
             </Button>
-          </motion.div>
+          </div>
+          <LandingPage />
         </div>
       </Suspense>
     );
@@ -301,39 +294,18 @@ const Index = () => {
   // Main dashboard
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader onLogoClick={handleLogoClick} />
+      <AppHeader
+        onLogoClick={handleLogoClick}
+        onSettingsClick={() => setShowSettings(true)}
+        onSignOut={() => signOut()}
+        userName={user.user_metadata?.display_name || 'User'}
+        userEmail={user.email}
+      />
 
-      {/* User Auth Button */}
-      <div className="fixed top-4 right-16 z-50" data-tour="profile-avatar">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="rounded-full bg-card border-border touch-target">
-              <User size={18} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <div className="px-2 py-1.5">
-              <p className="text-sm font-medium truncate">{user.user_metadata?.display_name || 'User'}</p>
-              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-            </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut()} className="text-destructive touch-target">
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {/* Settings Button */}
-      <button
-        onClick={() => setShowSettings(!showSettings)}
-        className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary transition-colors touch-target"
+      <main
+        className="max-w-lg mx-auto px-4 py-6 pb-28 scroll-smooth-touch"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 5.5rem)' }}
       >
-        <Settings size={20} />
-      </button>
-
-      <main className="max-w-lg mx-auto px-4 py-6 pt-20 pb-28 scroll-smooth-touch">
         <AnimatePresence mode="wait">
           <motion.div
             key={screenKey}

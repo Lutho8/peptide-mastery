@@ -298,10 +298,10 @@ export interface CalculatorSettings {
 
 const defaultCalculatorSettings: CalculatorSettings = {
   syringeType: 'u40',
-  experienceLevel: 'intermediate',
+  experienceLevel: 'beginner',
   lastVialSize: '5',
   lastBacWater: '2',
-  lastTargetDose: '250',
+  lastTargetDose: '0.25',
   lastSelectedPeptide: '',
   savedAt: '',
 };

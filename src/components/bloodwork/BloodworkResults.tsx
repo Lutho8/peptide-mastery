@@ -7,7 +7,6 @@ import { SystemDashboard } from './SystemDashboard';
 import { PatternDetection } from './PatternDetection';
 import { StackCartProvider } from './StackCartContext';
 import { StackCartBar } from './StackCartBar';
-import { BloodworkOnboarding } from './BloodworkOnboarding';
 import { WhyRTDStrip } from './WhyRTDStrip';
 import { summarizeSystems } from '@/lib/bloodwork/systems';
 import { detectPatterns } from '@/lib/bloodwork/patterns';
@@ -49,8 +48,8 @@ const CATEGORY_LABELS: Record<Lang, Record<string, string>> = {
 };
 
 const UI = {
-  en: { title: 'Your Bloodwork Results', analysed: (n: number, g: number) => `${n} biomarkers analysed · ${g} goals`, shopStack: 'Shop my stack', download: 'Download PDF', biomarkerPanel: 'Biomarker panel', insights: 'Insights', searchPlaceholder: 'Search biomarkers… (press / to focus)', shown: (a: number, b: number) => `${a}/${b} shown`, all: 'All', normal: 'Normal', low: 'Low', high: 'High', critical: 'Critical', noMatch: 'No biomarkers match this filter.', reset: 'Reset filters', clear: 'Clear filters', ref: 'Ref', langLabel: 'Language' },
-  de: { title: 'Ihre Blutwert-Ergebnisse', analysed: (n: number, g: number) => `${n} Biomarker analysiert · ${g} Ziele`, shopStack: 'Mein Stack kaufen', download: 'PDF laden', biomarkerPanel: 'Biomarker-Panel', insights: 'Erkenntnisse', searchPlaceholder: 'Biomarker suchen… (drücken Sie /)', shown: (a: number, b: number) => `${a}/${b} sichtbar`, all: 'Alle', normal: 'Normal', low: 'Niedrig', high: 'Hoch', critical: 'Kritisch', noMatch: 'Keine Biomarker entsprechen diesem Filter.', reset: 'Filter zurücksetzen', clear: 'Filter löschen', ref: 'Ref', langLabel: 'Sprache' },
+  en: { title: 'Your Bloodwork Results', analysed: (n: number, g: number) => `${n} biomarkers analysed · ${g} goals`, shopStack: 'View research options', download: 'Download PDF', biomarkerPanel: 'Biomarker panel', insights: 'Insights', searchPlaceholder: 'Search biomarkers… (press / to focus)', shown: (a: number, b: number) => `${a}/${b} shown`, all: 'All', normal: 'Normal', low: 'Low', high: 'High', critical: 'Critical', noMatch: 'No biomarkers match this filter.', reset: 'Reset filters', clear: 'Clear filters', ref: 'Ref', langLabel: 'Language', optional: 'Optional research discussion and next steps' },
+  de: { title: 'Ihre Blutwert-Ergebnisse', analysed: (n: number, g: number) => `${n} Biomarker analysiert · ${g} Ziele`, shopStack: 'Forschungsoptionen', download: 'PDF laden', biomarkerPanel: 'Biomarker-Panel', insights: 'Erkenntnisse', searchPlaceholder: 'Biomarker suchen… (drücken Sie /)', shown: (a: number, b: number) => `${a}/${b} sichtbar`, all: 'Alle', normal: 'Normal', low: 'Niedrig', high: 'Hoch', critical: 'Kritisch', noMatch: 'Keine Biomarker entsprechen diesem Filter.', reset: 'Filter zurücksetzen', clear: 'Filter löschen', ref: 'Ref', langLabel: 'Sprache', optional: 'Optionale Forschungsfragen und nächste Schritte' },
 } as const;
 
 type StatusFilter = 'all' | 'normal' | 'high' | 'low' | 'critical';
@@ -59,6 +58,7 @@ interface Props {
   result: BloodworkScanResult;
   onDownload: () => void;
   labReportId: string | null;
+  preferredLanguage?: Lang;
 }
 
 
@@ -77,17 +77,17 @@ export function BloodworkResults(props: Props) {
       <BloodworkResultsInner {...props} />
       <WhyRTDStrip />
       <StackCartBar patternIds={patternsTop.map((p) => p.id)} />
-      <BloodworkOnboarding />
     </StackCartProvider>
   );
 }
 
-function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
+function BloodworkResultsInner({ result, onDownload, labReportId, preferredLanguage }: Props) {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [lang, setLang] = useState<Lang>(() => {
-    if (typeof window === 'undefined') return (result.detected_language ?? 'en') as Lang;
+    if (typeof window === 'undefined') return preferredLanguage ?? (result.detected_language ?? 'en') as Lang;
+    if (preferredLanguage) return preferredLanguage;
     const saved = window.localStorage.getItem(LANG_KEY);
     if (saved === 'en' || saved === 'de') return saved;
     return (result.detected_language ?? 'en') as Lang;
@@ -216,19 +216,21 @@ function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
 
 
       {/* SYSTEM DASHBOARD */}
-      <SystemDashboard
-        systems={summarizeSystems(result.biomarkers)}
-        onSelect={(cats) => {
-          setStatusFilter('all');
-          setSearch('');
-          const first = cats[0];
-          const el = document.querySelector(`[data-bm-category="${first}"]`);
-          el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }}
-      />
-
-      {/* PATTERN DETECTION */}
-      <PatternDetection patterns={detectPatterns(result.biomarkers)} />
+      {result.scan_type === 'deep' && (
+        <>
+          <SystemDashboard
+            systems={summarizeSystems(result.biomarkers)}
+            onSelect={(cats) => {
+              setStatusFilter('all');
+              setSearch('');
+              const first = cats[0];
+              const el = document.querySelector(`[data-bm-category="${first}"]`);
+              el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+          />
+          <PatternDetection patterns={detectPatterns(result.biomarkers)} />
+        </>
+      )}
 
       {/* BIOMARKER PANEL */}
       <section>
@@ -351,7 +353,17 @@ function BloodworkResultsInner({ result, onDownload, labReportId }: Props) {
 
 
       {/* PROTOCOL */}
-      <ProtocolSections protocol={result.protocol} goals={result.goals} labReportId={labReportId} />
+      <details className="group rounded-2xl border border-border bg-card/50 p-4">
+        <summary className="min-h-11 cursor-pointer list-none py-2 text-sm font-semibold text-foreground marker:hidden">
+          <span className="inline-flex items-center gap-2">
+            <span className="text-accent transition-transform group-open:rotate-90">›</span>
+            {t.optional}
+          </span>
+        </summary>
+        <div className="mt-5 border-t border-border pt-5">
+          <ProtocolSections protocol={result.protocol} goals={result.goals} labReportId={labReportId} />
+        </div>
+      </details>
     </div>
   );
 }

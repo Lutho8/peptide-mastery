@@ -93,11 +93,11 @@ export function ProfileSetupWizard({ open, onOpenChange, onComplete }: ProfileSe
   }, [open, user]);
 
   const steps = [
-    { title: 'Welcome', subtitle: "Let's personalize your protocol" },
+    { title: 'Welcome', subtitle: "Let's make the tracker easier to use" },
     { title: 'About You', subtitle: 'Tell us a bit about yourself' },
-    { title: 'Body Stats', subtitle: 'Used for dosing & body composition' },
-    { title: 'Experience', subtitle: 'Helps us tailor recommendations' },
-    { title: 'Your Goals', subtitle: 'Pick up to 5 — drives suggestions' },
+    { title: 'Body Stats', subtitle: 'Used for progress and body composition' },
+    { title: 'Experience', subtitle: 'Changes how much guidance we show' },
+    { title: 'Your Goals', subtitle: 'Pick up to 5 — organises your dashboard' },
   ];
 
   const progress = ((step + 1) / steps.length) * 100;
@@ -191,7 +191,7 @@ export function ProfileSetupWizard({ open, onOpenChange, onComplete }: ProfileSe
     toast({
       title: '🎉 Profile ready',
       description: synced
-        ? 'Saved to the cloud — your stack and dosing are tuned to you.'
+        ? 'Saved to the cloud — your tracker is ready.'
         : 'Saved locally. Cloud sync will retry next time you open the app.',
     });
     onComplete?.();
@@ -254,14 +254,14 @@ export function ProfileSetupWizard({ open, onOpenChange, onComplete }: ProfileSe
                   <div className="space-y-1">
                     <h3 className="text-xl font-semibold text-foreground">Welcome to Peptide South Africa</h3>
                     <p className="text-sm text-muted-foreground px-4">
-                      Spend 60 seconds setting up your profile so your stack, dosing tools, and AI insights are tuned to <span className="text-foreground font-medium">you</span>.
+                      Spend 60 seconds setting up your profile so the tracker can show the right level of guidance and progress views for <span className="text-foreground font-medium">you</span>.
                     </p>
                   </div>
                   <div className="grid grid-cols-3 gap-2 pt-2">
                     {[
-                      { icon: Target, label: 'Tailored stacks' },
-                      { icon: Sparkles, label: 'Smart insights' },
-                      { icon: Shield, label: 'Safer dosing' },
+                      { icon: Target, label: 'Clear goals' },
+                      { icon: Sparkles, label: 'Simpler guidance' },
+                      { icon: Shield, label: 'Private tracking' },
                     ].map((b, i) => (
                       <div key={i} className="rounded-lg border border-border bg-card p-2 text-center">
                         <b.icon size={16} className="text-primary mx-auto mb-1" />
@@ -349,7 +349,7 @@ export function ProfileSetupWizard({ open, onOpenChange, onComplete }: ProfileSe
                     </div>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-relaxed bg-muted/40 p-2.5 rounded-lg">
-                    Stored locally on your device. Used for BMI, dosage suggestions, and body composition tracking.
+                    Stored locally on your device. Used for BMI and body-composition progress tracking—not to choose a dose.
                   </p>
                 </div>
               )}
