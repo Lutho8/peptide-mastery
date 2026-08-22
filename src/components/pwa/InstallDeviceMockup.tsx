@@ -10,7 +10,7 @@ function TrackerPreview() {
   return (
     <div className="space-y-3 px-4 pt-5">
       <div className="flex items-center gap-2">
-        <img src="/icon-192.png?v=psa4" alt="" className="h-8 w-8 rounded-[10px]" />
+        <img src="/icon-192.png?v=psa5" alt="" className="h-8 w-8 rounded-[10px]" />
         <div>
           <p className="text-[11px] font-bold leading-tight text-[#0B1F33]">PEPTIDE</p>
           <p className="text-[8px] font-semibold tracking-[0.16em] text-[#149F99]">SOUTH AFRICA</p>
@@ -94,7 +94,7 @@ export function InstallDeviceMockup({ device }: Props) {
           ) : (
             <div className="absolute inset-x-4 bottom-5 rounded-2xl border border-[#DBE6E7] bg-white p-4 shadow-2xl">
               <div className="flex items-center gap-3">
-                <img src="/icon-192.png?v=psa4" alt="" className="h-10 w-10 rounded-xl" />
+                <img src="/icon-192.png?v=psa5" alt="" className="h-10 w-10 rounded-xl" />
                 <div className="flex-1">
                   <p className="text-[11px] font-semibold text-[#0B1F33]">Install Peptide SA?</p>
                   <p className="text-[8px] text-[#5D7182]">peptide-south-africa.co.za</p>
