@@ -40,7 +40,7 @@ const actions = [
     id: 'peptides', 
     icon: Database, 
     label: 'Peptides',
-    hint: 'Browse 98+',
+    hint: 'Full catalog',
     gradient: 'from-cyan-600 to-teal-700',
     onClick: 'onPeptides'
   },
@@ -90,7 +90,7 @@ export function QuickActions({
   };
 
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
       {actions.map((action) => {
         const Icon = action.icon;
         return (
@@ -98,7 +98,7 @@ export function QuickActions({
             key={action.id}
             onClick={handlers[action.onClick]}
             className={cn(
-              "flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br text-white",
+              "min-h-[7.25rem] flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-gradient-to-br text-white sm:p-4",
               "hover:scale-[1.02] hover:shadow-lg transition-all duration-200",
               action.gradient
             )}

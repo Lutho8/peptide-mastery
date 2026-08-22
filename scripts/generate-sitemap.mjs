@@ -7,7 +7,6 @@ const BASE_URL = 'https://peptide-south-africa.co.za';
 const staticEntries = [
   { path: '/', changefreq: 'weekly', priority: '1.0' },
   { path: '/install', changefreq: 'monthly', priority: '0.8' },
-  { path: '/free-course', changefreq: 'monthly', priority: '0.8' },
   { path: '/live-qna', changefreq: 'monthly', priority: '0.6' },
   { path: '/coa-verification', changefreq: 'monthly', priority: '0.5' },
   { path: '/bloodwork', changefreq: 'monthly', priority: '0.8' },

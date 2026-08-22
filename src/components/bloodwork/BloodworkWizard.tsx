@@ -417,7 +417,7 @@ function StepGoals({ state, onChange }: { state: ScanFormState; onChange: (s: Sc
         icon={Target}
         eyebrow="Step 3 of 4"
         title="What are you optimizing for?"
-        subtitle={`Pick up to ${MAX_GOALS} goals. Your protocol focuses on these.`}
+        subtitle={`Pick up to ${MAX_GOALS} goals as context. They do not generate a diagnosis or treatment plan.`}
       />
 
       <div className="mt-2 mb-5 flex items-center justify-between">
@@ -482,7 +482,7 @@ function StepGoals({ state, onChange }: { state: ScanFormState; onChange: (s: Sc
           <Textarea
             value={state.peptideHistoryNotes}
             onChange={(e) => onChange({ ...state, peptideHistoryNotes: e.target.value })}
-            placeholder="Which peptides, doses, and how long? e.g. Retatrutide 4mg/wk for 2 months, BPC-157 250mcg/day for 6 weeks."
+            placeholder="List any products already used, exactly as recorded in your existing prescription or research notes. Do not use this field to design a new protocol."
             className="mt-3 min-h-[100px] bg-card/40"
             maxLength={1000}
           />
@@ -502,6 +502,7 @@ function StepReview({
   running: 'baseline' | 'deep' | null;
   onRun: (t: 'baseline' | 'deep') => void;
 }) {
+  const [aiProcessingConsent, setAiProcessingConsent] = useState(false);
   return (
     <div>
       <StepHeader
@@ -539,6 +540,18 @@ function StepReview({
         </div>
       </div>
 
+      <label className="mt-5 flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-border bg-card/50 p-4 text-xs leading-relaxed text-muted-foreground">
+        <input
+          type="checkbox"
+          checked={aiProcessingConsent}
+          onChange={(event) => setAiProcessingConsent(event.target.checked)}
+          className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+        />
+        <span>
+          I consent to this lab-report file and the context entered above being sent securely to <strong className="text-foreground">OpenRouter</strong>, the third-party AI processing provider used for document extraction. I understand the output may contain errors and is not medical advice.
+        </span>
+      </label>
+
       {/* Tier cards */}
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <TierCard
@@ -546,11 +559,11 @@ function StepReview({
           icon={Sparkles}
           duration="< 60 seconds"
           biomarkers="Key biomarkers"
-          followups="No follow-ups"
+          followups="No automated treatment"
           description="A simple extraction of key biomarkers with plain-language educational feedback."
           cta="Run Baseline"
           running={running === 'baseline'}
-          disabled={running !== null}
+          disabled={running !== null || !aiProcessingConsent}
           onClick={() => onRun('baseline')}
           accent="muted"
         />
@@ -559,11 +572,11 @@ function StepReview({
           icon={Layers}
           duration="2–3 minutes"
           biomarkers="32 biomarkers · 8 panels"
-          followups="4 follow-ups · 12 months"
+          followups="No automated treatment"
           description="A more detailed category review with bilingual discussion points for your healthcare professional."
           cta="Run Deep Decode"
           running={running === 'deep'}
-          disabled={running !== null}
+          disabled={running !== null || !aiProcessingConsent}
           onClick={() => onRun('deep')}
           accent="primary"
           recommended
@@ -571,7 +584,7 @@ function StepReview({
       </div>
 
       <p className="mt-6 text-[11px] text-muted-foreground italic text-center">
-        For informational purposes only — not medical advice.
+        Consent is required before AI processing. For informational purposes only — not medical advice.
       </p>
     </div>
   );

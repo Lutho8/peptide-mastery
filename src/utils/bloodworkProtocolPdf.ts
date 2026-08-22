@@ -6,7 +6,7 @@ const PAGE_W = 210;
 const PAGE_H = 297;
 const CONTENT_W = PAGE_W - MARGIN * 2;
 
-export function exportBloodworkProtocolPDF(result: BloodworkScanResult, filename = 'bloodwork-protocol.pdf') {
+export function exportBloodworkProtocolPDF(result: BloodworkScanResult, filename = 'bloodwork-report.pdf') {
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   let y = MARGIN;
 
@@ -20,15 +20,13 @@ export function exportBloodworkProtocolPDF(result: BloodworkScanResult, filename
   // Title
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(20);
-  pdf.text('Peptide South Africa — Bloodwork Protocol', MARGIN, y);
+  pdf.text('Peptide South Africa — Bloodwork Report', MARGIN, y);
   y += 8;
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(10);
   pdf.setTextColor(120);
   pdf.text(
-    `${result.scan_type === 'deep' ? 'Deep Decode' : 'Baseline Scan'} · ${result.biomarkers.length} biomarkers · Health score: ${
-      result.health_score ?? 'n/a'
-    }/100`,
+    `${result.scan_type === 'deep' ? 'Deep Decode' : 'Baseline Scan'} · ${result.biomarkers.length} extracted biomarkers`,
     MARGIN,
     y
   );
@@ -38,7 +36,7 @@ export function exportBloodworkProtocolPDF(result: BloodworkScanResult, filename
   pdf.setTextColor(0);
 
   // Biomarkers
-  section(pdf, '02 — Biomarker Panel', () => y, (next) => (y = next));
+  section(pdf, '01 — Biomarker Panel', () => y, (next) => (y = next));
   for (const bm of result.biomarkers) {
     ensure(7);
     pdf.setFont('helvetica', 'bold');
@@ -57,7 +55,7 @@ export function exportBloodworkProtocolPDF(result: BloodworkScanResult, filename
 
   // Insights
   if (result.insights.length) {
-    section(pdf, '03 — Insights', () => y, (next) => (y = next));
+    section(pdf, '02 — Educational observations', () => y, (next) => (y = next));
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
     result.insights.forEach((line, i) => {
@@ -66,55 +64,6 @@ export function exportBloodworkProtocolPDF(result: BloodworkScanResult, filename
       ensure(wrapped.length * 5);
       pdf.text(wrapped, MARGIN, y);
       y += wrapped.length * 5 + 1;
-    });
-  }
-
-  const p = result.protocol;
-
-  if (p.stack?.length) {
-    section(pdf, '04 — Peptide Stack', () => y, (next) => (y = next));
-    if (p.stack_summary) wrap(pdf, p.stack_summary, () => y, (n) => (y = n));
-    p.stack.forEach((peptide, i) => {
-      ensure(20);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(`${i + 1}. ${peptide.name} (${peptide.priority.toUpperCase()})`, MARGIN, y);
-      y += 5;
-      pdf.setFont('helvetica', 'normal');
-      wrap(pdf, peptide.rationale, () => y, (n) => (y = n));
-      wrap(pdf, `Dosing: ${peptide.dosing}`, () => y, (n) => (y = n));
-      y += 1;
-    });
-    wrap(
-      pdf,
-      'Buy this stack: https://peptide-south-africa.com/shop',
-      () => y,
-      (n) => (y = n)
-    );
-  }
-
-  numberedSection(pdf, '05 — Supplements', p.supplements?.map((s) => ({
-    title: `${s.name}${s.dose ? ` — ${s.dose}` : ''}`,
-    body: [s.what_it_is, s.why_it_matters, s.how_to_take].filter(Boolean).join(' '),
-  })), () => y, (n) => (y = n));
-
-  numberedSection(pdf, '06 — Nutrition', p.nutrition?.map((n) => ({
-    title: n.title,
-    body: [n.what_it_looks_like, n.why_adopt, n.examples].filter(Boolean).join(' '),
-  })), () => y, (n) => (y = n));
-
-  numberedSection(pdf, '07 — Exercise', p.exercise, () => y, (n) => (y = n));
-  numberedSection(pdf, '08 — Stress', p.stress, () => y, (n) => (y = n));
-  numberedSection(pdf, '09 — Environment', p.environment, () => y, (n) => (y = n));
-
-  if (p.retest?.length) {
-    section(pdf, '10 — Diagnostics: Retest', () => y, (next) => (y = next));
-    p.retest.forEach((r, i) => {
-      ensure(10);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(`${i + 1}. ${r.marker}${r.when ? ` — ${r.when}` : ''}`, MARGIN, y);
-      y += 5;
-      pdf.setFont('helvetica', 'normal');
-      if (r.why) wrap(pdf, r.why, () => y, (n) => (y = n));
     });
   }
 
@@ -129,7 +78,14 @@ export function exportBloodworkProtocolPDF(result: BloodworkScanResult, filename
   pdf.setFontSize(10);
   wrap(
     pdf,
-    'This analysis is for educational and informational purposes only. It does not constitute medical advice. Consult a qualified healthcare provider before making any changes to your health regimen, including peptide protocols, supplements, or diagnostic testing.',
+    'Medical disclaimer: This extraction is for educational and informational purposes only and may contain OCR or classification errors. It is not medical advice, diagnosis, treatment, a prescription, or a dosing guide. Your original laboratory report and its printed reference ranges remain the source of truth. Consult a qualified healthcare professional for interpretation and all treatment decisions.',
+    () => y,
+    (n) => (y = n)
+  );
+  y += 5;
+  wrap(
+    pdf,
+    'Legal notice: This report is information only and does not guarantee accuracy, suitability, approval, legality, efficacy, compatibility, or safety. Do not start, stop, buy, or combine peptides, medicines, supplements, or diagnostic testing based on this report.',
     () => y,
     (n) => (y = n)
   );
@@ -165,29 +121,4 @@ function wrap(pdf: jsPDF, text: string, getY: () => number, setY: (n: number) =>
   pdf.text(lines, MARGIN, y);
   y += lines.length * 5 + 1;
   setY(y);
-}
-
-function numberedSection(
-  pdf: jsPDF,
-  title: string,
-  items: { title: string; body?: string }[] | undefined,
-  getY: () => number,
-  setY: (n: number) => void
-) {
-  if (!items?.length) return;
-  section(pdf, title, getY, setY);
-  items.forEach((item, i) => {
-    let y = getY();
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(10);
-    if (y + 6 > PAGE_H - MARGIN) {
-      pdf.addPage();
-      y = MARGIN;
-    }
-    pdf.text(`${i + 1}. ${item.title}`, MARGIN, y);
-    y += 5;
-    setY(y);
-    pdf.setFont('helvetica', 'normal');
-    if (item.body) wrap(pdf, item.body, getY, setY);
-  });
 }

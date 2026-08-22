@@ -7,7 +7,7 @@
 // and still hydrates via the normal lazy-loaded App.
 import { renderToString } from "react-dom/server";
 import { StaticRouter } from "react-router-dom/server";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider, type HelmetServerState } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,7 +18,6 @@ import Index from "./pages/Index";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Disclaimer from "./pages/Disclaimer";
 import TermsOfService from "./pages/TermsOfService";
-import FreeCourse from "./pages/FreeCourse";
 import COAVerification from "./pages/COAVerification";
 import LiveQnA from "./pages/LiveQnA";
 import PeptideEntityPage from "./pages/PeptideEntityPage";
@@ -61,7 +60,7 @@ export function render(url: string): RenderResult {
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/disclaimer" element={<Disclaimer />} />
                 <Route path="/terms" element={<TermsOfService />} />
-                <Route path="/free-course" element={<FreeCourse />} />
+                <Route path="/free-course" element={<Navigate to="/" replace />} />
                 <Route path="/coa-verification" element={<COAVerification />} />
                 <Route path="/live-qna" element={<LiveQnA />} />
                 <Route path="/peptides/:slug" element={<PeptideEntityPage />} />

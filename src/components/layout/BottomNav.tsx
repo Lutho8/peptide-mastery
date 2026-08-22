@@ -21,7 +21,7 @@ const tabs = [
 export function BottomNav({ activeTab, onTabChange, pendingReminders = 0 }: BottomNavProps) {
   return (
     <nav data-tour="bottom-nav" className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-lg no-select" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-      <div className="grid grid-cols-5 items-center py-1.5 px-1 max-w-lg mx-auto">
+      <div className="grid grid-cols-5 items-center py-1.5 px-1 w-full max-w-2xl mx-auto">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;

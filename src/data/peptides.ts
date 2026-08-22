@@ -165,16 +165,16 @@ export const corePeptides: Peptide[] = [
     bioavailability: 'High (subcutaneous)',
     storageRequirements: 'Store at 2-8°C, protect from light, stable 24 months lyophilized',
     legalStatus: {
-      usa: 'approved',
-      eu: 'Approved for medical use (Zadaxin)',
-      australia: 'Schedule 4 (prescription)'
+      usa: 'research-only',
+      eu: 'Authorization varies by country; verify current national status',
+      australia: 'Not approved by the TGA for routine therapeutic use'
     },
-    clinicalStatus: 'approved',
-    fdaApproved: true,
-    fdaApprovalYear: 1998,
+    clinicalStatus: 'phase3',
+    fdaApproved: false,
     warnings: [
       'Monitor for signs of autoimmune activation',
-      'Use with caution in immunocompromised patients'
+      'Use with caution in immunocompromised patients',
+      'A 2025 phase 3 sepsis trial found no 28-day mortality benefit; evidence is indication-specific'
     ],
     notableStudies: [
       {
@@ -438,15 +438,16 @@ export const corePeptides: Peptide[] = [
     bioavailability: 'High (subcutaneous)',
     storageRequirements: 'Store at -20°C, protect from light, stable 2 years lyophilized',
     legalStatus: {
-      usa: 'research-only',
-      eu: 'Clinical trial (Stealth BioTherapeutics)',
-      australia: 'Not scheduled (research)'
+      usa: 'approved',
+      eu: 'Verify current EMA and national authorization status',
+      australia: 'Verify current TGA authorization status'
     },
-    clinicalStatus: 'phase3',
-    fdaApproved: false,
+    clinicalStatus: 'approved',
+    fdaApproved: true,
+    fdaApprovalYear: 2025,
     warnings: [
-      'Currently in clinical trials for mitochondrial diseases',
-      'Not yet approved for general use'
+      'FDA accelerated approval is limited to Barth syndrome in patients weighing at least 30 kg',
+      'Confirmatory evidence is required; approval does not support general longevity use'
     ],
     notableStudies: [
       {

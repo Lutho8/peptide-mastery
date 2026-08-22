@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Menu, X, ShoppingBag, Sparkles, FlaskConical, Activity, Search as SearchIcon, LayoutDashboard, GraduationCap, Smartphone } from 'lucide-react';
+import { Menu, X, ShoppingBag, Sparkles, FlaskConical, Activity, Search as SearchIcon, LayoutDashboard, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AnimatedLogo } from '@/components/ui/AnimatedLogo';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,7 +37,6 @@ export function LandingHeader({ onSignInClick, onSearch, onBlendsClick }: Landin
 
   const navItems: NavItem[] = [
     { label: 'Install App', icon: Smartphone, href: '/install' },
-    { label: 'Free Course', icon: GraduationCap, href: '/free-course' },
     { label: 'Bloodwork', icon: Activity, href: '/bloodwork' },
     { label: 'Browse Peptides', icon: SearchIcon, action: 'browse' },
     { label: 'Blends & Stacks', icon: FlaskConical, action: 'blends' },

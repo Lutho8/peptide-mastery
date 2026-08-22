@@ -20,7 +20,7 @@ const staticRoutes = [
   // NOTE: "/" (the app home) is intentionally NOT prerendered — it is a
   // client-gated app entry that renders an auth-dependent redirect/spinner,
   // not marketing content. It stays as the default SPA shell (index.html).
-  "/free-course", "/live-qna", "/coa-verification", "/blog", "/faq",
+  "/live-qna", "/coa-verification", "/blog", "/faq",
   "/privacy", "/terms", "/disclaimer",
   "/weight-loss-peptides-south-africa", "/healing-peptides-south-africa",
   "/anti-aging-peptides-south-africa", "/cognitive-peptides-south-africa",

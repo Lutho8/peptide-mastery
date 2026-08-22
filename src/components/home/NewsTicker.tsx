@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { researchUpdates, ResearchUpdate } from '@/data/researchUpdates';
-import { Newspaper, ExternalLink, FlaskConical, TestTube, Lightbulb, BookOpen } from 'lucide-react';
+import { Newspaper, ExternalLink, FlaskConical, TestTube, Lightbulb, BookOpen, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -10,6 +10,8 @@ const categoryConfig = {
   'study': { label: 'Study', icon: FlaskConical, className: 'bg-green-500/20 text-green-400 border-green-500/30' },
   'review': { label: 'Review', icon: BookOpen, className: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
   'breakthrough': { label: 'Breakthrough', icon: Lightbulb, className: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
+  'regulatory': { label: 'Regulatory', icon: ShieldCheck, className: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' },
+  'evidence-limit': { label: 'Evidence Limit', icon: AlertTriangle, className: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
 };
 
 export function NewsTicker() {
@@ -100,7 +102,7 @@ export function NewsTicker() {
               Latest Research Updates
             </DialogTitle>
             <DialogDescription className="text-muted-foreground text-sm">
-              {researchUpdates.length} peer-reviewed updates
+              {researchUpdates.length} verified source updates · reviewed 23 Aug 2026
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh]">

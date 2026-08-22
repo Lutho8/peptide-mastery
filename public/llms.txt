@@ -5,7 +5,6 @@
 ## Pages
 
 - [Home](/): Peptide protocol tracker with dose logging, cycle management, and stack builder.
-- [Free Course](/free-course): Educational course on peptide research fundamentals.
 - [Live Q&A](/live-qna): Monthly live peptide research Q&A sessions.
 - [COA Verification](/coa-verification): Certificate of Analysis verification for peptide vendors.
 - [Bloodwork](/bloodwork): AI-powered lab report analysis with biomarker decoding.
