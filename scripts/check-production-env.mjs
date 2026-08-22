@@ -1,30 +1,15 @@
-// Fail hosted builds before they can silently ship against the retired backend.
-// Local builds remain possible without secrets so contributors can prerender and test.
+// Verify that every build is pinned to the owned backend without depending on
+// Vercel settings. Publishable keys are public browser identifiers; privileged
+// service-role credentials remain exclusively in Supabase Edge Functions.
+import { readFileSync } from 'node:fs';
 
-const OWNED_SUPABASE_URL = 'https://eutszmrsukoqqeilzrbv.supabase.co';
-const isHostedBuild = process.env.VERCEL === '1';
+const source = readFileSync('src/integrations/supabase/public-config.ts', 'utf8');
+const requiredUrl = 'https://eutszmrsukoqqeilzrbv.supabase.co';
+const hasOwnedUrl = source.includes(`OWNED_SUPABASE_URL = '${requiredUrl}'`);
+const hasModernPublishableKey = /OWNED_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_[A-Za-z0-9_-]+'/u.test(source);
 
-if (!isHostedBuild) {
-  console.log('Production environment check skipped outside Vercel.');
-  process.exit(0);
-}
-
-const configuredUrl = (process.env.VITE_SUPABASE_URL || '').trim().replace(/\/$/, '');
-const configuredKey = (process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '').trim();
-const keyLooksValid =
-  configuredKey.startsWith('sb_publishable_') ||
-  /^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(configuredKey);
-
-const failures = [];
-if (configuredUrl !== OWNED_SUPABASE_URL) {
-  failures.push(`VITE_SUPABASE_URL must be ${OWNED_SUPABASE_URL}`);
-}
-if (!keyLooksValid) {
-  failures.push('VITE_SUPABASE_PUBLISHABLE_KEY is missing or malformed');
-}
-
-if (failures.length) {
-  console.error(`Production environment check failed:\n${failures.map((item) => `- ${item}`).join('\n')}`);
+if (!hasOwnedUrl || !hasModernPublishableKey) {
+  console.error('Production environment check failed: owned Supabase public configuration is missing.');
   process.exit(1);
 }
 
