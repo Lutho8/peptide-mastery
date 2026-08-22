@@ -9,7 +9,7 @@
  *   2) `supabase db lint` CLI when on PATH.
  *   3) HARD FAIL. No silent skip.
  *
- * Emergency override: set LOVABLE_SKIP_SECURITY_LINT=1 (prints loud warning).
+ * Emergency override: set PSA_SKIP_SECURITY_LINT=1 (prints loud warning).
  */
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -27,7 +27,7 @@ type Finding = {
   metadata?: Record<string, unknown>;
 };
 
-const PROJECT_REF = "lwrvuszozhhpteyrxenl";
+const PROJECT_REF = "eutszmrsukoqqeilzrbv";
 const ALLOWLIST_PATH = resolve(process.cwd(), "scripts/security-lint-allowlist.json");
 
 function loud(msg: string) {
@@ -38,8 +38,8 @@ function info(msg: string) {
   console.log("[security-lint] " + msg);
 }
 
-if (process.env.LOVABLE_SKIP_SECURITY_LINT === "1") {
-  loud("LOVABLE_SKIP_SECURITY_LINT=1 — security linter gate bypassed. Do not ship like this.");
+if (process.env.PSA_SKIP_SECURITY_LINT === "1") {
+  loud("PSA_SKIP_SECURITY_LINT=1 — security linter gate bypassed. Do not ship like this.");
   process.exit(0);
 }
 
@@ -112,7 +112,7 @@ async function main() {
   }
 
   if (findings === null) {
-    const strict = process.env.LOVABLE_SECURITY_LINT_STRICT === "1";
+    const strict = process.env.PSA_SECURITY_LINT_STRICT === "1";
     const msg =
       "Security linter gate could not reach a signal. No SUPABASE_ACCESS_TOKEN and no Supabase CLI detected. Add the token in Workspace Settings → Build Secrets, or run `bun run lint:security` locally with the CLI.";
     if (strict) {

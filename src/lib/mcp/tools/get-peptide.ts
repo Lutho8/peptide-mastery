@@ -1,4 +1,4 @@
-import { defineTool } from "@lovable.dev/mcp-js";
+import { defineTool } from "../types";
 import { z } from "zod";
 import { peptides } from "../../../data/peptides";
 

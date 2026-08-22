@@ -1,14 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, X, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { detectPlatform, type Platform } from '@/lib/pwaInstall';
 
 export function InstallBanner() {
-  const { isInstallable, install } = usePWAInstall();
+  const { isInstallable, isInstalled, install } = usePWAInstall();
   const [dismissed, setDismissed] = useState(false);
+  const [platform, setPlatform] = useState<Platform>('desktop');
 
-  if (!isInstallable || dismissed) return null;
+  useEffect(() => setPlatform(detectPlatform()), []);
+
+  const isMobile = platform.startsWith('ios') || platform.startsWith('android');
+
+  if ((!isInstallable && !isMobile) || isInstalled || dismissed) return null;
 
   return (
     <AnimatePresence>
@@ -25,19 +31,23 @@ export function InstallBanner() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground">Install Peptide South Africa</p>
-            <p className="hidden text-xs text-muted-foreground sm:block">Add to home screen for the best experience</p>
+            <p className="hidden text-xs text-muted-foreground sm:block">Three quick steps to add it to your Home Screen</p>
           </div>
           <Button
             size="sm"
-            onClick={() => install('install_banner')}
+            onClick={() => {
+              if (isInstallable) void install('install_banner');
+              else window.location.assign('/install');
+            }}
             className="shrink-0 gap-1.5 rounded-full touch-target"
           >
             <Download size={14} />
-            Install
+            {isInstallable ? 'Install' : 'Show me'}
           </Button>
           <button
             onClick={() => setDismissed(true)}
-            className="shrink-0 p-1.5 rounded-full hover:bg-muted transition-colors touch-target"
+            className="shrink-0 rounded-full p-1.5 transition-colors hover:bg-muted touch-target"
+            aria-label="Dismiss install prompt"
           >
             <X size={16} className="text-muted-foreground" />
           </button>

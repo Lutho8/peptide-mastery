@@ -29,7 +29,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const { signIn, signUp, signInWithOAuth } = useAuth();
 
-  // Apple Sign In via Lovable Cloud managed OAuth
+  // Apple Sign In via the company-owned Supabase Auth project.
   const APPLE_SIGNIN_ENABLED = true;
 
   const handleGoogleSignIn = async () => {

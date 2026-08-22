@@ -1,73 +1,110 @@
-# Welcome to your Lovable project
+# Peptide South Africa — Tracker App
 
-## Project info
+Research-peptide protocol tracker for [peptide-south-africa.co.za](https://peptide-south-africa.co.za),
+with an Android build via Capacitor.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+**Stack:** Vite · React 18 · TypeScript · Tailwind + shadcn/ui · Supabase (Postgres,
+Auth, Storage, Edge Functions) · Vercel · Capacitor
 
-## How can I edit this code?
+This project was originally built on Lovable and has been migrated to run
+independently. See [`docs/MIGRATION.md`](docs/MIGRATION.md) for what changed and
+what still needs configuring.
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## Local development
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Requires Node.js 20+ (`nvm` recommended).
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+git clone https://github.com/Lutho8/peptide-south-africa-coza.git
+cd peptide-south-africa-coza
+npm install
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+cp .env.example .env.local   # then fill in VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY
+npm run dev                  # http://localhost:8080
 ```
 
-**Edit a file directly in GitHub**
+`.env*` files are gitignored. Real values live in the Vercel dashboard
+(client vars) and in Supabase Edge Function secrets (server vars).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Useful scripts
 
-**Use GitHub Codespaces**
+| Command | What it does |
+|---|---|
+| `npm run dev` | Dev server on port 8080 (regenerates the sitemap first) |
+| `npm run build` | Production build + prerender of all static routes |
+| `npm run preview` | Serve the production build locally |
+| `npm run lint` | ESLint |
+| `npm test` | Vitest |
+| `npm run build:native` | Native build + `cap sync` for the Android app |
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+The installable web-app journey is available at `/install` and automatically
+uses Safari instructions on iPhone/iPad or the native Chrome prompt on Android.
 
-## What technologies are used for this project?
+---
 
-This project is built with:
+## Backend — Supabase
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Link the repository to the company-owned Supabase project before deploying:
+(see `supabase/config.toml`).
 
-## How can I deploy this project?
+```sh
+npm i -g supabase
+supabase login
+supabase link --project-ref <owned-project-ref>
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+supabase db push                    # apply migrations in supabase/migrations
+supabase functions deploy           # deploy all edge functions
+supabase functions deploy safety-check   # …or just one
+```
 
-## Can I connect a custom domain to my Lovable project?
+### Edge functions
 
-Yes, you can!
+| Function | Purpose | JWT |
+|---|---|---|
+| `peptide-ai-agent` | Privacy-first local research / stack guidance | yes |
+| `safety-check` | AI safety review of a peptide against a user profile | yes |
+| `analyze-lab-report` | Bloodwork PDF/image extraction and analysis | yes |
+| `mcp` | Token-protected MCP server exposing the peptide catalogue | yes |
+| `process-email-queue` | Drains the transactional email queue | yes |
+| `gsc-status` | Search Console sitemap + search-analytics status | yes |
+| `gsc-resubmit-sitemap` | Resubmits the sitemap to Search Console | yes |
+| `gsc-verify-live` | Live URL verification | yes |
+| `crm-capture` | First-party lead/activity capture | project token |
+| `crm-admin` | Admin-only CRM overview and status updates | user JWT + admin role |
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Required secrets
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Set these under **Edge Functions → Secrets**, or:
+
+```sh
+supabase secrets set OPENROUTER_API_KEY=...
+supabase secrets set GOOGLE_SERVICE_ACCOUNT_JSON="$(cat service-account.json)"
+supabase secrets set RESEND_API_KEY=...
+```
+
+`.env.example` documents every secret, what uses it, and its default.
+
+---
+
+## Deployment — Vercel
+
+Pushes to `main` deploy automatically. `vercel.json` handles the SPA rewrite so
+OAuth callbacks don't 404, and sets immutable caching on hashed assets.
+
+Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` under **Project
+Settings → Environment Variables** for the Production environment, then
+redeploy — Vercel does not inject new variables into existing builds.
+
+---
+
+## Authentication
+
+Google and Apple sign-in go through Supabase Auth directly
+(`src/integrations/auth/oauth.ts`). Both providers need their own credentials in
+**Supabase → Authentication → Providers**, and the production domain must be
+listed under **Authentication → URL Configuration** as both the Site URL and an
+allowed redirect URL.
+
+`AUTH_MIGRATION_CHECKLIST.md` has the full step-by-step for domain changes.

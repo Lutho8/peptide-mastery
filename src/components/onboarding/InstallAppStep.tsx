@@ -10,8 +10,6 @@ import { detectPlatform, isStandalone, getInstallCtaState, chromeIntentUrl, type
 import { track } from '@/lib/analytics';
 import { markStep } from '@/lib/onboardingProgress';
 import { OfflineReadyBadge } from '@/components/pwa/OfflineReadyBadge';
-import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
-import { InstallVerification } from '@/components/pwa/InstallVerification';
 
 const PENDING_KEY = 'rtd-install-prompt-pending';
 
@@ -95,7 +93,7 @@ export function InstallAppStep({ open, onClose }: Props) {
 
             <h3 className="mt-3 text-2xl md:text-3xl font-bold text-foreground">Install Peptide South Africa on your phone</h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              We're not in the App Store — by design. Pin the app to your Home Screen for offline access and a full-screen experience.
+              Add the tracker to your Home Screen for quick, full-screen access. Your account and synced data stay the same.
             </p>
 
             {cta.kind === 'installed' && (
@@ -175,13 +173,9 @@ export function InstallAppStep({ open, onClose }: Props) {
               </Button>
             </div>
 
-            <div className="mt-6 pt-5 border-t border-border/40">
-              <InstallVerification />
-            </div>
-
-            <div className="mt-6 pt-5 border-t border-border/40">
-              <OnboardingChecklist variant="inline" hideWhenComplete={false} />
-            </div>
+            <a href="/install" className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline">
+              Open the visual install guide →
+            </a>
           </motion.div>
         </motion.div>
       )}

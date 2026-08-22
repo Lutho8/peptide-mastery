@@ -12,9 +12,9 @@
 > Requires: **Android Studio** installed (https://developer.android.com/studio), Java JDK 17+, Node.js 20+.
 
 ```bash
-# 1. Export project to your GitHub via Lovable's "Export to GitHub" button, then:
-git clone <your-repo-url>
-cd <your-repo>
+# 1. Clone the standalone GitHub repository:
+git clone https://github.com/Lutho8/peptide-south-africa-coza.git
+cd peptide-south-africa-coza
 
 # 2. Install dependencies
 npm install

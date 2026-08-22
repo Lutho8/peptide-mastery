@@ -1,5 +1,7 @@
 import "@testing-library/jest-dom";
 
+Object.defineProperty(window, "scrollTo", { configurable: true, value: () => {} });
+
 class IO {
   observe() {}
   unobserve() {}
@@ -188,4 +190,3 @@ export function goOnline() {
 }
 
 applyMocks();
-

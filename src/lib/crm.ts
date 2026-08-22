@@ -1,4 +1,4 @@
-// CRM client helper — fire-and-forget lead capture into NocoBase.
+// CRM client helper — fire-and-forget lead capture into the owned Supabase CRM.
 // Never blocks UX. Failures are logged to the console only.
 
 import { supabase } from '@/integrations/supabase/client';
@@ -81,7 +81,7 @@ export async function captureLead(input: CaptureLeadInput): Promise<void> {
     const pageUrl = typeof window !== 'undefined' ? window.location.href : undefined;
     const sessionId = getSessionId();
 
-    await supabase.functions.invoke('nocobase-sync', {
+    await supabase.functions.invoke('crm-capture', {
       body: {
         action: 'capture_lead',
         email,

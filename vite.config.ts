@@ -1,9 +1,6 @@
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
-import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/supabase/vite";
-
 
 /**
  * Logs a clear marker when Vite finishes booting, and surfaces boot-time
@@ -39,7 +36,7 @@ process.on("unhandledRejection", (err) => {
 });
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(() => ({
   server: {
     host: "::",
     port: 8080,
@@ -50,8 +47,6 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     bootLogger(),
     react(),
-    mcpPlugin(),
-    mode === "development" && componentTagger(),
   ].filter(Boolean),
 
   resolve: {

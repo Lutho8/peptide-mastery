@@ -1,6 +1,6 @@
-# OAuth Migration Checklist: Lovable → Vercel/Cloudflare
+# OAuth Deployment Checklist: Supabase → Vercel/Cloudflare
 
-Use this checklist after switching from Lovable hosting to Vercel (or Cloudflare Pages) to ensure Google / Apple OAuth sign-in continues to work.
+Use this checklist when deploying the independent app to Vercel (or Cloudflare Pages) to ensure Google / Apple OAuth sign-in continues to work.
 
 ---
 
@@ -124,14 +124,6 @@ npm run dev
 
 ---
 
-## Domain-specific notes
+## Domain-specific note
 
-### Hardcoded Lovable URLs to update
-The following files contain hardcoded references to the old Lovable domain. Update them to your new domain if SEO / social sharing is important:
-
-- `src/pages/CategoryHubPage.tsx` — `BASE_URL = 'https://peptide-mastery.lovable.app'`
-- `src/pages/GuidePage.tsx` — `BASE_URL = 'https://peptide-mastery.lovable.app'`
-- `src/pages/PeptideEntityPage.tsx` — `BASE_URL = 'https://peptide-mastery.lovable.app'`
-- `src/components/landing/LandingPage.tsx` — `canonical="https://peptide-mastery.lovable.app"`
-
-> These are only used for `<meta>` / Open Graph tags. OAuth itself does not depend on them.
+All canonical and OAuth return URLs must use `https://peptide-south-africa.co.za` in production.

@@ -18,6 +18,7 @@ Deno.serve(async (req) => {
   const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
   const authHeader = req.headers.get("Authorization") || "";
   const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    db: { schema: "tracker" },
     global: { headers: { Authorization: authHeader } },
   });
   const { data: { user } } = await userClient.auth.getUser();

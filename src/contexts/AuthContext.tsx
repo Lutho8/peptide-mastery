@@ -2,7 +2,7 @@ import React, { createContext, useContext, ReactNode } from 'react';
 import { User, Session, Provider } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { lovable } from '@/integrations/lovable';
+import { signInWithOAuth as startOAuth } from '@/integrations/auth/oauth';
 import {
   setActiveUserId,
   clearLegacyGlobalKeys,
@@ -187,15 +187,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (provider !== 'google' && provider !== 'apple') {
         return { error: new Error(`Provider ${provider} not supported`) };
       }
-      const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: window.location.origin,
+      const result = await startOAuth(provider, {
+        redirectTo: window.location.origin,
       });
       if (result.error) {
         console.error('[OAuth] error:', result.error);
         const err = result.error;
         return { error: err instanceof Error ? err : new Error(String(err)) };
       }
-      // result.redirected => browser navigates to provider; otherwise tokens were set on the session.
+      // Supabase redirects the browser to the provider; the session is picked
+      // up from the URL on return via detectSessionInUrl.
       return { error: null };
     } catch (err) {
       console.error('[OAuth] unexpected:', err);
