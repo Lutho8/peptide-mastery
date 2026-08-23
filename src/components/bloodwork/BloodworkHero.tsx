@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion';
-import { Upload, Activity, Target } from 'lucide-react';
+import { Upload, Activity, Stethoscope } from 'lucide-react';
 
 const STEPS = [
   { num: '01', title: 'Upload your bloodwork', icon: Upload, body: 'PDF or image, English or German. Encrypted in transit and at rest.' },
-  { num: '02', title: 'Receive your analysis', icon: Activity, body: 'AI extracts every biomarker, scores your health, and decodes what it means.' },
-  { num: '03', title: 'Execute your protocol', icon: Target, body: 'Personalised peptide stack, supplements, nutrition, and follow-up retests.' },
+  { num: '02', title: 'Review extracted values', icon: Activity, body: 'Compare every extracted value, unit and range against the original laboratory report.' },
+  { num: '03', title: 'Discuss with a clinician', icon: Stethoscope, body: 'Take the organized report to a qualified professional for interpretation and treatment decisions.' },
 ];
 
 export function BloodworkHero() {
@@ -17,10 +17,10 @@ export function BloodworkHero() {
           transition={{ duration: 0.5 }}
           className="text-3xl md:text-5xl font-bold tracking-tight text-foreground"
         >
-          From bloodwork to <span className="text-primary">protocol</span>.
+          From bloodwork to <span className="text-primary">clearer questions</span>.
         </motion.h1>
         <p className="mt-3 text-sm md:text-base text-muted-foreground max-w-2xl">
-          Premium-grade decoding of your labs into an actionable peptide and lifestyle protocol — built around your goals.
+          A bilingual educational extraction that keeps your laboratory’s values, units and reference ranges visible. No automated diagnosis, prescription or peptide stack.
         </p>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">

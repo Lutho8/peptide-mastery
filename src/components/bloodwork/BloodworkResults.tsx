@@ -1,15 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Download, AlertTriangle, CheckCircle, TrendingUp, TrendingDown, Search, X, ShoppingBag, Languages } from 'lucide-react';
+import { Download, AlertTriangle, CheckCircle, TrendingUp, TrendingDown, Search, X, Languages, Scale, Stethoscope } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ProtocolSections, Protocol } from './ProtocolSections';
-import { SystemDashboard } from './SystemDashboard';
-import { PatternDetection } from './PatternDetection';
-import { StackCartProvider } from './StackCartContext';
-import { StackCartBar } from './StackCartBar';
-import { WhyRTDStrip } from './WhyRTDStrip';
-import { summarizeSystems } from '@/lib/bloodwork/systems';
-import { detectPatterns } from '@/lib/bloodwork/patterns';
+import type { Protocol } from './ProtocolSections';
 import { trackBwEvent } from '@/lib/bloodwork/analytics';
 
 export interface ResultBiomarker {
@@ -48,8 +41,8 @@ const CATEGORY_LABELS: Record<Lang, Record<string, string>> = {
 };
 
 const UI = {
-  en: { title: 'Your Bloodwork Results', analysed: (n: number, g: number) => `${n} biomarkers analysed · ${g} goals`, shopStack: 'View research options', download: 'Download PDF', biomarkerPanel: 'Biomarker panel', insights: 'Insights', searchPlaceholder: 'Search biomarkers… (press / to focus)', shown: (a: number, b: number) => `${a}/${b} shown`, all: 'All', normal: 'Normal', low: 'Low', high: 'High', critical: 'Critical', noMatch: 'No biomarkers match this filter.', reset: 'Reset filters', clear: 'Clear filters', ref: 'Ref', langLabel: 'Language', optional: 'Optional research discussion and next steps' },
-  de: { title: 'Ihre Blutwert-Ergebnisse', analysed: (n: number, g: number) => `${n} Biomarker analysiert · ${g} Ziele`, shopStack: 'Forschungsoptionen', download: 'PDF laden', biomarkerPanel: 'Biomarker-Panel', insights: 'Erkenntnisse', searchPlaceholder: 'Biomarker suchen… (drücken Sie /)', shown: (a: number, b: number) => `${a}/${b} sichtbar`, all: 'Alle', normal: 'Normal', low: 'Niedrig', high: 'Hoch', critical: 'Kritisch', noMatch: 'Keine Biomarker entsprechen diesem Filter.', reset: 'Filter zurücksetzen', clear: 'Filter löschen', ref: 'Ref', langLabel: 'Sprache', optional: 'Optionale Forschungsfragen und nächste Schritte' },
+  en: { title: 'Your Bloodwork Results', analysed: (n: number, g: number) => `${n} biomarkers extracted · ${g} context goals`, download: 'Download PDF', biomarkerPanel: 'Biomarker panel', insights: 'Educational observations', searchPlaceholder: 'Search biomarkers… (press / to focus)', shown: (a: number, b: number) => `${a}/${b} shown`, all: 'All', normal: 'Normal', low: 'Low', high: 'High', critical: 'Critical', noMatch: 'No biomarkers match this filter.', reset: 'Reset filters', clear: 'Clear filters', ref: 'Lab reference', langLabel: 'Language' },
+  de: { title: 'Ihre Blutwert-Ergebnisse', analysed: (n: number, g: number) => `${n} Biomarker extrahiert · ${g} Kontextziele`, download: 'PDF laden', biomarkerPanel: 'Biomarker-Panel', insights: 'Edukative Beobachtungen', searchPlaceholder: 'Biomarker suchen… (drücken Sie /)', shown: (a: number, b: number) => `${a}/${b} sichtbar`, all: 'Alle', normal: 'Normal', low: 'Niedrig', high: 'Hoch', critical: 'Kritisch', noMatch: 'Keine Biomarker entsprechen diesem Filter.', reset: 'Filter zurücksetzen', clear: 'Filter löschen', ref: 'Laborreferenz', langLabel: 'Sprache' },
 } as const;
 
 type StatusFilter = 'all' | 'normal' | 'high' | 'low' | 'critical';
@@ -63,25 +56,17 @@ interface Props {
 
 
 export function BloodworkResults(props: Props) {
-  const patternsTop = detectPatterns(props.result.biomarkers);
   useEffect(() => {
     trackBwEvent('bw_analysis_viewed', {
       scanType: props.result.scan_type,
-      patterns: patternsTop.map((p) => p.id),
       biomarkerCount: props.result.biomarkers.length,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  return (
-    <StackCartProvider>
-      <BloodworkResultsInner {...props} />
-      <WhyRTDStrip />
-      <StackCartBar patternIds={patternsTop.map((p) => p.id)} />
-    </StackCartProvider>
-  );
+  return <BloodworkResultsInner {...props} />;
 }
 
-function BloodworkResultsInner({ result, onDownload, labReportId, preferredLanguage }: Props) {
+function BloodworkResultsInner({ result, onDownload, preferredLanguage }: Props) {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -192,17 +177,6 @@ function BloodworkResultsInner({ result, onDownload, labReportId, preferredLangu
             )}
           </div>
           <div className="flex items-center gap-3 flex-wrap">
-            {typeof result.health_score === 'number' && <HealthScoreRing score={result.health_score} />}
-            <button
-              type="button"
-              onClick={() => {
-                const el = document.getElementById('bloodwork-stack-cart') || document.querySelector('[data-bloodwork-patterns]');
-                el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }}
-              className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-primary hover:bg-primary/20 transition-colors"
-            >
-              <ShoppingBag size={14} /> {t.shopStack}
-            </button>
             <button
               type="button"
               onClick={onDownload}
@@ -214,23 +188,16 @@ function BloodworkResultsInner({ result, onDownload, labReportId, preferredLangu
         </div>
       </header>
 
-
-      {/* SYSTEM DASHBOARD */}
-      {result.scan_type === 'deep' && (
-        <>
-          <SystemDashboard
-            systems={summarizeSystems(result.biomarkers)}
-            onSelect={(cats) => {
-              setStatusFilter('all');
-              setSearch('');
-              const first = cats[0];
-              const el = document.querySelector(`[data-bm-category="${first}"]`);
-              el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }}
-          />
-          <PatternDetection patterns={detectPatterns(result.biomarkers)} />
-        </>
-      )}
+      <section className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs leading-relaxed text-muted-foreground">
+          <p className="mb-1 flex items-center gap-2 font-semibold text-foreground"><Stethoscope size={14} /> Medical disclaimer</p>
+          This extraction is educational and may contain OCR or classification errors. Your laboratory report and its printed ranges remain the source of truth. Only a qualified healthcare professional can diagnose, prescribe, interpret urgency or recommend treatment.
+        </div>
+        <div className="rounded-xl border border-border bg-card/50 p-4 text-xs leading-relaxed text-muted-foreground">
+          <p className="mb-1 flex items-center gap-2 font-semibold text-foreground"><Scale size={14} /> Legal notice</p>
+          This output is information, not a medical service, prescription or guarantee. Do not start, stop, buy or combine peptides, medicines or supplements based on this report.
+        </div>
+      </section>
 
       {/* BIOMARKER PANEL */}
       <section>
@@ -351,19 +318,6 @@ function BloodworkResultsInner({ result, onDownload, labReportId, preferredLangu
         ) : null;
       })()}
 
-
-      {/* PROTOCOL */}
-      <details className="group rounded-2xl border border-border bg-card/50 p-4">
-        <summary className="min-h-11 cursor-pointer list-none py-2 text-sm font-semibold text-foreground marker:hidden">
-          <span className="inline-flex items-center gap-2">
-            <span className="text-accent transition-transform group-open:rotate-90">›</span>
-            {t.optional}
-          </span>
-        </summary>
-        <div className="mt-5 border-t border-border pt-5">
-          <ProtocolSections protocol={result.protocol} goals={result.goals} labReportId={labReportId} />
-        </div>
-      </details>
     </div>
   );
 }
@@ -405,59 +359,6 @@ function FilterChip({
       {label}
       <span className="text-[10px] font-mono tabular-nums opacity-80">{count}</span>
     </button>
-  );
-}
-
-function HealthScoreRing({ score }: { score: number }) {
-  const [animated, setAnimated] = useState(0);
-  useEffect(() => {
-    const target = Math.max(0, Math.min(100, score));
-    let raf = 0;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / 900);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setAnimated(Math.round(target * eased));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [score]);
-
-  const radius = 36;
-  const circ = 2 * Math.PI * radius;
-  const offset = circ - (animated / 100) * circ;
-  const tone = score >= 75 ? 'text-green-500' : score >= 50 ? 'text-yellow-500' : 'text-red-500';
-
-  return (
-    <motion.div
-      initial={{ scale: 0.85, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="relative w-[88px] h-[88px]"
-      aria-label={`Health score ${animated} of 100`}
-    >
-      <svg className="w-full h-full -rotate-90" viewBox="0 0 88 88">
-        <circle cx="44" cy="44" r={radius} fill="none" stroke="hsl(var(--border))" strokeWidth="6" />
-        <circle
-          cx="44"
-          cy="44"
-          r={radius}
-          fill="none"
-          className={tone}
-          stroke="currentColor"
-          strokeWidth="6"
-          strokeLinecap="round"
-          strokeDasharray={circ}
-          strokeDashoffset={offset}
-          style={{ transition: 'stroke-dashoffset 0.1s linear' }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className={cn('text-2xl font-bold', tone)}>{animated}</span>
-        <span className="text-[8px] uppercase tracking-widest text-muted-foreground">Score</span>
-      </div>
-    </motion.div>
   );
 }
 

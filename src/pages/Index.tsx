@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { BottomNav } from '@/components/layout/BottomNav';
@@ -32,7 +33,6 @@ const LandingPage = lazy(() => import('@/components/landing/LandingPage').then(m
 const BodyCompositionModal = lazy(() => import('@/components/modals/BodyCompositionModal').then(m => ({ default: m.BodyCompositionModal })));
 const DoseTrackerModal = lazy(() => import('@/components/modals/DoseTrackerModal').then(m => ({ default: m.DoseTrackerModal })));
 const CycleManagementModal = lazy(() => import('@/components/modals/CycleManagementModal').then(m => ({ default: m.CycleManagementModal })));
-const BloodworkModal = lazy(() => import('@/components/modals/BloodworkModal').then(m => ({ default: m.BloodworkModal })));
 const InventoryModal = lazy(() => import('@/components/modals/InventoryModal').then(m => ({ default: m.InventoryModal })));
 const NotificationActionModal = lazy(() => import('@/components/modals/NotificationActionModal').then(m => ({ default: m.NotificationActionModal })));
 const AuthModal = lazy(() => import('@/components/auth/AuthModal').then(m => ({ default: m.AuthModal })));
@@ -57,6 +57,7 @@ const Index = () => {
   // opened the My Stack screen, causing the home preview to look empty.
   useCloudSync();
   const { getDirection, getTransitionVariants } = useScreenTransition();
+  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<TabId>('home');
 
@@ -90,7 +91,6 @@ const Index = () => {
   const [bodyCompositionOpen, setBodyCompositionOpen] = useState(false);
   const [doseTrackerOpen, setDoseTrackerOpen] = useState(false);
   const [cycleManagementOpen, setCycleManagementOpen] = useState(false);
-  const [bloodworkOpen, setBloodworkOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [profileSetupOpen, setProfileSetupOpen] = useState(false);
   const [installStepOpen, setInstallStepOpen] = useState(false);
@@ -231,9 +231,9 @@ const Index = () => {
               onOpenBodyComposition={() => setBodyCompositionOpen(true)}
               onOpenDoseTracker={() => setDoseTrackerOpen(true)}
               onOpenCycles={() => setCycleManagementOpen(true)}
-              onOpenBloodwork={() => setBloodworkOpen(true)}
+              onOpenBloodwork={() => navigate('/bloodwork')}
               onOpenInventory={() => setInventoryOpen(true)}
-              onNavigatePeptides={() => setActiveTab('daily-log')}
+              onNavigatePeptides={() => setShowResearch(true)}
               onNavigateStack={() => setActiveTab('stack')}
               onNavigateDosage={() => setActiveTab('dosage')}
               onOpenSettings={() => setShowSettings(true)}
@@ -271,22 +271,7 @@ const Index = () => {
   if (showLandingPage) {
     return (
       <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
-        <div className="relative bg-background">
-          <div
-            className="sticky top-0 z-[70] flex items-center border-b border-border bg-background/95 px-3 py-2 backdrop-blur-xl"
-            style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0px))' }}
-          >
-            <Button
-              onClick={handleBackToDashboard}
-              variant="outline"
-              className="min-h-11 gap-2 rounded-xl bg-card text-primary shadow-sm"
-            >
-              <ArrowLeft size={18} />
-              Return to tracker
-            </Button>
-          </div>
-          <LandingPage />
-        </div>
+        <LandingPage onBackToDashboard={handleBackToDashboard} />
       </Suspense>
     );
   }
@@ -303,7 +288,7 @@ const Index = () => {
       />
 
       <main
-        className="max-w-lg mx-auto px-4 py-6 pb-28 scroll-smooth-touch"
+        className="mx-auto w-full max-w-5xl px-3 py-4 pb-28 sm:px-4 sm:py-6 scroll-smooth-touch"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 5.5rem)' }}
       >
         <AnimatePresence mode="wait">
@@ -330,7 +315,6 @@ const Index = () => {
         {bodyCompositionOpen && <BodyCompositionModal open={bodyCompositionOpen} onOpenChange={setBodyCompositionOpen} />}
         {doseTrackerOpen && <DoseTrackerModal open={doseTrackerOpen} onOpenChange={setDoseTrackerOpen} />}
         {cycleManagementOpen && <CycleManagementModal open={cycleManagementOpen} onOpenChange={setCycleManagementOpen} />}
-        {bloodworkOpen && <BloodworkModal open={bloodworkOpen} onOpenChange={setBloodworkOpen} />}
         {inventoryOpen && <InventoryModal open={inventoryOpen} onOpenChange={setInventoryOpen} />}
         <NotificationActionModal onMarkAsTaken={handleMarkDoseAsTaken} />
         {authModalOpen && <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />}

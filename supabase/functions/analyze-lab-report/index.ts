@@ -238,9 +238,6 @@ function buildFallbackResult(text: string, scanType: string, detectedLanguage?: 
   const abnormal = biomarkers.filter((b) => b.status !== "normal");
   const lang = detectedLanguage || detectLanguage(text);
   const reportDate = extractDateFromText(text);
-  const score = biomarkers.length
-    ? Math.max(55, Math.min(95, 92 - abnormal.length * 5))
-    : null;
   const abnormalNames = abnormal.slice(0, 5).map((b) => b.name).join(", ");
   const abnormalNamesDe = abnormal.slice(0, 5).map((b) => b.name_de || b.name).join(", ");
 
@@ -253,7 +250,7 @@ function buildFallbackResult(text: string, scanType: string, detectedLanguage?: 
       : "Der Upload wurde verarbeitet, aber es konnten keine zuverlässigen Biomarker-Zeilen automatisch extrahiert werden.",
     report_date: reportDate,
     detected_language: lang,
-    health_score: score,
+    health_score: null,
     biomarkers,
     insights: [
       biomarkers.length ? `${biomarkers.length} biomarker rows were extracted from the report.` : "No structured biomarker rows were extracted.",
@@ -265,16 +262,7 @@ function buildFallbackResult(text: string, scanType: string, detectedLanguage?: 
       abnormal.length ? `${abnormal.length} Wert(e) liegen außerhalb der angegebenen Referenzbereiche.` : "Kein extrahierter Wert lag eindeutig außerhalb des Referenzbereichs.",
       "Nutzen Sie dies als edukative Übersicht und klären Sie die klinische Einordnung mit qualifiziertem Fachpersonal.",
     ],
-    protocol: {
-      stack_summary: "Protocol generation used the extracted biomarker pattern and remains research-only.",
-      stack: [],
-      supplements: [],
-      nutrition: [],
-      exercise: [],
-      stress: [],
-      environment: [],
-      retest: [{ marker: "Key abnormal markers", when: scanType === "deep" ? "8-12 weeks" : "8 weeks", why: "Confirm whether the pattern is improving." }],
-    },
+    protocol: { stack: [], supplements: [], nutrition: [], exercise: [], stress: [], environment: [], retest: [] },
     recommended_stack_peptides: [],
   };
 }
@@ -430,11 +418,11 @@ serve(async (req) => {
       }
     }
 
-    const systemPrompt = `You provide an educational lab-report review for Peptide South Africa. Return ONLY valid JSON. Lab reports may be English or German; always output English and German fields. Dosing units must be mg, IU, or units only.
+    const systemPrompt = `You provide a conservative educational lab-report extraction for Peptide South Africa. Return ONLY valid JSON. Lab reports may be English or German; always output English and German fields.
 
-JSON shape: {"summary":"English overview","summary_de":"German overview","report_date":"YYYY-MM-DD or null","detected_language":"en|de","health_score":0-100,"biomarkers":[{"name":"English name","name_de":"German name","short_name":"abbr","value":1.2,"unit":"unit","reference_range":"range","status":"normal|high|low|critical","category":"hormone|liver|kidney|lipid|metabolic|thyroid|inflammation|other","layman_explanation":"English","layman_explanation_de":"German"}],"insights":["English findings"],"insights_de":["German findings"],"protocol":{"stack_summary":"research-only summary","stack":[],"supplements":[],"nutrition":[],"exercise":[],"stress":[],"environment":[],"retest":[]},"recommended_stack_peptides":[]}
+JSON shape: {"summary":"English overview","summary_de":"German overview","report_date":"YYYY-MM-DD or null","detected_language":"en|de","health_score":null,"biomarkers":[{"name":"English name","name_de":"German name","short_name":"abbr","value":1.2,"unit":"unit","reference_range":"range","status":"normal|high|low|critical","category":"hormone|liver|kidney|lipid|metabolic|thyroid|inflammation|other","layman_explanation":"English","layman_explanation_de":"German"}],"insights":["English findings"],"insights_de":["German findings"],"protocol":{"stack_summary":"","stack":[],"supplements":[],"nutrition":[],"exercise":[],"stress":[],"environment":[],"retest":[]},"recommended_stack_peptides":[]}
 
-Interpret abnormal values conservatively. Do not diagnose, prescribe, or tell the user to change treatment. Keep the laboratory's printed value, unit, and reference range as the source of truth; country context must never replace the supplied range. Peptide content must remain research-only and be framed as a discussion prompt for a qualified healthcare professional. Include all readable biomarkers. If text extraction already supplied biomarkers, preserve them and improve names/explanations without dropping rows.`;
+Interpret abnormal values conservatively. Do not diagnose, score overall health, prescribe, recommend products, create a peptide stack, provide dosing, set a retest interval, or tell the user to change treatment. Keep the laboratory's printed value, unit, and reference range as the source of truth; country context must never replace the supplied range. The protocol and recommended_stack_peptides fields must always be empty. Include all readable biomarkers. If text extraction already supplied biomarkers, preserve them and improve names/explanations without dropping rows. Every insight must be an educational observation or a question for a qualified healthcare professional.`;
 
     const userText = [
       `Analyze this lab report (${effectiveFileName}).`,
@@ -536,10 +524,10 @@ Interpret abnormal values conservatively. Do not diagnose, prescribe, or tell th
     else if (typeof parsed.insights_de === "string") insightsDeArr = parsed.insights_de.split(/\n+/).map((s: string) => s.trim()).filter(Boolean);
     if (!insightsDeArr.length && fallbackForMerge?.insights_de) insightsDeArr = fallbackForMerge.insights_de;
 
-    const healthScore = typeof parsed.health_score === "number" && parsed.health_score >= 0 && parsed.health_score <= 100 ? Math.round(parsed.health_score) : (fallbackForMerge?.health_score ?? null);
+    const healthScore = null;
     const detectedLang = parsed.detected_language === "de" || fallbackForMerge?.detected_language === "de" ? "de" : "en";
     const biomarkers = Array.isArray(parsed.biomarkers) ? parsed.biomarkers : [];
-    const protocol = parsed.protocol || fallbackForMerge?.protocol || { stack: [], supplements: [], nutrition: [], exercise: [], stress: [], environment: [], retest: [] };
+    const protocol = { stack: [], supplements: [], nutrition: [], exercise: [], stress: [], environment: [], retest: [] };
 
     await supabase
       .from("lab_reports")
@@ -554,7 +542,7 @@ Interpret abnormal values conservatively. Do not diagnose, prescribe, or tell th
         report_date: parsed.report_date || null,
         health_score: healthScore,
         protocol,
-        recommended_stack_peptides: Array.isArray(parsed.recommended_stack_peptides) ? parsed.recommended_stack_peptides : [],
+        recommended_stack_peptides: [],
         updated_at: new Date().toISOString(),
       })
       .eq("id", reportId)

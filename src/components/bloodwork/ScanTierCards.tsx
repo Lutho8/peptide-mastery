@@ -14,7 +14,7 @@ export function ScanTierCards({ ready, running, onRun }: Props) {
         eyebrow="Free for all researchers"
         title="Baseline Scan"
         icon={Sparkles}
-        description="Instant biomarker extraction across all panels, personalised health insights, and a curated peptide stack. Ready in under 60 seconds."
+        description="Biomarker extraction across readable panels with conservative educational observations. No diagnosis, prescription or product recommendation."
         cta="Run baseline scan"
         ready={ready}
         running={running === 'baseline'}
@@ -26,7 +26,7 @@ export function ScanTierCards({ ready, running, onRun }: Props) {
         eyebrow="Free · advanced scan"
         title="Deep Decode"
         icon={Layers}
-        description="32 biomarkers across 8 panels. Full health report scored by category, with a personalised optimisation protocol. Includes 4 follow-ups over 12 months."
+        description="Expanded extraction and bilingual observations across readable panels, designed to help you prepare focused questions for a qualified clinician."
         cta="Run deep decode"
         ready={ready}
         running={running === 'deep'}

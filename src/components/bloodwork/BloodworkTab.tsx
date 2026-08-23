@@ -315,11 +315,6 @@ export function BloodworkTab() {
                       </p>
                     )}
                   </div>
-                  {r.health_score != null && (
-                    <div className="shrink-0 rounded-lg bg-primary/10 px-2.5 py-1 text-sm font-bold text-primary">
-                      {r.health_score}/100
-                    </div>
-                  )}
                 </div>
               </button>
               <div className="mt-2 pt-2 border-t border-border/40 flex justify-end">

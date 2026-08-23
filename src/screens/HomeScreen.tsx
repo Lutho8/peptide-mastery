@@ -16,6 +16,7 @@ import { BookCallSection } from '@/components/booking/BookCallSection';
 import { WelcomeGuide } from '@/components/home/WelcomeGuide';
 import { ReorderWidget } from '@/components/home/ReorderWidget';
 import { NextClubEventCard } from '@/components/home/NextClubEventCard';
+import { AgeResearchGuide } from '@/components/home/AgeResearchGuide';
 import { PullToRefresh } from '@/components/ui/PullToRefresh';
 import { DashboardTour } from '@/components/onboarding/DashboardTour';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
@@ -102,7 +103,7 @@ export function HomeScreen({
   return (
     <PullToRefresh onRefresh={handleRefresh}>
       <motion.div 
-        className="pb-24 space-y-6"
+        className="pb-24 space-y-4 sm:space-y-5"
         variants={containerVariants}
         initial="hidden"
         animate="show"
@@ -135,20 +136,39 @@ export function HomeScreen({
         />
       </motion.div>
 
+      <motion.div variants={itemVariants}>
+        <AgeResearchGuide onOpenResearch={onNavigateResearch} />
+      </motion.div>
+
+      {/* Primary mobile actions stay above the fold. */}
+      <motion.div variants={itemVariants} data-tour="quick-actions">
+        <QuickActions
+          onDoseTracker={onOpenDoseTracker}
+          onBodyStats={onOpenBodyComposition}
+          onCycles={onOpenCycles}
+          onPeptides={onNavigatePeptides}
+          onBloodwork={onOpenBloodwork}
+          onInventory={onOpenInventory}
+          onResearch={onNavigateResearch}
+        />
+      </motion.div>
+
       {/* News Ticker */}
       <motion.div variants={itemVariants}>
         <NewsTicker />
       </motion.div>
 
-      {/* Body Composition Dashboard */}
-      <motion.div variants={itemVariants}>
-        <BodyCompositionCard onViewDetails={onOpenBodyComposition} />
-      </motion.div>
+      <div className="grid gap-4 md:grid-cols-2 md:items-start">
+        {/* Body Composition Dashboard */}
+        <motion.div variants={itemVariants}>
+          <BodyCompositionCard onViewDetails={onOpenBodyComposition} />
+        </motion.div>
 
-      {/* Today's Doses Summary */}
-      <motion.div variants={itemVariants} data-tour="todays-doses">
-        <TodaysDoses onViewTracker={onOpenDoseTracker} />
-      </motion.div>
+        {/* Today's Doses Summary */}
+        <motion.div variants={itemVariants} data-tour="todays-doses">
+          <TodaysDoses onViewTracker={onOpenDoseTracker} />
+        </motion.div>
+      </div>
 
       {/* Today's Reminders Preview */}
       <motion.div variants={itemVariants} data-tour="reminders">
@@ -183,19 +203,6 @@ export function HomeScreen({
       {/* Active Protocol Preview */}
       <motion.div variants={itemVariants} data-tour="active-stack">
         <ActiveStackPreview onViewStack={onNavigateStack} />
-      </motion.div>
-
-      {/* Quick Actions Grid */}
-      <motion.div variants={itemVariants} data-tour="quick-actions">
-        <QuickActions
-          onDoseTracker={onOpenDoseTracker}
-          onBodyStats={onOpenBodyComposition}
-          onCycles={onOpenCycles}
-          onPeptides={onNavigatePeptides}
-          onBloodwork={onOpenBloodwork}
-          onInventory={onOpenInventory}
-          onResearch={onNavigateResearch}
-        />
       </motion.div>
 
       {/* Stack Categories */}

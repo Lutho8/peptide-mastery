@@ -15,6 +15,7 @@ export interface ResearchReference {
   keyFindings: string[];
   dosageInfo?: string;
   url: string;
+  verificationStatus?: 'primary-verified' | 'legacy-linked';
 }
 
 export const researchReferences: ResearchReference[] = [
@@ -220,6 +221,7 @@ export const researchReferences: ResearchReference[] = [
   // Semaglutide references
   {
     id: 'ref-semaglutide-step1',
+    verificationStatus: 'primary-verified',
     pmid: '33567185',
     title: 'STEP 1 Trial: Once-Weekly Semaglutide in Adults with Overweight or Obesity',
     authors: 'Wilding JPH, Batterham RL, Calanna S, et al.',
@@ -255,6 +257,7 @@ export const researchReferences: ResearchReference[] = [
   // Tirzepatide references
   {
     id: 'ref-tirzepatide-surmount1',
+    verificationStatus: 'primary-verified',
     pmid: '35658024',
     title: 'SURMOUNT-1: Tirzepatide for Treatment of Obesity',
     authors: 'Jastreboff AM, Aronne LJ, et al.',
@@ -833,6 +836,120 @@ export const researchReferences: ResearchReference[] = [
       'Regulates circadian rhythms and gut motility'
     ],
     url: 'https://pubmed.ncbi.nlm.nih.gov/16621152/'
+  },
+  {
+    id: 'ref-retatrutide-nejm-phase2-2023',
+    verificationStatus: 'primary-verified',
+    doi: '10.1056/NEJMoa2301972',
+    title: 'Triple-Hormone-Receptor Agonist Retatrutide for Obesity — A Phase 2 Trial',
+    authors: 'Jastreboff AM, Kaplan LM, Frías JP, et al.',
+    journal: 'New England Journal of Medicine',
+    year: 2023,
+    peptideIds: ['retatrutide'],
+    keyFindings: [
+      'Randomized, double-blind, placebo-controlled phase 2 trial',
+      'Reported dose-dependent body-weight reduction at 24 and 48 weeks',
+      'Phase 2 findings do not constitute regulatory approval'
+    ],
+    url: 'https://www.nejm.org/doi/full/10.1056/NEJMoa2301972'
+  },
+  {
+    id: 'ref-survodutide-phase3-2026',
+    verificationStatus: 'primary-verified',
+    pmid: '42253238',
+    title: 'Survodutide Once Weekly for the Treatment of Adults with Obesity',
+    authors: 'le Roux CW, et al.',
+    journal: 'The Lancet',
+    year: 2026,
+    peptideIds: ['survodutide'],
+    keyFindings: [
+      'Randomized, double-blind, placebo-controlled phase 3 trial',
+      'Studied adults with obesity without diabetes',
+      'Reported greater body-weight reduction with survodutide than placebo',
+      'Evidence applies to the studied compound and trial population'
+    ],
+    url: 'https://pubmed.ncbi.nlm.nih.gov/42253238/'
+  },
+  {
+    id: 'ref-cagrisema-redefine1-2025',
+    verificationStatus: 'primary-verified',
+    pmid: '40544433',
+    doi: '10.1056/NEJMoa2502081',
+    title: 'Coadministered Cagrilintide and Semaglutide in Adults with Overweight or Obesity',
+    authors: 'Garvey WT, et al.',
+    journal: 'New England Journal of Medicine',
+    year: 2025,
+    peptideIds: ['cagrilintide', 'semaglutide'],
+    keyFindings: [
+      'Randomized phase 3 REDEFINE 1 trial',
+      'The named coadministration produced greater weight reduction than placebo',
+      'Results do not validate custom combinations or component substitutions'
+    ],
+    url: 'https://pubmed.ncbi.nlm.nih.gov/40544433/'
+  },
+  {
+    id: 'ref-elamipretide-fda-2025',
+    verificationStatus: 'primary-verified',
+    title: 'FDA Grants Accelerated Approval to First Treatment for Barth Syndrome',
+    authors: 'U.S. Food and Drug Administration',
+    journal: 'FDA regulatory decision',
+    year: 2025,
+    peptideIds: ['ss31'],
+    keyFindings: [
+      'Accelerated approval is limited to Barth syndrome patients weighing at least 30 kg',
+      'The approval is based on a surrogate endpoint and requires confirmatory research',
+      'It does not establish benefit for general mitochondrial or longevity use'
+    ],
+    url: 'https://www.fda.gov/news-events/press-announcements/fda-grants-accelerated-approval-first-treatment-barth-syndrome'
+  },
+  {
+    id: 'ref-ta1-tests-2025',
+    verificationStatus: 'primary-verified',
+    pmid: '39814420',
+    title: 'The efficacy and safety of thymosin α1 for sepsis (TESTS)',
+    authors: 'Wu J, et al.',
+    journal: 'BMJ',
+    year: 2025,
+    peptideIds: ['ta1'],
+    keyFindings: [
+      'Multicentre, double-blind, placebo-controlled phase 3 trial',
+      'No clear reduction in 28-day all-cause mortality',
+      'Negative results limit broad efficacy claims and are retained in the evidence record'
+    ],
+    url: 'https://pubmed.ncbi.nlm.nih.gov/39814420/'
+  },
+  {
+    id: 'ref-bpc157-human-pilot-2025',
+    verificationStatus: 'primary-verified',
+    pmid: '40131143',
+    title: 'Safety of Intravenous Infusion of BPC157 in Humans',
+    authors: 'Lee E, et al.',
+    journal: 'Alternative Therapies in Health and Medicine',
+    year: 2025,
+    peptideIds: ['bpc157'],
+    keyFindings: [
+      'Pilot report included only two previously exposed adults',
+      'No measured adverse effects were reported during the short observation period',
+      'The sample is far too small to establish efficacy, routine safety or clinical dosing'
+    ],
+    url: 'https://pubmed.ncbi.nlm.nih.gov/40131143/'
+  },
+  {
+    id: 'ref-semaglutide-flow-2024',
+    verificationStatus: 'primary-verified',
+    pmid: '38785209',
+    doi: '10.1056/NEJMoa2403347',
+    title: 'Effects of Semaglutide on Chronic Kidney Disease in Patients with Type 2 Diabetes',
+    authors: 'Perkovic V, et al.',
+    journal: 'New England Journal of Medicine',
+    year: 2024,
+    peptideIds: ['semaglutide'],
+    keyFindings: [
+      'Randomized trial in patients with type 2 diabetes and chronic kidney disease',
+      'Reduced the trial composite of major kidney events and cardiovascular death versus placebo',
+      'Findings are indication- and population-specific'
+    ],
+    url: 'https://pubmed.ncbi.nlm.nih.gov/38785209/'
   }
 ];
 

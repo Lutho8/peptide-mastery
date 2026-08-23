@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, FlaskConical, Sparkles } from 'lucide-react';
+import { ArrowLeft, FlaskConical } from 'lucide-react';
 import { toast } from 'sonner';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -9,7 +9,6 @@ import { useMembership } from '@/hooks/useMembership';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { captureLead } from '@/lib/crm';
-import { trackBwEvent } from '@/lib/bloodwork/analytics';
 
 import { ScanFormState } from '@/components/bloodwork/ScanForm';
 import { BloodworkResults, BloodworkScanResult } from '@/components/bloodwork/BloodworkResults';
@@ -98,25 +97,9 @@ export default function BloodworkPage() {
   const [labReportId, setLabReportId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
-  const [stackActivated, setStackActivated] = useState(false);
   const lastTierRef = useRef<'baseline' | 'deep' | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const progress = useScanProgress();
-
-
-  // Post-purchase return handler — fires when user comes back from the shop.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('stack_activated') === '1') {
-      setStackActivated(true);
-      trackBwEvent('bw_protocol_activated', { source: 'shop_return' });
-      toast.success('Stack purchased — activate your protocol below.');
-      // Clean URL so refresh doesn't retrigger
-      const url = new URL(window.location.href);
-      url.searchParams.delete('stack_activated');
-      window.history.replaceState({}, '', url.toString());
-    }
-  }, []);
 
 
   const runScan = useCallback(
@@ -430,15 +413,6 @@ export default function BloodworkPage() {
             />
           ) : (
             <main className="max-w-5xl mx-auto px-4 py-8 pb-24">
-              {stackActivated && (
-                <div className="mb-4 rounded-xl border border-primary/40 bg-primary/10 p-3 flex items-center gap-3">
-                  <Sparkles size={18} className="text-primary shrink-0" />
-                  <p className="text-xs text-foreground">
-                    <span className="font-bold uppercase tracking-wider">Stack activated · </span>
-                    Your reminders will be scheduled when you add this protocol to your dose tracker.
-                  </p>
-                </div>
-              )}
               <div className="mb-6">
                 <button
                   type="button"

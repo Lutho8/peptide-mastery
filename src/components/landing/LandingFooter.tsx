@@ -35,7 +35,6 @@ const footerLinks: Record<string, FooterLink[]> = {
     { label: 'Reconstitution Guide', href: '/guides/reconstitution', isRoute: true },
     { label: 'Injection Guide', href: '/guides/injection', isRoute: true },
     { label: 'Bloodwork Monitoring', href: '/guides/bloodwork', isRoute: true },
-    { label: 'Free Course', href: '/free-course', isRoute: true },
   ],
   Legal: [
     { label: 'Privacy Policy', href: '/privacy', isRoute: true },

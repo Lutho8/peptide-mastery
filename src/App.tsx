@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import AppRouter from "@/AppRouter";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { startCycleNotificationChecker, stopCycleNotificationChecker } from "@/services/cycleNotifications";
@@ -18,7 +18,6 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Disclaimer = lazy(() => import("./pages/Disclaimer"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const FreeCourse = lazy(() => import("./pages/FreeCourse"));
 const COAVerification = lazy(() => import("./pages/COAVerification"));
 const LiveQnA = lazy(() => import("./pages/LiveQnA"));
 const PeptideEntityPage = lazy(() => import("./pages/PeptideEntityPage"));
@@ -115,7 +114,7 @@ const App = () => {
                     <Route path="/disclaimer" element={<Disclaimer />} />
                     <Route path="/terms" element={<TermsOfService />} />
                     <Route path="/admin" element={<AdminDashboard />} />
-                    <Route path="/free-course" element={<FreeCourse />} />
+                    <Route path="/free-course" element={<Navigate to="/" replace />} />
                     <Route path="/coa-verification" element={<COAVerification />} />
                     <Route path="/live-qna" element={<LiveQnA />} />
                     <Route path="/peptides/:slug" element={<PeptideEntityPage />} />
