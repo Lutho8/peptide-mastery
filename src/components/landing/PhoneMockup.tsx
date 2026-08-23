@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Activity, Droplet, Pill, TrendingUp } from 'lucide-react';
+import { Activity, Check, Droplet, Pill, TrendingUp } from 'lucide-react';
 
 /**
  * iPhone-style device frame with a stylized Peptide South Africa dashboard inside.
@@ -7,7 +7,7 @@ import { Activity, Droplet, Pill, TrendingUp } from 'lucide-react';
  */
 export function PhoneMockup() {
   return (
-    <div className="relative mx-auto w-[260px] sm:w-[280px] md:w-[300px]">
+    <div className="relative mx-auto w-[230px] sm:w-[270px] md:w-[290px]">
       {/* Phone frame */}
       <div className="relative aspect-[9/19] rounded-[2.5rem] bg-foreground/90 p-3 shadow-2xl ring-1 ring-foreground/10">
         {/* Side buttons */}
@@ -28,8 +28,10 @@ export function PhoneMockup() {
 
           {/* Header */}
           <div className="px-4 pt-4">
-            <div className="text-[10px] text-muted-foreground">Good morning</div>
-            <div className="text-sm font-bold text-foreground">Today's Protocol</div>
+            <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider text-accent">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Peptide South Africa
+            </div>
+            <div className="mt-1 text-sm font-bold text-foreground">Today's tracker</div>
           </div>
 
           {/* Adherence ring card */}
@@ -46,17 +48,17 @@ export function PhoneMockup() {
                     stroke="hsl(var(--accent))"
                     strokeWidth="3"
                     strokeDasharray="94.2"
-                    strokeDashoffset="7.5"
+                    strokeDashoffset="0"
                     strokeLinecap="round"
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-foreground">
-                  92%
+                  3/3
                 </div>
               </div>
               <div className="flex-1">
-                <div className="text-[10px] font-semibold text-foreground">Adherence</div>
-                <div className="text-[8px] text-muted-foreground">7-day streak</div>
+                <div className="text-[10px] font-semibold text-foreground">Entries complete</div>
+                <div className="text-[8px] text-muted-foreground">Account synced</div>
               </div>
               <TrendingUp className="h-4 w-4 text-accent" />
             </div>
@@ -68,9 +70,9 @@ export function PhoneMockup() {
               Today
             </div>
             {[
-              { name: 'Semaglutide', dose: '0.25 mg', time: '08:00', color: 'bg-primary' },
-              { name: 'BPC-157', dose: '250 mcg', time: '12:00', color: 'bg-accent' },
-              { name: 'Tesamorelin', dose: '1 mg', time: '22:00', color: 'bg-primary/70' },
+              { name: 'Morning entry', status: 'Logged', time: '08:00', color: 'bg-primary' },
+              { name: 'Midday entry', status: 'Due', time: '12:00', color: 'bg-accent' },
+              { name: 'Evening entry', status: 'Scheduled', time: '22:00', color: 'bg-primary/70' },
             ].map((d) => (
               <div
                 key={d.name}
@@ -81,7 +83,7 @@ export function PhoneMockup() {
                 </div>
                 <div className="flex-1">
                   <div className="text-[10px] font-semibold text-foreground">{d.name}</div>
-                  <div className="text-[8px] text-muted-foreground">{d.dose}</div>
+                  <div className="flex items-center gap-1 text-[8px] text-muted-foreground"><Check className="h-2.5 w-2.5 text-accent" /> {d.status}</div>
                 </div>
                 <div className="text-[9px] font-medium text-muted-foreground">{d.time}</div>
               </div>

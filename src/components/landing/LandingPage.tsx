@@ -1,10 +1,9 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { LandingHeader } from './LandingHeader';
 import { HeroSection } from './HeroSection';
 import { SafeSection } from './SafeSection';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { LANDING_SECTIONS } from '@/lib/landingSections';
-import { useAuth } from '@/contexts/AuthContext';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { JsonLd, buildOrganizationSchema, buildWebSiteSchema, buildFAQSchema, buildLocalBusinessSchema } from '@/components/seo/JsonLd';
 import { faqCategories } from './FAQSection';
@@ -25,7 +24,6 @@ const CTASection = lazy(() => import('./CTASection').then(m => ({ default: m.CTA
 const LandingFooter = lazy(() => import('./LandingFooter').then(m => ({ default: m.LandingFooter })));
 const FAQSection = lazy(() => import('./FAQSection').then(m => ({ default: m.FAQSection })));
 const SafetyDisclaimerBand = lazy(() => import('./SafetyDisclaimerBand').then(m => ({ default: m.SafetyDisclaimerBand })));
-const LiveQnAPopup = lazy(() => import('./LiveQnAPopup').then(m => ({ default: m.LiveQnAPopup })));
 
 // Lazy load modals - only loaded when opened
 const AuthModal = lazy(() => import('@/components/auth/AuthModal').then(m => ({ default: m.AuthModal })));
@@ -39,22 +37,17 @@ const SectionPlaceholder = ({ minH = 400 }: { minH?: number }) => (
   <div style={{ minHeight: minH }} aria-hidden="true" />
 );
 
-export function LandingPage() {
-  const { user } = useAuth();
+interface LandingPageProps {
+  onBackToDashboard?: () => void;
+}
+
+export function LandingPage({ onBackToDashboard }: LandingPageProps) {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [quizOpen, setQuizOpen] = useState(false);
   const [blendsStacksOpen, setBlendsStacksOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
-  const [popupReady, setPopupReady] = useState(false);
-
-  useEffect(() => {
-    const w = window as Window & { requestIdleCallback?: (cb: () => void) => number };
-    const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 2500));
-    const id = schedule(() => setPopupReady(true));
-    return () => { if (typeof id === 'number') clearTimeout(id); };
-  }, []);
 
   const handleSignInClick = () => { setAuthMode('signup'); setAuthModalOpen(true); };
   const handleCategoryClick = (_category: PeptideCategory) => { setSearchOpen(true); };
@@ -76,6 +69,7 @@ export function LandingPage() {
         onSignInClick={handleSignInClick}
         onSearch={() => setSearchOpen(true)}
         onBlendsClick={() => setBlendsStacksOpen(true)}
+        onBackToDashboard={onBackToDashboard}
       />
 
       <ErrorBoundary fallbackTitle="The landing page hit a snag">
@@ -132,12 +126,6 @@ export function LandingPage() {
       <Suspense fallback={<SectionPlaceholder minH={300} />}>
         <LandingFooter />
       </Suspense>
-      {popupReady && (
-        <Suspense fallback={null}>
-          <LiveQnAPopup />
-        </Suspense>
-      )}
-
       <Suspense fallback={null}>
         {authModalOpen && <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} defaultMode={authMode} />}
         {quizOpen && <PeptideQuiz open={quizOpen} onClose={() => setQuizOpen(false)} />}

@@ -271,22 +271,7 @@ const Index = () => {
   if (showLandingPage) {
     return (
       <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
-        <div className="relative bg-background">
-          <div
-            className="sticky top-0 z-[70] flex items-center border-b border-border bg-background/95 px-3 py-2 backdrop-blur-xl"
-            style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0px))' }}
-          >
-            <Button
-              onClick={handleBackToDashboard}
-              variant="outline"
-              className="min-h-11 gap-2 rounded-xl bg-card text-primary shadow-sm"
-            >
-              <ArrowLeft size={18} />
-              Return to tracker
-            </Button>
-          </div>
-          <LandingPage />
-        </div>
+        <LandingPage onBackToDashboard={handleBackToDashboard} />
       </Suspense>
     );
   }
