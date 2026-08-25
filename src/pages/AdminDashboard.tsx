@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Calendar, Mail, Shield, GraduationCap, Tag, Upload, Search, ScrollText } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, Mail, Shield, GraduationCap, Tag, Upload, Search, ScrollText, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ import CRMEnrollmentsTable from '@/components/admin/CRMEnrollmentsTable';
 import VialLabelMaker from '@/components/admin/VialLabelMaker';
 import COAUploadManager from '@/components/admin/COAUploadManager';
 import AuditLogViewer from '@/components/admin/AuditLogViewer';
+import FulfilmentQueue from '@/components/admin/FulfilmentQueue';
 import { logAudit } from '@/lib/auditLog';
 
 interface UserRow {
@@ -146,7 +147,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList>
+          <TabsList className="w-full justify-start overflow-x-auto">
             <TabsTrigger value="users" className="gap-1.5">
               <Users className="h-4 w-4" />
               Users
@@ -154,6 +155,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="crm" className="gap-1.5">
               <GraduationCap className="h-4 w-4" />
               CRM
+            </TabsTrigger>
+            <TabsTrigger value="fulfilment" className="gap-1.5">
+              <Truck className="h-4 w-4" />
+              Fulfilment
             </TabsTrigger>
             <TabsTrigger value="labels" className="gap-1.5">
               <Tag className="h-4 w-4" />
@@ -248,6 +253,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="crm">
             <CRMEnrollmentsTable />
+          </TabsContent>
+
+          <TabsContent value="fulfilment">
+            <FulfilmentQueue />
           </TabsContent>
 
           <TabsContent value="labels">

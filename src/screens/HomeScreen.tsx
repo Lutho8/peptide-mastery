@@ -13,6 +13,7 @@ import { QuickActions } from '@/components/home/QuickActions';
 import { StackCategories } from '@/components/home/StackCategories';
 import { SafetyDisclaimer } from '@/components/home/SafetyDisclaimer';
 import { JourneyDashboard } from '@/components/home/JourneyDashboard';
+import { OrderJourneyCard } from '@/components/home/OrderJourneyCard';
 import { PullToRefresh } from '@/components/ui/PullToRefresh';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
@@ -130,6 +131,16 @@ export function HomeScreen({
           onWorkspace={onNavigateStack}
         />
       </motion.div>
+
+      {!journey.isLoading && journey.snapshot && (
+        <motion.div variants={itemVariants}>
+          <OrderJourneyCard
+            journey={journey.snapshot.journey}
+            commerce={journey.snapshot.commerce}
+            onTrack={journey.trackEvent}
+          />
+        </motion.div>
+      )}
 
       {showAdvancedDashboard ? (
         <>

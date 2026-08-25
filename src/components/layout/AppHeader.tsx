@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { LifeBuoy, ShoppingBag, User, Settings, LogOut } from 'lucide-react';
 import { AnimatedLogo } from '@/components/ui/AnimatedLogo';
 import { SupportSheet } from '@/components/support/SupportSheet';
+import { getStoreCategoryHref } from '@/lib/storeLinks';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,8 +19,7 @@ interface AppHeaderProps {
   userEmail?: string | null;
 }
 
-const SHOP_HREF =
-  'https://peptide-south-africa.com/?utm_source=psa_app&utm_medium=header&utm_campaign=shop_nav';
+const SHOP_HREF = getStoreCategoryHref('all', 'header');
 
 export function AppHeader({ onLogoClick, onSettingsClick, onSignOut, userName, userEmail }: AppHeaderProps) {
   const [supportOpen, setSupportOpen] = useState(false);

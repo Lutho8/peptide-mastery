@@ -1348,6 +1348,7 @@ type GeneratedDatabase = {
         Returns: string
       }
       get_dashboard_snapshot: { Args: never; Returns: Json }
+      get_order_dashboard: { Args: never; Returns: Json }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number

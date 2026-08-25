@@ -49,7 +49,52 @@ export interface DashboardSnapshot {
       report_date: string | null;
     } | null;
   };
+  commerce: OrderDashboard;
 }
+
+export interface OrderDashboard {
+  order_count: number;
+  latest_order: {
+    id: string;
+    public_ref: string;
+    status: string;
+    total: number;
+    currency: string;
+    created_at: string;
+    paid_at: string | null;
+    shipping_method: string | null;
+  } | null;
+  latest_shipment: {
+    id: string;
+    order_ref: string;
+    status: string;
+    service: string;
+    courier: string | null;
+    tracking_number: string | null;
+    postnet_branch_name: string | null;
+    promised_date: string | null;
+    picked_at: string | null;
+    packed_at: string | null;
+    ready_for_collection_at: string | null;
+    dispatched_at: string | null;
+    delivered_at: string | null;
+    updated_at: string;
+  } | null;
+  next_reorder: {
+    id: string;
+    product_slug: string;
+    variant_label: string | null;
+    due_at: string;
+    source_order_id: string | null;
+  } | null;
+}
+
+const EMPTY_ORDER_DASHBOARD: OrderDashboard = {
+  order_count: 0,
+  latest_order: null,
+  latest_shipment: null,
+  next_reorder: null,
+};
 
 export function useCustomerJourney() {
   const { user } = useAuth();
@@ -81,13 +126,23 @@ export function useCustomerJourney() {
 
     setIsLoading(true);
     setError(null);
-    const { data, error: rpcError } = await supabase.rpc('get_dashboard_snapshot');
+    const [{ data, error: rpcError }, orderResult] = await Promise.all([
+      supabase.rpc('get_dashboard_snapshot'),
+      supabase.rpc('get_order_dashboard'),
+    ]);
     if (rpcError) {
       setError('Your dashboard could not be loaded. Please try again.');
       setIsLoading(false);
       return;
     }
-    setSnapshot(data as unknown as DashboardSnapshot);
+    if (orderResult.error) console.warn('[Journey] Order status was not loaded:', orderResult.error.message);
+    const baseSnapshot = data as unknown as Omit<DashboardSnapshot, 'commerce'>;
+    setSnapshot({
+      ...baseSnapshot,
+      commerce: orderResult.error
+        ? EMPTY_ORDER_DASHBOARD
+        : (orderResult.data as unknown as OrderDashboard) ?? EMPTY_ORDER_DASHBOARD,
+    });
     setIsLoading(false);
 
     if (viewedForUser.current !== user.id) {
