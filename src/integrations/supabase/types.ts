@@ -229,6 +229,45 @@ type GeneratedDatabase = {
         }
         Relationships: []
       }
+      customer_journeys: {
+        Row: {
+          created_at: string
+          experience_mode: string | null
+          last_active_at: string
+          lifecycle_stage: string
+          next_action_code: string
+          onboarding_step: number
+          pathway: string
+          primary_goal: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          experience_mode?: string | null
+          last_active_at?: string
+          lifecycle_stage?: string
+          next_action_code?: string
+          onboarding_step?: number
+          pathway?: string
+          primary_goal?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          experience_mode?: string | null
+          last_active_at?: string
+          lifecycle_stage?: string
+          next_action_code?: string
+          onboarding_step?: number
+          pathway?: string
+          primary_goal?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_doses: {
         Row: {
           created_at: string
@@ -597,6 +636,33 @@ type GeneratedDatabase = {
           side?: string
           svg_path_id?: string
           zone_index?: number
+        }
+        Relationships: []
+      }
+      journey_events: {
+        Row: {
+          context: Json
+          created_at: string
+          event_name: string
+          id: number
+          source: string
+          user_id: string
+        }
+        Insert: {
+          context?: Json
+          created_at?: string
+          event_name: string
+          id?: never
+          source?: string
+          user_id: string
+        }
+        Update: {
+          context?: Json
+          created_at?: string
+          event_name?: string
+          id?: never
+          source?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1281,6 +1347,9 @@ type GeneratedDatabase = {
         Args: { encryption_key: string; plain_text: string }
         Returns: string
       }
+      get_dashboard_snapshot: { Args: never; Returns: Json }
+      get_customer_value_funnel: { Args: { _days?: number }; Returns: Json }
+      get_order_dashboard: { Args: never; Returns: Json }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number

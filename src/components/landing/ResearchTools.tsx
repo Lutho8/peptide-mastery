@@ -1,44 +1,34 @@
 import { motion } from 'framer-motion';
-import { FlaskConical, Calculator, HelpCircle, Search } from 'lucide-react';
+import { BookOpenCheck, LayoutDashboard, Search } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ResearchToolsProps {
-  onBlendsClick?: () => void;
-  onQuizClick?: () => void;
   onSearchClick?: () => void;
-  onStackClick?: () => void;
-  onCalculatorClick?: () => void;
+  onStartClick?: () => void;
 }
 
-export function ResearchTools({ onBlendsClick, onQuizClick, onSearchClick, onCalculatorClick }: ResearchToolsProps) {
+export function ResearchTools({ onSearchClick, onStartClick }: ResearchToolsProps) {
   const tools = [
     {
       icon: Search,
-      title: 'Browse',
-      description: 'Predictive search across our peptide and blend database — instant results as you type.',
+      title: 'Browse the research catalogue',
+      description: 'Search source-linked peptide and blend records without receiving a product recommendation.',
       color: 'from-cyan-500 to-teal-500',
       onClick: onSearchClick,
     },
     {
-      icon: FlaskConical,
-      title: 'Blends & Stacks',
-      description: 'Pre-formulated blends and a builder for your own stacks with full compatibility analysis.',
+      icon: LayoutDashboard,
+      title: 'Use the guided dashboard',
+      description: 'Start with a clear next step, then keep your records, progress and support in one account.',
       color: 'from-purple-500 to-pink-500',
-      onClick: onBlendsClick,
+      onClick: onStartClick,
     },
     {
-      icon: Calculator,
-      title: 'Calculator',
-      description: 'Reconstitution and dosing calculator with multiple syringe types.',
+      icon: BookOpenCheck,
+      title: 'Understand the two pathways',
+      description: 'Separate guided clinical questions from independent research before you continue.',
       color: 'from-green-500 to-emerald-500',
-      onClick: onCalculatorClick,
-    },
-    {
-      icon: HelpCircle,
-      title: 'Peptide Quiz',
-      description: 'Guided questionnaire to find your ideal peptide for research.',
-      color: 'from-orange-500 to-amber-500',
-      onClick: onQuizClick,
+      onClick: onStartClick,
     },
   ];
 
@@ -54,11 +44,11 @@ export function ResearchTools({ onBlendsClick, onQuizClick, onSearchClick, onCal
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Research Tools</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Powerful tools to enhance your peptide research and decision-making process.
+            Three clear places to begin, without a product quiz or an automatically generated stack.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-3 gap-6">
           {tools.map((tool, index) => (
             <motion.div
               key={tool.title}

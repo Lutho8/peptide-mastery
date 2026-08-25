@@ -22,7 +22,6 @@ import { Button } from '@/components/ui/button';
 const HomeScreen = lazy(() => import('@/screens/HomeScreen').then(m => ({ default: m.HomeScreen })));
 const MyStackScreen = lazy(() => import('@/screens/MyStackScreen').then(m => ({ default: m.MyStackScreen })));
 const DailyLogScreen = lazy(() => import('@/screens/DailyLogScreen').then(m => ({ default: m.DailyLogScreen })));
-const DosageScreen = lazy(() => import('@/screens/DosageScreen').then(m => ({ default: m.DosageScreen })));
 const ResearchLibraryScreen = lazy(() => import('@/screens/ResearchLibraryScreen').then(m => ({ default: m.ResearchLibraryScreen })));
 const TransformationScreen = lazy(() => import('@/screens/TransformationScreen').then(m => ({ default: m.TransformationScreen })));
 const SettingsScreen = lazy(() => import('@/screens/SettingsScreen').then(m => ({ default: m.SettingsScreen })));
@@ -32,25 +31,23 @@ const LandingPage = lazy(() => import('@/components/landing/LandingPage').then(m
 // Lazy load modals
 const BodyCompositionModal = lazy(() => import('@/components/modals/BodyCompositionModal').then(m => ({ default: m.BodyCompositionModal })));
 const DoseTrackerModal = lazy(() => import('@/components/modals/DoseTrackerModal').then(m => ({ default: m.DoseTrackerModal })));
-const CycleManagementModal = lazy(() => import('@/components/modals/CycleManagementModal').then(m => ({ default: m.CycleManagementModal })));
 const InventoryModal = lazy(() => import('@/components/modals/InventoryModal').then(m => ({ default: m.InventoryModal })));
 const NotificationActionModal = lazy(() => import('@/components/modals/NotificationActionModal').then(m => ({ default: m.NotificationActionModal })));
 const AuthModal = lazy(() => import('@/components/auth/AuthModal').then(m => ({ default: m.AuthModal })));
-const ProfileSetupWizard = lazy(() => import('@/components/onboarding/ProfileSetupWizard').then(m => ({ default: m.ProfileSetupWizard })));
 const InstallAppStep = lazy(() => import('@/components/onboarding/InstallAppStep').then(m => ({ default: m.InstallAppStep })));
 
 const ScreenLoaderHome = () => <HomeSkeleton />;
 const ScreenLoaderList = () => <ListSkeleton />;
 const ScreenLoaderCards = () => <CardSkeleton />;
 
-type TabId = 'home' | 'stack' | 'daily-log' | 'dosage' | 'transformation';
+type TabId = 'home' | 'stack' | 'daily-log' | 'transformation';
 
 const Index = () => {
   useStorageInit();
   const { addDose } = useDailyDoses();
   const { user, signOut, isLoading } = useAuth();
   const { isLoading: accessLoading } = useAccessControl();
-  const { hydrated: profileHydrated } = useProfileSync();
+  useProfileSync();
   // Mount cloud sync at the app shell so the stack (and other cloud data)
   // hydrates as soon as the user is authenticated, regardless of which tab
   // they happen to land on. Without this, hydration only ran when the user
@@ -74,7 +71,7 @@ const Index = () => {
           setShowSettings(true);
           return;
         }
-        if (['home', 'stack', 'daily-log', 'dosage', 'transformation'].includes(screen)) {
+        if (['home', 'stack', 'daily-log', 'transformation'].includes(screen)) {
           setShowSettings(false);
           setActiveTab(screen as TabId);
         }
@@ -90,9 +87,7 @@ const Index = () => {
   const [showLandingPage, setShowLandingPage] = useState(false);
   const [bodyCompositionOpen, setBodyCompositionOpen] = useState(false);
   const [doseTrackerOpen, setDoseTrackerOpen] = useState(false);
-  const [cycleManagementOpen, setCycleManagementOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
-  const [profileSetupOpen, setProfileSetupOpen] = useState(false);
   const [installStepOpen, setInstallStepOpen] = useState(false);
 
   // Mark install_completed when user opens app from home screen (standalone)
@@ -123,23 +118,10 @@ const Index = () => {
       }
       const t = setTimeout(() => setInstallStepOpen(true), 800);
       return () => clearTimeout(t);
-    } catch {}
+    } catch {
+      // Storage and display-mode APIs can be unavailable in hardened browsers.
+    }
   }, [user]);
-
-  // Auto-open the profile setup wizard once per user — wait for cloud hydration first
-  // so we don't prompt a user who already has a profile saved on another device.
-  useEffect(() => {
-    if (!user || !profileHydrated) return;
-    let cancelled = false;
-    import('@/components/onboarding/ProfileSetupWizard').then(({ shouldShowProfileSetup }) => {
-      if (cancelled) return;
-      if (shouldShowProfileSetup(user.id)) {
-        const t = setTimeout(() => setProfileSetupOpen(true), 600);
-        return () => clearTimeout(t);
-      }
-    });
-    return () => { cancelled = true; };
-  }, [user, profileHydrated]);
 
   const handleMarkDoseAsTaken = useCallback((peptideName: string, dose: string, time: string) => {
     const doseMatch = dose.match(/^([\d.]+)(\w+)$/);
@@ -211,7 +193,6 @@ const Index = () => {
       home: <ScreenLoaderHome />,
       stack: <ScreenLoaderList />,
       'daily-log': <ScreenLoaderList />,
-      dosage: <ScreenLoaderCards />,
       transformation: <ScreenLoaderCards />,
     };
 
@@ -219,7 +200,6 @@ const Index = () => {
       home: 'Dashboard',
       stack: 'My Stack',
       'daily-log': 'Daily Log',
-      dosage: 'Dosage Calculator',
       transformation: 'Transformation',
     };
 
@@ -230,19 +210,17 @@ const Index = () => {
             <HomeScreen
               onOpenBodyComposition={() => setBodyCompositionOpen(true)}
               onOpenDoseTracker={() => setDoseTrackerOpen(true)}
-              onOpenCycles={() => setCycleManagementOpen(true)}
+              onOpenCycles={() => setActiveTab('stack')}
               onOpenBloodwork={() => navigate('/bloodwork')}
               onOpenInventory={() => setInventoryOpen(true)}
               onNavigatePeptides={() => setShowResearch(true)}
               onNavigateStack={() => setActiveTab('stack')}
-              onNavigateDosage={() => setActiveTab('dosage')}
               onOpenSettings={() => setShowSettings(true)}
               onNavigateResearch={() => setShowResearch(true)}
             />
           )}
           {activeTab === 'stack' && <MyStackScreen />}
           {activeTab === 'daily-log' && <DailyLogScreen />}
-          {activeTab === 'dosage' && <DosageScreen />}
           {activeTab === 'transformation' && <TransformationScreen />}
         </Suspense>
       </ErrorBoundary>
@@ -314,16 +292,9 @@ const Index = () => {
       <Suspense fallback={null}>
         {bodyCompositionOpen && <BodyCompositionModal open={bodyCompositionOpen} onOpenChange={setBodyCompositionOpen} />}
         {doseTrackerOpen && <DoseTrackerModal open={doseTrackerOpen} onOpenChange={setDoseTrackerOpen} />}
-        {cycleManagementOpen && <CycleManagementModal open={cycleManagementOpen} onOpenChange={setCycleManagementOpen} />}
         {inventoryOpen && <InventoryModal open={inventoryOpen} onOpenChange={setInventoryOpen} />}
         <NotificationActionModal onMarkAsTaken={handleMarkDoseAsTaken} />
         {authModalOpen && <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />}
-        {profileSetupOpen && (
-          <ProfileSetupWizard
-            open={profileSetupOpen}
-            onOpenChange={setProfileSetupOpen}
-          />
-        )}
         {installStepOpen && (
           <InstallAppStep open={installStepOpen} onClose={() => setInstallStepOpen(false)} />
         )}

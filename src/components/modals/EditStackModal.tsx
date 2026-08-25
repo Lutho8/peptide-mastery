@@ -6,15 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { CategoryBadge } from '@/components/ui/CategoryBadge';
-import { peptides } from '@/data/peptides';
 import { getAllSelectablePeptides, findPeptideOrBlend } from '@/data/blendAdapters';
-import { getCategoriesForGoals, getGoalLabels, getMatchingGoalsForCategory } from '@/data/goalMap';
-import { getUserProfile } from '@/services/storage';
-import { Plus, Trash2, X, FlaskConical, Sparkles, Info } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Plus, Trash2, X, FlaskConical, Info } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
 export type ExperienceTier = 'beginner' | 'intermediate' | 'advanced' | 'athlete';
 
@@ -24,25 +18,6 @@ export interface StackItem {
   frequency: string;
   experienceLevel?: ExperienceTier;
 }
-
-const TIER_LABELS: { value: ExperienceTier; label: string }[] = [
-  { value: 'beginner', label: 'Beginner' },
-  { value: 'intermediate', label: 'Inter' },
-  { value: 'advanced', label: 'Adv' },
-  { value: 'athlete', label: 'Athlete' },
-];
-
-/** Split a dosing string like "0.8mg 2x/week" into { dose, frequency }. */
-function splitDosing(s: string | undefined): { dose: string; frequency: string } {
-  if (!s) return { dose: '', frequency: '' };
-  const trimmed = s.trim();
-  // Match leading amount+unit token(s), e.g. "0.8mg", "300mcg", "2.5mg", "100 IU"
-  const m = trimmed.match(/^([\d.,]+\s*(?:mg|mcg|µg|iu|units?|u))\b\s*(.*)$/i);
-  if (m) return { dose: m[1].trim(), frequency: m[2].trim() };
-  const parts = trimmed.split(/\s+/);
-  return { dose: parts[0] ?? '', frequency: parts.slice(1).join(' ') };
-}
-
 
 interface EditStackModalProps {
   open: boolean;
@@ -57,25 +32,13 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
   const [newPeptideId, setNewPeptideId] = useState('');
   const [newDose, setNewDose] = useState('');
   const [newFrequency, setNewFrequency] = useState('');
-  const [newTier, setNewTier] = useState<ExperienceTier>('intermediate');
-  const [userGoals, setUserGoals] = useState<string[]>([]);
 
   useEffect(() => {
     if (open) {
       setStack([...currentStack]);
       setShowAddNew(false);
-      const profile = getUserProfile();
-      setUserGoals(profile?.goals ?? []);
-      const exp = (profile as { experience?: string } | null)?.experience;
-      if (exp === 'beginner' || exp === 'intermediate' || exp === 'advanced' || exp === 'athlete') {
-        setNewTier(exp);
-      }
     }
   }, [open, currentStack]);
-
-
-  const goalCategories = getCategoriesForGoals(userGoals);
-  const goalLabelList = getGoalLabels(userGoals);
 
   const handleUpdateItem = (index: number, field: 'dose' | 'frequency', value: string) => {
     const updated = [...stack];
@@ -107,12 +70,12 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
       return;
     }
 
-    setStack([...stack, { peptideId: newPeptideId, dose: newDose, frequency: newFrequency, experienceLevel: newTier }]);
+    setStack([...stack, { peptideId: newPeptideId, dose: newDose, frequency: newFrequency }]);
     setNewPeptideId('');
     setNewDose('');
     setNewFrequency('');
     setShowAddNew(false);
-    toast.success('Peptide added to stack');
+    toast.success('Item added to your recorded workspace');
   };
 
   const handleSave = () => {
@@ -123,27 +86,22 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
 
   const allSelectable = getAllSelectablePeptides();
   const availablePeptides = allSelectable.filter(p => !stack.some(s => s.peptideId === p.id));
-  const recommendedPeptides = goalCategories.size > 0
-    ? availablePeptides.filter(p => goalCategories.has(p.category))
-    : [];
-  const recommendedIds = new Set(recommendedPeptides.map(p => p.id));
-  const otherIndividual = availablePeptides.filter(p => !p.isBlend && !recommendedIds.has(p.id));
-  const otherBlends = availablePeptides.filter(p => p.isBlend && !recommendedIds.has(p.id));
+  const availableIndividual = availablePeptides.filter(p => !p.isBlend);
+  const availableBlends = availablePeptides.filter(p => p.isBlend);
 
   return (
-    <TooltipProvider delayDuration={200}>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto bg-card border-border">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Edit Your Stack</DialogTitle>
+          <DialogTitle className="text-foreground">Edit Recorded Workspace</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Current Stack Items */}
           {stack.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <p>No peptides in your stack yet.</p>
-              <p className="text-sm">Add your first peptide or blend below.</p>
+              <p>No items have been recorded yet.</p>
+              <p className="text-sm">Add only information from an existing plan or your own research record.</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -218,101 +176,33 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
               </div>
 
               <div className="space-y-3">
-                {/* Goal-tuned banner */}
-                {goalLabelList.length > 0 ? (
-                  <div className="flex items-start gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/20">
-                    <Sparkles size={14} className="text-primary mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="text-xs text-muted-foreground mb-1">Tuned to your goals:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {goalLabelList.map(g => (
-                          <Badge key={g} variant="secondary" className="text-[10px] py-0 h-5">
-                            {g}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-xs text-muted-foreground p-2.5 rounded-lg bg-muted/40 border border-border">
-                    💡 Complete your profile in Settings to see peptides recommended for your goals.
-                  </div>
-                )}
+                <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-2.5 text-xs text-muted-foreground">
+                  <Info size={14} className="mt-0.5 shrink-0 text-primary" />
+                  <p>The app records the item, amount and frequency you enter. It does not select or recommend these values.</p>
+                </div>
 
                 <div>
                   <Label className="text-xs text-muted-foreground">Peptide / Blend</Label>
-                  <Select value={newPeptideId} onValueChange={(id) => {
-                    setNewPeptideId(id);
-                    const p = findPeptideOrBlend(id) as { dosing?: Record<string, string> } | null;
-                    const src = p?.dosing?.[newTier] || p?.dosing?.intermediate || p?.dosing?.beginner;
-                    if (src) {
-                      const { dose, frequency } = splitDosing(src);
-                      setNewDose(dose);
-                      setNewFrequency(frequency);
-                    }
-                  }}>
+                  <Select value={newPeptideId} onValueChange={setNewPeptideId}>
 
                     <SelectTrigger className="bg-muted border-border">
                       <SelectValue placeholder="Select peptide or blend" />
                     </SelectTrigger>
                     <SelectContent>
-                      {recommendedPeptides.length > 0 && (
+                      {availableIndividual.length > 0 && (
                         <>
-                          <div className="px-2 py-1.5 text-xs font-semibold text-primary flex items-center gap-1.5">
-                            <Sparkles className="w-3 h-3" />
-                            Recommended for your goals
-                          </div>
-                          {recommendedPeptides.map(peptide => {
-                            const matchingGoals = getMatchingGoalsForCategory(peptide.category, userGoals);
-                            return (
-                              <SelectItem key={peptide.id} value={peptide.id} className="bg-primary/5">
-                                <span className="flex items-center gap-1.5">
-                                  {peptide.isBlend && <FlaskConical className="w-3 h-3 text-purple-400" />}
-                                  {peptide.name}
-                                  {matchingGoals.length > 0 && (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <span
-                                          className="inline-flex items-center"
-                                          onClick={(e) => e.stopPropagation()}
-                                          onPointerDown={(e) => e.stopPropagation()}
-                                        >
-                                          <Info className="w-3 h-3 text-primary/70 hover:text-primary" />
-                                        </span>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="right" className="max-w-[220px]">
-                                        <p className="text-xs">
-                                          Recommended because it targets:{' '}
-                                          <span className="font-semibold text-primary">
-                                            {matchingGoals.join(', ')}
-                                          </span>
-                                        </p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  )}
-                                </span>
-                              </SelectItem>
-                            );
-                          })}
-                        </>
-                      )}
-                      {otherIndividual.length > 0 && (
-                        <>
-                          <div className={cn(
-                            "px-2 py-1.5 text-xs font-semibold text-muted-foreground",
-                            recommendedPeptides.length > 0 && "border-t border-border mt-1 pt-1.5"
-                          )}>Individual Peptides</div>
-                          {otherIndividual.map(peptide => (
+                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Individual Peptides</div>
+                          {availableIndividual.map(peptide => (
                             <SelectItem key={peptide.id} value={peptide.id}>
                               {peptide.name}
                             </SelectItem>
                           ))}
                         </>
                       )}
-                      {otherBlends.length > 0 && (
+                      {availableBlends.length > 0 && (
                         <>
                           <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t border-border mt-1 pt-1.5">Blends & Stacks</div>
-                          {otherBlends.map(peptide => (
+                          {availableBlends.map(peptide => (
                             <SelectItem key={peptide.id} value={peptide.id}>
                               <span className="flex items-center gap-1.5">
                                 <FlaskConical className="w-3 h-3 text-purple-400" />
@@ -326,52 +216,14 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
                   </Select>
                 </div>
 
-                <div>
-                  <Label className="text-xs text-muted-foreground">Experience level</Label>
-                  <div className="mt-1 grid grid-cols-4 gap-1 rounded-lg bg-muted p-1" role="tablist" aria-label="Experience level">
-                    {TIER_LABELS.map(t => {
-                      const active = newTier === t.value;
-                      return (
-                        <button
-                          key={t.value}
-                          type="button"
-                          role="tab"
-                          aria-selected={active}
-                          onClick={() => {
-                            setNewTier(t.value);
-                            const p = findPeptideOrBlend(newPeptideId) as { dosing?: Record<string, string> } | null;
-                            const src = p?.dosing?.[t.value];
-                            if (src) {
-                              const { dose, frequency } = splitDosing(src);
-                              setNewDose(dose);
-                              setNewFrequency(frequency);
-                            }
-                          }}
-                          className={cn(
-                            'min-h-[36px] rounded-md px-2 text-xs font-medium transition-colors',
-                            active
-                              ? 'bg-primary text-primary-foreground shadow-sm'
-                              : 'text-muted-foreground hover:text-foreground'
-                          )}
-                        >
-                          {t.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="mt-1 text-[10px] text-muted-foreground">
-                    Auto-fills the recommended dose for this tier. You can still edit below.
-                  </p>
-                </div>
-
                 <div className="grid grid-cols-2 gap-2">
 
                   <div>
-                    <Label className="text-xs text-muted-foreground">Dose</Label>
+                    <Label className="text-xs text-muted-foreground">Recorded amount</Label>
                     <Input
                       value={newDose}
                       onChange={(e) => setNewDose(e.target.value)}
-                      placeholder="e.g., 500mcg"
+                      placeholder="Enter from your plan"
                       className="bg-muted border-border"
                     />
                   </div>
@@ -380,7 +232,7 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
                     <Input
                       value={newFrequency}
                       onChange={(e) => setNewFrequency(e.target.value)}
-                      placeholder="e.g., Daily"
+                      placeholder="Enter from your plan"
                       className="bg-muted border-border"
                     />
                   </div>
@@ -388,7 +240,7 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
 
                 <Button onClick={handleAddItem} className="w-full" size="sm">
                   <Plus size={14} className="mr-1" />
-                  Add to Stack
+                  Add recorded item
                 </Button>
               </div>
             </GradientCard>
@@ -399,7 +251,7 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
               onClick={() => setShowAddNew(true)}
             >
               <Plus size={16} className="mr-2" />
-              Add Peptide or Blend
+              Add recorded item
             </Button>
           )}
 
@@ -409,12 +261,11 @@ export function EditStackModal({ open, onOpenChange, currentStack, onSave }: Edi
               Cancel
             </Button>
             <Button className="flex-1" onClick={handleSave}>
-              Save Stack
+              Save workspace
             </Button>
           </div>
         </div>
       </DialogContent>
     </Dialog>
-    </TooltipProvider>
   );
 }

@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import {
   Activity,
   ArrowRight,
-  FlaskConical,
   LayoutDashboard,
   Menu,
   Search as SearchIcon,
@@ -18,7 +17,6 @@ import { track } from '@/lib/analytics';
 interface LandingHeaderProps {
   onSignInClick: () => void;
   onSearch?: (query: string) => void;
-  onBlendsClick?: () => void;
   onBackToDashboard?: () => void;
 }
 
@@ -29,10 +27,10 @@ type NavItem = {
   description: string;
   icon: typeof Menu;
   href?: string;
-  action?: 'browse' | 'blends' | 'dashboard';
+  action?: 'browse' | 'dashboard';
 };
 
-export function LandingHeader({ onSignInClick, onSearch, onBlendsClick, onBackToDashboard }: LandingHeaderProps) {
+export function LandingHeader({ onSignInClick, onSearch, onBackToDashboard }: LandingHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user } = useAuth();
@@ -62,14 +60,12 @@ export function LandingHeader({ onSignInClick, onSearch, onBlendsClick, onBackTo
     { label: 'Install the tracker', description: 'Add the web app to your phone', icon: Smartphone, href: '/install' },
     { label: 'Bloodwork', description: 'Upload and organize lab reports', icon: Activity, href: '/bloodwork' },
     { label: 'Research library', description: 'Browse evidence and limitations', icon: SearchIcon, action: 'browse' },
-    { label: 'Blends & stacks', description: 'Review catalogued combinations', icon: FlaskConical, action: 'blends' },
     { label: user ? 'Return to tracker' : 'Open dashboard', description: user ? 'Continue tracking' : 'Sign in or create an account', icon: LayoutDashboard, action: 'dashboard' },
   ];
 
   const handleAction = (item: NavItem) => {
     track('header_nav_click', { label: item.label });
     if (item.action === 'browse') return onSearch?.('');
-    if (item.action === 'blends') return onBlendsClick?.();
     if (item.action === 'dashboard') {
       if (user) {
         if (onBackToDashboard) onBackToDashboard();

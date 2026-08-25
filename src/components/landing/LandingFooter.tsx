@@ -1,22 +1,11 @@
 import { Link } from 'react-router-dom';
 import { Twitter, Mail, Linkedin } from 'lucide-react';
 import logoIcon from '@/assets/logo-icon.png';
-import { blogPosts } from '@/data/blogPosts';
 import { businessInfo } from '@/data/businessInfo';
 
 type FooterLink = { label: string; href: string; isRoute?: boolean; external?: boolean };
 
-const latestBlogs: FooterLink[] = blogPosts.slice(0, 5).map(p => ({
-  label: p.title.length > 52 ? p.title.slice(0, 52) + '…' : p.title,
-  href: `/blog/${p.slug}`,
-  isRoute: true,
-}));
-
 const footerLinks: Record<string, FooterLink[]> = {
-  Blogs: [
-    ...latestBlogs,
-    { label: 'Browse all blogs →', href: '/blog', isRoute: true },
-  ],
   'Popular Peptides': [
     { label: 'BPC-157', href: '/peptides/bpc-157', isRoute: true },
     { label: 'Retatrutide', href: '/peptides/retatrutide', isRoute: true },
@@ -30,11 +19,6 @@ const footerLinks: Record<string, FooterLink[]> = {
     { label: 'Growth Hormone', href: '/categories/growth-hormone', isRoute: true },
     { label: 'Longevity', href: '/categories/longevity', isRoute: true },
     { label: 'Cognitive', href: '/categories/cognitive', isRoute: true },
-  ],
-  Guides: [
-    { label: 'Reconstitution Guide', href: '/guides/reconstitution', isRoute: true },
-    { label: 'Injection Guide', href: '/guides/injection', isRoute: true },
-    { label: 'Bloodwork Monitoring', href: '/guides/bloodwork', isRoute: true },
   ],
   Legal: [
     { label: 'Privacy Policy', href: '/privacy', isRoute: true },

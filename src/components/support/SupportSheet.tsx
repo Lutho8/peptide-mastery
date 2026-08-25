@@ -1,4 +1,4 @@
-import { MessageCircle, Mail, CalendarCheck, ShoppingBag, ExternalLink } from 'lucide-react';
+import { MessageCircle, Mail, Route, ShoppingBag } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -12,11 +12,10 @@ interface SupportSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const WA_HREF = 'https://wa.me/491624747159?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20Peptide%20South%20Africa';
-const BOOK_HREF = 'mailto:webinars@fintiba.com?subject=Consultation%20Request%20%E2%80%94%20Peptide%20South%20Africa';
+const WA_HREF = 'https://wa.me/27641344646?text=Hi%2C%20I%20need%20help%20with%20my%20Peptide%20South%20Africa%20account%20or%20pathway.';
+const GUIDED_HREF = 'mailto:support@peptide-south-africa.com?subject=Guided%20Pathway%20Request%20%E2%80%94%20Peptide%20South%20Africa';
 const EMAIL_HREF = 'mailto:support@peptide-south-africa.com?subject=Support%20%E2%80%94%20Peptide%20South%20Africa';
 const SHOP_HREF = 'https://peptide-south-africa.com/?utm_source=psa_app&utm_medium=support&utm_campaign=shop';
-const CLUB_HREF = 'https://capetownpeptideclub.co.za';
 
 interface Row {
   icon: React.ReactNode;
@@ -30,15 +29,15 @@ const rows: Row[] = [
   {
     icon: <MessageCircle size={20} />,
     label: 'WhatsApp chat',
-    sub: 'Fastest response — usually within an hour',
+    sub: 'Account, order and pathway support',
     href: WA_HREF,
     accent: 'bg-[#25D366]/15 text-[#25D366]',
   },
   {
-    icon: <CalendarCheck size={20} />,
-    label: 'Book a consultation',
-    sub: '1:1 expert call with a peptide researcher',
-    href: BOOK_HREF,
+    icon: <Route size={20} />,
+    label: 'Request the guided pathway',
+    sub: 'We will route patient-specific questions appropriately',
+    href: GUIDED_HREF,
     accent: 'bg-primary/15 text-primary',
   },
   {
@@ -50,17 +49,10 @@ const rows: Row[] = [
   },
   {
     icon: <ShoppingBag size={20} />,
-    label: 'Shop peptides',
-    sub: 'peptide-south-africa.com',
+    label: 'Browse the research store',
+    sub: 'Opens peptide-south-africa.com',
     href: SHOP_HREF,
     accent: 'bg-amber-500/15 text-amber-500',
-  },
-  {
-    icon: <ExternalLink size={20} />,
-    label: 'Cape Town Peptide Club',
-    sub: 'Invite-only community & events',
-    href: CLUB_HREF,
-    accent: 'bg-green-500/15 text-green-500',
   },
 ];
 

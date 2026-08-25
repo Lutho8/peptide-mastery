@@ -456,7 +456,7 @@ function StepGoals({ state, onChange }: { state: ScanFormState; onChange: (s: Sc
 
       <div className="mt-10">
         <h4 className="text-sm font-semibold text-foreground mb-1">Have you used peptides before?</h4>
-        <p className="text-xs text-muted-foreground mb-3">Helps us avoid suggesting compounds you've already cycled.</p>
+        <p className="text-xs text-muted-foreground mb-3">Adds context to the extraction record; it will not generate a product or treatment recommendation.</p>
         <div className="flex gap-2">
           {(['Yes', 'No'] as const).map((opt) => {
             const v = opt === 'Yes';
@@ -579,7 +579,7 @@ function StepReview({
           disabled={running !== null || !aiProcessingConsent}
           onClick={() => onRun('deep')}
           accent="primary"
-          recommended
+          highlighted
         />
       </div>
 
@@ -601,7 +601,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 
 function TierCard({
   title, icon: Icon, duration, biomarkers, followups, description, cta,
-  running, disabled, onClick, accent, recommended,
+  running, disabled, onClick, accent, highlighted,
 }: {
   title: string;
   icon: React.ElementType;
@@ -614,7 +614,7 @@ function TierCard({
   disabled: boolean;
   onClick: () => void;
   accent: 'primary' | 'muted';
-  recommended?: boolean;
+  highlighted?: boolean;
 }) {
   return (
     <div
@@ -625,9 +625,9 @@ function TierCard({
           : 'border-border/60 bg-card/50'
       )}
     >
-      {recommended && (
+      {highlighted && (
         <span className="absolute -top-2.5 right-4 px-2.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider shadow-md">
-          Recommended
+          More detail
         </span>
       )}
       <div className="flex items-center gap-2 mb-2">

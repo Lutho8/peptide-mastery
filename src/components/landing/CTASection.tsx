@@ -8,11 +8,11 @@ interface CTASectionProps {
 }
 
 const benefits = [
-  '98+ Peptide Profiles',
-  'Smart Calculators',
-  'Protocol Tracking',
-  'Monthly Group Q&A',
-  'COA Verification',
+  'Guided first step',
+  'Existing-plan tracking',
+  'Bloodwork record',
+  'Source-linked research',
+  'Inventory record',
 ];
 
 export function CTASection({ onSignInClick }: CTASectionProps) {
@@ -31,10 +31,10 @@ export function CTASection({ onSignInClick }: CTASectionProps) {
           className="max-w-3xl mx-auto text-center"
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Ready to Optimize Your Peptide Journey?
+            Ready for one clear next step?
           </h2>
           <p className="text-lg text-muted-foreground mb-8">
-            Every feature is free for registered researchers — dose logging, bloodwork integration, calculators, and the monthly Q&A. No paywalls. Ever.
+            Create an account to organise your pathway, existing plan, progress and support without scattered systems.
           </p>
 
           {/* Benefits List */}
@@ -67,7 +67,7 @@ export function CTASection({ onSignInClick }: CTASectionProps) {
             </Button>
             <SparkleButton asChild size="lg" className="w-full sm:w-auto">
               <a href="https://peptide-south-africa.com?utm_source=tracker&utm_medium=cta_section&utm_campaign=buy_peptides" target="_blank" rel="noopener noreferrer">
-                Buy Peptides →
+                Browse Research Store →
               </a>
             </SparkleButton>
           </div>

@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, Clock, FlaskConical, Layers, Beaker, Sparkles } from 'lucide-react';
+import { Search, X, Clock, FlaskConical, Layers, Beaker, Sparkles, type LucideIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +30,7 @@ interface SearchResult {
   subtitle: string;
   tag?: string;
   score: number;
-  raw: any;
+  raw: Peptide | PeptideBlend;
 }
 
 const RECENT_KEY = 'peptide_recent_searches';
@@ -165,7 +165,7 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
             name: p.shortName,
             subtitle: p.name,
             tag: p.halfLife,
-            score: s + p.longevityScore,
+            score: s,
             raw: p,
           });
         }
@@ -215,13 +215,6 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
     return out.sort((a, b) => b.score - a.score).slice(0, q ? 20 : 12);
   }, [debouncedQuery, category, stackItems]);
 
-  const popularSuggestions = useMemo(() => {
-    const ids = ['tesamorelin', 'bpc157', 'semaglutide', 'retatrutide', 'ghkcu', 'ipamorelin'];
-    return ids
-      .map((id) => peptides.find((p) => p.id === id))
-      .filter((p): p is Peptide => Boolean(p));
-  }, []);
-
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 100);
   }, [open]);
@@ -249,7 +242,7 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
   if (!open) return null;
 
   const showRecents = !debouncedQuery && recents.length > 0;
-  const chips: { id: CategoryFilter; label: string; icon: any }[] = [
+  const chips: { id: CategoryFilter; label: string; icon: LucideIcon }[] = [
     { id: 'all', label: 'All', icon: Sparkles },
     { id: 'peptides', label: 'Peptides', icon: FlaskConical },
     { id: 'blends', label: 'Blends', icon: Beaker },
@@ -408,29 +401,11 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
                 <p className="text-sm text-muted-foreground">Try a different keyword or category.</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <Sparkles className="w-3 h-3" /> Popular
+              <div className="rounded-xl border border-border bg-card/50 p-4">
+                <p className="text-sm font-medium text-foreground">Search the catalogue by name or category</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  Results are matched to your search terms. They are not ranked as product recommendations.
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {popularSuggestions.map((p) => (
-                    <button
-                      key={p.id}
-                      onClick={() => {
-                        setSelectedPeptide(p);
-                        setDetailModalOpen(true);
-                      }}
-                      className="px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/30 hover:bg-primary hover:text-primary-foreground transition-colors"
-                    >
-                      {p.shortName}
-                    </button>
-                  ))}
-                </div>
-                {!showRecents && (
-                  <p className="text-xs text-muted-foreground pt-4">
-                    Try "Tesa", "BPC", "Sema", or "Reta" — partial names and brand names work.
-                  </p>
-                )}
               </div>
             )}
           </div>

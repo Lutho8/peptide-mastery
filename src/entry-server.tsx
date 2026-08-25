@@ -19,24 +19,9 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Disclaimer from "./pages/Disclaimer";
 import TermsOfService from "./pages/TermsOfService";
 import COAVerification from "./pages/COAVerification";
-import LiveQnA from "./pages/LiveQnA";
 import PeptideEntityPage from "./pages/PeptideEntityPage";
 import CategoryHubPage from "./pages/CategoryHubPage";
-import GuidePage from "./pages/GuidePage";
-import BlogIndexPage from "./pages/BlogIndexPage";
-import BlogPostPage from "./pages/BlogPostPage";
 import FAQPage from "./pages/FAQPage";
-import WeightLossPeptidesSA from "./pages/goals/WeightLossPeptidesSA";
-import HealingPeptidesSA from "./pages/goals/HealingPeptidesSA";
-import AntiAgingPeptidesSA from "./pages/goals/AntiAgingPeptidesSA";
-import CognitivePeptidesSA from "./pages/goals/CognitivePeptidesSA";
-import GrowthHormonePeptidesSA from "./pages/goals/GrowthHormonePeptidesSA";
-import LibidoPeptidesSA from "./pages/goals/LibidoPeptidesSA";
-import Bpc157VsTb500 from "./pages/comparisons/Bpc157VsTb500";
-import PeptidesForWomenSA from "./pages/goals/PeptidesForWomenSA";
-import PeptidesDiabetesFattyLiver from "./pages/goals/PeptidesDiabetesFattyLiver";
-import PeptideStorageReconstitutionGuide from "./pages/guides/PeptideStorageReconstitutionGuide";
-import Bpc157DosageGuideSA from "./pages/guides/Bpc157DosageGuideSA";
 
 export interface RenderResult {
   html: string;
@@ -62,24 +47,24 @@ export function render(url: string): RenderResult {
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/free-course" element={<Navigate to="/" replace />} />
                 <Route path="/coa-verification" element={<COAVerification />} />
-                <Route path="/live-qna" element={<LiveQnA />} />
+                <Route path="/live-qna" element={<Navigate to="/" replace />} />
                 <Route path="/peptides/:slug" element={<PeptideEntityPage />} />
                 <Route path="/categories/:slug" element={<CategoryHubPage />} />
-                <Route path="/guides/:slug" element={<GuidePage />} />
-                <Route path="/blog" element={<BlogIndexPage />} />
-                <Route path="/blog/:slug" element={<BlogPostPage />} />
+                <Route path="/guides/:slug" element={<Navigate to="/" replace />} />
+                <Route path="/blog" element={<Navigate to="/" replace />} />
+                <Route path="/blog/:slug" element={<Navigate to="/" replace />} />
                 <Route path="/faq" element={<FAQPage />} />
-                <Route path="/weight-loss-peptides-south-africa" element={<WeightLossPeptidesSA />} />
-                <Route path="/healing-peptides-south-africa" element={<HealingPeptidesSA />} />
-                <Route path="/anti-aging-peptides-south-africa" element={<AntiAgingPeptidesSA />} />
-                <Route path="/cognitive-peptides-south-africa" element={<CognitivePeptidesSA />} />
-                <Route path="/growth-hormone-peptides-south-africa" element={<GrowthHormonePeptidesSA />} />
-                <Route path="/libido-peptides-south-africa" element={<LibidoPeptidesSA />} />
-                <Route path="/bpc-157-vs-tb-500" element={<Bpc157VsTb500 />} />
-                <Route path="/peptides-for-women-south-africa" element={<PeptidesForWomenSA />} />
-                <Route path="/peptides-diabetes-fatty-liver" element={<PeptidesDiabetesFattyLiver />} />
-                <Route path="/peptide-storage-reconstitution-guide" element={<PeptideStorageReconstitutionGuide />} />
-                <Route path="/bpc-157-dosage-guide-south-africa" element={<Bpc157DosageGuideSA />} />
+                <Route path="/weight-loss-peptides-south-africa" element={<Navigate to="/" replace />} />
+                <Route path="/healing-peptides-south-africa" element={<Navigate to="/" replace />} />
+                <Route path="/anti-aging-peptides-south-africa" element={<Navigate to="/" replace />} />
+                <Route path="/cognitive-peptides-south-africa" element={<Navigate to="/" replace />} />
+                <Route path="/growth-hormone-peptides-south-africa" element={<Navigate to="/" replace />} />
+                <Route path="/libido-peptides-south-africa" element={<Navigate to="/" replace />} />
+                <Route path="/bpc-157-vs-tb-500" element={<Navigate to="/" replace />} />
+                <Route path="/peptides-for-women-south-africa" element={<Navigate to="/" replace />} />
+                <Route path="/peptides-diabetes-fatty-liver" element={<Navigate to="/" replace />} />
+                <Route path="/peptide-storage-reconstitution-guide" element={<Navigate to="/" replace />} />
+                <Route path="/bpc-157-dosage-guide-south-africa" element={<Navigate to="/peptides/bpc-157" replace />} />
               </Routes>
             </StaticRouter>
           </TooltipProvider>

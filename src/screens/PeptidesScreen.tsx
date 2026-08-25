@@ -1,10 +1,9 @@
 import { useState, useDeferredValue, useMemo, useEffect } from 'react';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { CategoryBadge } from '@/components/ui/CategoryBadge';
-import { StatusBadge } from '@/components/ui/StatusBadge';
 import { peptides, Peptide, PeptideCategory, getCategoryLabel } from '@/data/peptides';
 import { getAliasesFor, boundedLevenshtein } from '@/data/peptideAliases';
-import { Search, Filter, Star, Check, FlaskConical, ShieldCheck, Bookmark, BookmarkPlus, Trash2 } from 'lucide-react';
+import { Search, Filter, FlaskConical, ShieldCheck, Bookmark, BookmarkPlus, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -23,7 +22,7 @@ interface PeptidesScreenProps {
   onViewPeptide: (peptide: Peptide) => void;
 }
 
-type FilterTab = 'all' | 'fda-approved' | 'janoshik' | 'in-stock' | 'longevity' | 'new';
+type FilterTab = 'all' | 'fda-approved' | 'janoshik' | 'new';
 type ResearchStatus = 'all' | 'approved' | 'phase3' | 'phase2' | 'phase1' | 'preclinical';
 
 const researchStatusLabel: Record<ResearchStatus, string> = {
@@ -35,13 +34,10 @@ const researchStatusLabel: Record<ResearchStatus, string> = {
   preclinical: 'Research',
 };
 
-type SortKey = 'longevity' | 'name' | 'price' | 'priceDesc' | 'janoshikPurity' | 'recentlyAdded';
+type SortKey = 'name' | 'janoshikPurity' | 'recentlyAdded';
 
 const sortLabels: Record<SortKey, string> = {
-  longevity: 'Longevity Score',
   name: 'Name (A→Z)',
-  price: 'Price (low → high)',
-  priceDesc: 'Price (high → low)',
   janoshikPurity: 'Janoshik Purity',
   recentlyAdded: 'Recently Added',
 };
@@ -66,7 +62,7 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
   const [researchFilter, setResearchFilter] = useState<ResearchStatus>('all');
-  const [sortBy, setSortBy] = useState<SortKey>('longevity');
+  const [sortBy, setSortBy] = useState<SortKey>('name');
   const [savedSearches, setSavedSearches] = useState<SavedPeptideSearch[]>(() => listSavedSearches());
   const [saveName, setSaveName] = useState('');
   const [saveOpen, setSaveOpen] = useState(false);
@@ -77,8 +73,6 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
     { id: 'all', label: 'All' },
     { id: 'fda-approved', label: 'FDA Approved' },
     { id: 'janoshik', label: 'Janoshik Tested' },
-    { id: 'in-stock', label: 'In Stock' },
-    { id: 'longevity', label: 'Top Longevity' },
     { id: 'new', label: 'New' },
   ];
 
@@ -107,28 +101,7 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
           // scope hints
           if (tok.startsWith('fda:')) return p.fdaApproved === (tok.slice(4) === 'true');
           if (tok.startsWith('janoshik:')) return p.janoshikTested === (tok.slice(9) === 'true');
-          if (tok.startsWith('stock:')) return p.supplier.stock === tok.slice(6);
           if (tok.startsWith('cat:')) return p.category.toLowerCase() === tok.slice(4);
-          if (tok.startsWith('score:')) {
-            const m = tok.slice(6).match(/^(>=|<=|>|<|=)?(\d+(?:\.\d+)?)$/);
-            if (!m) return false;
-            const [, op = '=', v] = m; const n = parseFloat(v);
-            return op === '>=' ? p.longevityScore >= n :
-                   op === '<=' ? p.longevityScore <= n :
-                   op === '>'  ? p.longevityScore >  n :
-                   op === '<'  ? p.longevityScore <  n :
-                                 p.longevityScore === n;
-          }
-          if (tok.startsWith('price:')) {
-            const m = tok.slice(6).match(/^(>=|<=|>|<|=)?(\d+(?:\.\d+)?)$/);
-            if (!m) return false;
-            const [, op = '=', v] = m; const n = parseFloat(v);
-            return op === '>=' ? p.supplier.price >= n :
-                   op === '<=' ? p.supplier.price <= n :
-                   op === '>'  ? p.supplier.price >  n :
-                   op === '<'  ? p.supplier.price <  n :
-                                 p.supplier.price === n;
-          }
           if (haystacks.some((h) => h.includes(tok))) return true;
           if (tok.length >= 3) {
             return haystacks.some((h) =>
@@ -150,12 +123,6 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
         case 'janoshik':
           matchesCategory = p.janoshikTested;
           break;
-        case 'in-stock':
-          matchesCategory = p.supplier.stock === 'in-stock';
-          break;
-        case 'longevity':
-          matchesCategory = p.longevityScore >= 8;
-          break;
       }
       if (!matchesCategory) return false;
 
@@ -170,14 +137,8 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
     })
     .sort((a, b) => {
       switch (sortBy) {
-        case 'longevity':
-          return b.longevityScore - a.longevityScore;
         case 'name':
           return a.name.localeCompare(b.name);
-        case 'price':
-          return a.supplier.price - b.supplier.price;
-        case 'priceDesc':
-          return b.supplier.price - a.supplier.price;
         case 'janoshikPurity':
           return (b.janoshikPurity ?? 0) - (a.janoshikPurity ?? 0);
         case 'recentlyAdded':
@@ -191,7 +152,7 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
     searchQuery.trim() !== '' ||
     activeFilter !== 'all' ||
     researchFilter !== 'all' ||
-    sortBy !== 'longevity';
+    sortBy !== 'name';
 
   const applySaved = (s: SavedPeptideSearch) => {
     setSearchQuery(s.query);
@@ -230,18 +191,13 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
 
       <WidgetHint
         id="peptides-intro"
-        title="Browse 98+ peptides — filter, then tap for the full profile"
-        body="Search by name (partial works), or use the filter tabs to narrow by FDA status, testing, stock, and category. Tap any card for dosing, half-life, and study links."
+        title="Browse catalogue records without product ranking"
+        body="Search by name or use evidence-status filters. Catalogue inclusion and ordering do not mean a product is suitable for you."
         steps={[
           'Type a partial name in the search bar — e.g. "Tesa" or "BPC".',
-          'Use "Janoshik Tested" for third-party verified peptides only.',
-          'Tap a card → Add to Stack to start tracking it.',
+          'Use evidence and testing filters to narrow the source material.',
+          'Open a card to review mechanism, limitations and references.',
         ]}
-        goalHooks={{
-          'fat-loss': 'try the "Top Longevity" and category filters — Retatrutide, Tirzepatide sit here.',
-          'recovery': 'BPC-157 and TB-500 are your top healing candidates — search either name.',
-          'cognitive': 'search Semax, Selank, or Cerebrolysin for cognitive-edge peptides.',
-        }}
       />
 
 
@@ -249,7 +205,7 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
       <div className="relative">
         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder='Search — try "BPC", "cat:healing", "fda:true", "score:>=8"'
+          placeholder='Search by name or use "cat:healing", "fda:true"'
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10 bg-card border-border"
@@ -405,22 +361,11 @@ export function PeptidesScreen({ onViewPeptide }: PeptidesScreenProps) {
                     <span>{peptide.janoshikPurity}%</span>
                   </div>
                 )}
-                <StatusBadge status={peptide.supplier.stock} size="sm" />
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-border/50">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1">
-                  <Star size={14} className="text-yellow-500 fill-yellow-500" />
-                  <span className="text-sm font-medium text-foreground">{peptide.longevityScore}/10</span>
-                  <span className="text-xs text-muted-foreground">Longevity</span>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-lg font-bold text-foreground">${peptide.supplier.price}</p>
-                <p className="text-xs text-muted-foreground">per vial</p>
-              </div>
+            <div className="pt-3 border-t border-border/50 text-xs text-muted-foreground">
+              Open the research record for evidence context, limitations and source links.
             </div>
           </GradientCard>
         ))}

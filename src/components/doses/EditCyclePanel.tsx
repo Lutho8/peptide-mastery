@@ -91,7 +91,7 @@ export function EditCyclePanel({ cycle, onSave, onCancel }: EditCyclePanelProps)
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Dose</Label>
+            <Label className="text-xs">Recorded amount</Label>
             <Input className="bg-muted" value={dose} onChange={(e) => setDose(e.target.value)} />
           </div>
           <div className="space-y-1">
@@ -108,7 +108,7 @@ export function EditCyclePanel({ cycle, onSave, onCancel }: EditCyclePanelProps)
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Duration (days)</Label>
+            <Label className="text-xs">Recorded length (days)</Label>
             <Input
               type="number"
               className="bg-muted"
@@ -117,7 +117,7 @@ export function EditCyclePanel({ cycle, onSave, onCancel }: EditCyclePanelProps)
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Break (days)</Label>
+            <Label className="text-xs">Recorded pause (days)</Label>
             <Input
               type="number"
               className="bg-muted"
@@ -137,7 +137,7 @@ export function EditCyclePanel({ cycle, onSave, onCancel }: EditCyclePanelProps)
         </div>
 
         <p className="text-[11px] text-muted-foreground italic">
-          Reminders for this peptide keep firing — disable them in Reminders if needed while you wait for your reorder.
+          These fields mirror your own existing plan. Updating them does not create clinical guidance.
         </p>
 
         <div className="flex gap-2">

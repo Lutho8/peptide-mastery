@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async';
 import { businessInfo, postalAddressSchema } from '@/data/businessInfo';
 
 interface JsonLdProps {
-  data: Record<string, any> | Record<string, any>[];
+  data: Record<string, unknown> | Record<string, unknown>[];
   id?: string;
 }
 
@@ -36,7 +36,7 @@ export function buildOrganizationSchema() {
     name: 'Peptide South Africa',
     url: 'https://peptide-south-africa.co.za',
     logo: 'https://peptide-south-africa.co.za/logo-animated.png',
-    description: 'Peptide research platform providing protocol tracking, dosage guidance, and biomarker analysis.',
+    description: 'South African peptide research platform providing source-led education, user-entered tracking, and bloodwork organisation.',
     email: businessInfo.email,
     telephone: businessInfo.telephone,
     address: postalAddressSchema(),
@@ -45,9 +45,9 @@ export function buildOrganizationSchema() {
       'https://capetownpeptideclub.co.za',
     ],
     knowsAbout: [
-      'Peptide therapy', 'BPC-157', 'TB-500', 'Retatrutide', 'Tirzepatide',
-      'Growth hormone secretagogues', 'Reconstitution', 'Biomarker analysis',
-      'Peptide stacking', 'Peptide dosing protocols'
+      'Peptide research', 'BPC-157', 'TB-500', 'Retatrutide', 'Tirzepatide',
+      'Growth hormone secretagogues', 'Biomarker organisation',
+      'Research methods', 'Clinical pathway navigation'
     ]
   };
 }
@@ -76,9 +76,9 @@ export function buildWebSiteSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Peptide South Africa – Peptide Research & Protocol Platform',
+    name: 'Peptide South Africa – Peptide Research & Tracking Platform',
     url: 'https://peptide-south-africa.co.za',
-    description: 'Research-backed peptide database with protocol tracking, reconstitution calculators, and AI-powered biomarker analysis.',
+    description: 'Source-led peptide database with user-entered tracking, guided pathway navigation, and bloodwork organisation.',
     potentialAction: {
       '@type': 'SearchAction',
       target: 'https://peptide-south-africa.co.za/peptides?q={search_term_string}',
@@ -137,24 +137,16 @@ export function buildPeptideSchema(peptide: {
   category: string;
   molecularWeight?: string;
   halfLife?: string;
-  administration: string;
 }) {
   return {
     '@context': 'https://schema.org',
-    '@type': 'MedicalEntity',
+    '@type': 'WebPage',
     name: peptide.name,
     url: `https://peptide-south-africa.co.za/peptides/${peptide.slug}`,
     description: peptide.description,
-    medicineSystem: 'WesternConventional',
-    relevantSpecialty: [
-      { '@type': 'MedicalSpecialty', name: 'Endocrinology' },
-      { '@type': 'MedicalSpecialty', name: 'Sports medicine' },
-      { '@type': 'MedicalSpecialty', name: 'Anti-aging medicine' },
-    ],
     additionalProperty: [
       peptide.molecularWeight && { '@type': 'PropertyValue', name: 'Molecular Weight', value: peptide.molecularWeight },
       peptide.halfLife && { '@type': 'PropertyValue', name: 'Half-Life', value: peptide.halfLife },
-      { '@type': 'PropertyValue', name: 'Administration', value: peptide.administration },
       { '@type': 'PropertyValue', name: 'Category', value: peptide.category },
     ].filter(Boolean)
   };

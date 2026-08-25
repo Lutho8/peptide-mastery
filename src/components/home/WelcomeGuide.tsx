@@ -1,18 +1,17 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Rocket, X, ArrowRight, Syringe, Calendar, BookOpen, Sparkles } from 'lucide-react';
+import { Rocket, X, ArrowRight, Calendar, BookOpen, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { resetDashboardTour } from '@/components/onboarding/DashboardTour';
 
 interface WelcomeGuideProps {
   onCycles: () => void;
-  onDosage: () => void;
   onResearch?: () => void;
 }
 
 const STORAGE_KEY = 'rtd-welcome-dismissed';
 
-export function WelcomeGuide({ onCycles, onDosage, onResearch }: WelcomeGuideProps) {
+export function WelcomeGuide({ onCycles, onResearch }: WelcomeGuideProps) {
   const [dismissed, setDismissed] = useState(true);
 
   useEffect(() => {
@@ -38,19 +37,11 @@ export function WelcomeGuide({ onCycles, onDosage, onResearch }: WelcomeGuidePro
     },
     {
       icon: Calendar,
-      title: 'Add your confirmed plan',
-      description: 'Track what was agreed with you',
+      title: 'Record an existing plan',
+      description: 'Enter only information you already have',
       action: onCycles,
       color: 'text-primary',
       bg: 'bg-primary/10',
-    },
-    {
-      icon: Syringe,
-      title: 'See the syringe draw',
-      description: 'Visual U-40 / U-100 units',
-      action: onDosage,
-      color: 'text-accent',
-      bg: 'bg-secondary',
     },
   ];
 
@@ -78,7 +69,7 @@ export function WelcomeGuide({ onCycles, onDosage, onResearch }: WelcomeGuidePro
               <h3 className="font-semibold text-foreground text-sm">Quick Start Guide</h3>
             </div>
             <p className="text-xs text-muted-foreground mb-3">
-              New to peptides? Follow these three steps in order:
+              New here? Start with evidence, then record only an existing plan.
             </p>
 
             <Button

@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { CategoryBadge } from '@/components/ui/CategoryBadge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { userProfile, stackOptimizations } from '@/data/userData';
+import { userProfile } from '@/data/userData';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCloudSync, useSyncPhase } from '@/hooks/useCloudSync';
 import { findPeptideOrBlend, findBlendData } from '@/data/blendAdapters';
-import { ChevronDown, ChevronUp, Sparkles, ShoppingCart, AlertTriangle, ExternalLink, Edit2, FlaskConical, Play, Square, RotateCcw, Target, Calendar as CalendarIcon, Undo2, Pause, Pencil, Wand2, Clock, Info } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, AlertTriangle, Edit2, FlaskConical, Play, Square, Target, Calendar as CalendarIcon, Undo2, Pause, Pencil, Info } from 'lucide-react';
 import { getGoalLabels } from '@/data/goalMap';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -16,21 +16,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { EditStackModal, StackItem } from '@/components/modals/EditStackModal';
 import { getActiveStack, saveActiveStack, getUserProfile, getCycles, updateCycle, saveCycle, Cycle } from '@/services/storage';
-import { getCycleSuggestion } from '@/data/cycleSuggestions';
 import { toast } from '@/hooks/use-toast';
 import { toast as sonnerToast } from 'sonner';
 import { recordStackChange, popLastChange, canUndo as canUndoStack } from '@/services/stackHistory';
-import { StackSyncBadge, type SyncStatus } from '@/components/sync/StackSyncBadge';
-import { AIAgentPanel } from '@/components/ai/AIAgentPanel';
+import { StackSyncBadge } from '@/components/sync/StackSyncBadge';
 import { Badge } from '@/components/ui/badge';
-import { CycleBreakAlert } from '@/components/doses/CycleBreakAlert';
-import { Progress } from '@/components/ui/progress';
-import { DosingReference } from '@/components/doses/DosingReference';
 import { EditCyclePanel } from '@/components/doses/EditCyclePanel';
 import { AnimatePresence } from 'framer-motion';
 import { useDailyDoses, type DailyDoseEntry } from '@/hooks/useDailyDoses';
-import { getCycleProgress as computeCycleProgress, cycleStatusLabel, validateBackdate, recalculateCycle, getCyclePhase, getNextDose } from '@/lib/cycleProgress';
-import { BuyStackCard } from '@/components/stack/BuyStackCard';
+import { getCycleProgress as computeCycleProgress, cycleStatusLabel, validateBackdate } from '@/lib/cycleProgress';
 import { WidgetHint } from '@/components/onboarding/WidgetHint';
 
 // --- Stack Item Card ---
@@ -44,14 +38,12 @@ interface StackItemProps {
   isEditing?: boolean;
   onStartCycle?: (peptideId: string, peptideName: string, dose: string, frequency: string) => void;
   onEndCycle?: (cycle: Cycle) => void;
-  onRestartCycle?: (peptideId: string, peptideName: string, dose: string, frequency: string) => void;
   onTogglePauseEdit?: (cycle: Cycle) => void;
   onSavePauseEdit?: (cycle: Cycle) => void;
   onResume?: (cycle: Cycle) => void;
-  onRecalculate?: (cycle: Cycle) => void;
 }
 
-function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEditing, onStartCycle, onEndCycle, onRestartCycle, onTogglePauseEdit, onSavePauseEdit, onResume, onRecalculate }: StackItemProps) {
+function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEditing, onStartCycle, onEndCycle, onTogglePauseEdit, onSavePauseEdit, onResume }: StackItemProps) {
   const [isOpen, setIsOpen] = useState(false);
   const blendData = findBlendData(peptideId);
 
@@ -129,7 +121,7 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEd
               }}
             >
               <Play size={12} />
-              Start Cycle
+              Start tracking period
             </Button>
           </div>
         )}
@@ -151,24 +143,6 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEd
                 {cycleStatusLabel(cycleInfo, cycle.status)}
               </Badge>
             </div>
-            {/* Phase + next-dose info */}
-            {(() => {
-              const phaseInfo = getCyclePhase(cycle, cycleInfo);
-              const nextDose = cycle.status === 'active' ? getNextDose(cycle, doses || []) : null;
-              return (
-                <div className="flex items-center justify-between flex-wrap gap-1.5 text-[10px] text-muted-foreground">
-                  <span>
-                    Week {phaseInfo.weekNow}/{phaseInfo.weeksTotal} · <span className="text-primary">{phaseInfo.label}</span>
-                    {phaseInfo.weeksLeft > 0 && cycle.status === 'active' && ` · ${phaseInfo.weeksLeft}w left`}
-                  </span>
-                  {nextDose && (
-                    <span className="inline-flex items-center gap-1">
-                      <Clock size={10} /> Next: {nextDose.label}
-                    </span>
-                  )}
-                </div>
-              );
-            })()}
             <div className="w-full h-2 rounded-full bg-muted">
               <div
                 className={cn(
@@ -180,7 +154,7 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEd
             </div>
             {cycle.breakDuration > 0 && (
               <p className="text-[10px] text-muted-foreground">
-                {cycle.breakDuration}-day break recommended after cycle
+                Recorded pause after this period: {cycle.breakDuration} days
               </p>
             )}
             {/* Inline cycle action buttons */}
@@ -241,33 +215,6 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEd
                   </Button>
                 </>
               )}
-              {cycleInfo.isOverdue && cycle.status === 'active' && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 gap-1.5 text-xs h-7 border-primary/30 text-primary hover:bg-primary/10"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRestartCycle?.(peptideId, peptide.name, dose, frequency);
-                  }}
-                >
-                  <RotateCcw size={10} />
-                  Restart
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 text-xs h-7 text-muted-foreground hover:text-foreground"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRecalculate?.(cycle);
-                }}
-                title="Reconcile week count, planned doses, and logged doses"
-              >
-                <Wand2 size={10} />
-                Recalculate
-              </Button>
             </div>
 
             {/* Inline edit/pause panel */}
@@ -285,26 +232,15 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEd
 
         <CollapsibleContent>
           <div className="mt-4 pt-4 border-t border-border/50 space-y-4">
-            <DosingReference peptideId={peptideId} dose={dose} />
             {blendData ? (
               <>
                 <div>
-                  <h5 className="text-sm font-medium text-foreground mb-2">Protocol Overview</h5>
+                  <h5 className="text-sm font-medium text-foreground mb-2">Research overview</h5>
                   <p className="text-xs text-muted-foreground">{blendData.howItWorks.slice(0, 200)}...</p>
                 </div>
                 <div>
-                  <h5 className="text-sm font-medium text-foreground mb-2">Dosing Schedule</h5>
-                  <div className="space-y-1.5">
-                    {blendData.dosingTable.map((row, i) => (
-                      <div key={i} className="flex justify-between p-2 rounded-lg bg-muted/50 text-xs">
-                        <span className="text-primary font-medium">{row.week}</span>
-                        <span className="text-muted-foreground">{row.dailyDose} — {row.units}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <h5 className="text-sm font-medium text-foreground mb-2">Benefits</h5>
+                  <h5 className="text-sm font-medium text-foreground mb-1">Research topics</h5>
+                  <p className="mb-2 text-[10px] text-muted-foreground">Catalogue topics only; not promised outcomes or recommendations.</p>
                   <ul className="space-y-1">
                     {blendData.benefits.slice(0, 4).map((benefit, i) => (
                       <li key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -345,28 +281,8 @@ function StackItemCard({ peptide, dose, frequency, peptideId, cycle, doses, isEd
             ) : (
               <>
                 <div>
-                  <h5 className="text-sm font-medium text-foreground mb-2">Expected Results Timeline</h5>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="p-2 rounded-lg bg-muted/50">
-                      <p className="text-primary font-medium">Week 1-2</p>
-                      <p className="text-muted-foreground">{peptide.expectedResults.week1_2}</p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-muted/50">
-                      <p className="text-primary font-medium">Week 3-4</p>
-                      <p className="text-muted-foreground">{peptide.expectedResults.week3_4}</p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-muted/50">
-                      <p className="text-primary font-medium">Week 5-8</p>
-                      <p className="text-muted-foreground">{peptide.expectedResults.week5_8}</p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-muted/50">
-                      <p className="text-primary font-medium">Long-term</p>
-                      <p className="text-muted-foreground">{peptide.expectedResults.longTerm}</p>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <h5 className="text-sm font-medium text-foreground mb-2">Top Athlete Benefits</h5>
+                  <h5 className="text-sm font-medium text-foreground mb-1">Athlete-focused research topics</h5>
+                  <p className="mb-2 text-[10px] text-muted-foreground">These labels organise source material and are not performance claims.</p>
                   <ul className="space-y-1">
                     {peptide.athleteBenefits.slice(0, 3).map((benefit, i) => (
                       <li key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -416,6 +332,8 @@ export function MyStackScreen() {
   const [startCycleDialogOpen, setStartCycleDialogOpen] = useState(false);
   const [pendingCycle, setPendingCycle] = useState<{ peptideId: string; peptideName: string; dose: string; frequency: string } | null>(null);
   const [pendingStartDate, setPendingStartDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [pendingDuration, setPendingDuration] = useState('');
+  const [pendingBreakDuration, setPendingBreakDuration] = useState('');
 
   const refreshFromStorage = () => {
     setActiveStack(getActiveStack());
@@ -465,8 +383,8 @@ export function MyStackScreen() {
       const changeReason = newStack.length === 0 && prev.length > 0 ? 'clear' : 'edit';
       recordStackChange(prev, newStack, changeReason);
       // Offer undo
-      sonnerToast('Stack updated', {
-        description: changeReason === 'clear' ? 'All peptides removed.' : 'Your stack has been saved.',
+      sonnerToast('Workspace updated', {
+        description: changeReason === 'clear' ? 'All recorded items removed.' : 'Your recorded workspace has been saved.',
         action: {
           label: 'Undo',
           onClick: () => handleUndo(),
@@ -488,27 +406,18 @@ export function MyStackScreen() {
       return;
     }
     handleSaveStack(last.prev, 'undo');
-    sonnerToast.success('Reverted to previous stack');
-  };
-
-  const handleStartBreak = (cycle: Cycle) => {
-    const updated: Cycle = { ...cycle, status: 'break' };
-    updateCycle(updated);
-    setCycles(getCycles());
+    sonnerToast.success('Reverted to previous workspace');
   };
 
   const openStartCycleDialog = (peptideId: string, peptideName: string, dose: string, frequency: string) => {
     setPendingCycle({ peptideId, peptideName, dose, frequency });
     setPendingStartDate(new Date().toISOString().split('T')[0]);
+    setPendingDuration('');
+    setPendingBreakDuration('');
     setStartCycleDialogOpen(true);
   };
 
-  const handleStartCycle = (peptideId: string, peptideName: string, dose: string, frequency: string, startDateOverride?: string) => {
-    const suggestion = getCycleSuggestion(peptideId);
-    const protocol = suggestion?.protocols?.[0];
-    const cycleDuration = protocol?.cycleDuration || 60;
-    const breakDuration = protocol?.breakDuration || 14;
-
+  const handleStartCycle = (peptideId: string, peptideName: string, dose: string, frequency: string, cycleDuration: number, breakDuration: number, startDateOverride?: string) => {
     const newCycle: Cycle = {
       id: `cycle-${Date.now()}`,
       peptideId,
@@ -523,49 +432,36 @@ export function MyStackScreen() {
     saveCycle(newCycle);
     setCycles(getCycles());
     toast({
-      title: '🚀 Cycle Started',
-      description: `${peptideName} — started ${newCycle.startDate} • ${cycleDuration}-day cycle.`,
+      title: 'Tracking period started',
+      description: `${peptideName} — recorded from ${newCycle.startDate} for ${cycleDuration} days.`,
     });
   };
 
   const confirmStartCycle = () => {
     if (!pendingCycle) return;
-    handleStartCycle(pendingCycle.peptideId, pendingCycle.peptideName, pendingCycle.dose, pendingCycle.frequency, pendingStartDate);
+    const duration = Number.parseInt(pendingDuration, 10);
+    const breakDuration = pendingBreakDuration ? Number.parseInt(pendingBreakDuration, 10) : 0;
+    if (!Number.isFinite(duration) || duration <= 0 || !Number.isFinite(breakDuration) || breakDuration < 0) {
+      toast({ title: 'Enter your recorded plan length', description: 'Use values from your existing plan. The app does not provide them.', variant: 'destructive' });
+      return;
+    }
+    handleStartCycle(pendingCycle.peptideId, pendingCycle.peptideName, pendingCycle.dose, pendingCycle.frequency, duration, breakDuration, pendingStartDate);
     setStartCycleDialogOpen(false);
     setPendingCycle(null);
   };
 
   const handleEndCycle = (cycle: Cycle) => {
-    const updated: Cycle = { ...cycle, status: 'completed' as any };
+    const updated: Cycle = { ...cycle, status: 'completed' };
     updateCycle(updated);
     setCycles(getCycles());
     toast({
-      title: '✅ Cycle Ended',
-      description: `${cycle.peptideName} cycle completed. Consider a ${cycle.breakDuration}-day break.`,
+      title: 'Tracking period ended',
+      description: `${cycle.peptideName} has been moved to your history.`,
     });
-  };
-
-  const handleRestartCycle = (peptideId: string, peptideName: string, dose: string, frequency: string) => {
-    const existing = cycles.find(c => c.peptideId === peptideId && (c.status === 'active' || c.status === 'break'));
-    if (existing) {
-      updateCycle({ ...existing, status: 'completed' as any });
-    }
-    openStartCycleDialog(peptideId, peptideName, dose, frequency);
   };
 
   const getCycleForPeptide = (peptideId: string): Cycle | undefined => {
     return cycles.find(c => c.peptideId === peptideId && (c.status === 'active' || c.status === 'break'));
-  };
-
-  const handleRecalculateCycle = (cycle: Cycle) => {
-    const { cycle: updated, changed, summary } = recalculateCycle(cycle, doses);
-    if (changed) {
-      updateCycle(updated);
-      setCycles(getCycles());
-      toast({ title: '✨ Cycle recalculated', description: summary });
-    } else {
-      toast({ title: 'Already in sync', description: summary });
-    }
   };
 
   const handleTogglePauseEdit = (cycle: Cycle) => {
@@ -577,8 +473,8 @@ export function MyStackScreen() {
     setCycles(getCycles());
     setEditingCycleId(null);
     toast({
-      title: 'Cycle paused',
-      description: `${updated.peptideName} is paused. Resume when you're back on track.`,
+      title: 'Tracking period paused',
+      description: `${updated.peptideName} is paused in your records.`,
     });
   };
 
@@ -593,8 +489,8 @@ export function MyStackScreen() {
     updateCycle(updated);
     setCycles(getCycles());
     toast({
-      title: '▶️ Cycle resumed',
-      description: `${cycle.peptideName} is active again.`,
+      title: 'Tracking period resumed',
+      description: `${cycle.peptideName} is active in your records again.`,
     });
   };
 
@@ -602,19 +498,13 @@ export function MyStackScreen() {
     <div className="pb-24 space-y-6 fade-in">
       <WidgetHint
         id="mystack-intro"
-        title="Your stack is the source of truth for every dose and cycle"
-        body="Add peptides here to unlock reminders, cycle tracking, dosing schedules, and bloodwork correlations. Everything on the dashboard reads from this list."
+        title="Keep one accurate record of your existing plan"
+        body="Record only information you already have. The dashboard uses this workspace for logging and progress views; it does not choose products, amounts, frequencies or durations."
         steps={[
-          'Tap "Edit stack" to add or remove peptides.',
-          'Start a cycle on each item to enable progress tracking and pause/resume.',
-          'Use "Recalculate" if you\'ve been off-schedule to realign your cycle.',
+          'Tap "Edit" to add or remove recorded items.',
+          'Enter amounts and frequencies from your existing plan.',
+          'Start, pause or end a tracking period when your real-world record changes.',
         ]}
-        goalHooks={{
-          'fat-loss': 'add one GLP-1 (Retatrutide/Tirzepatide) + optionally MOTS-c for metabolic support.',
-          'recovery': 'BPC-157 + TB-500 stack well together for 4–6 week healing blocks.',
-          'muscle-gain': 'CJC-1295 + Ipamorelin is the classic GH-secretagogue starter stack.',
-          'longevity': 'Epithalon + MOTS-c on structured long-arc cycles fits longevity best.',
-        }}
       />
 
       {/* User Profile Header */}
@@ -643,13 +533,13 @@ export function MyStackScreen() {
               </>
             ) : (
               <p className="text-sm text-muted-foreground mt-1">
-                Add your stats in Settings → Profile to personalize your protocol.
+                Add profile details in Settings to keep your records organised.
               </p>
             )}
           </div>
         </div>
 
-        {/* Tuned to your goals chip banner */}
+        {/* Saved interests are organisational labels, not recommendations. */}
         {(() => {
           const goalLabelList = getGoalLabels(profile.goals);
           if (goalLabelList.length > 0) {
@@ -657,7 +547,7 @@ export function MyStackScreen() {
               <div className="relative mt-4 flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
                 <Sparkles size={14} className="text-primary mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
-                  <p className="text-xs text-muted-foreground mb-1.5">Tuned to your goals:</p>
+                  <p className="text-xs text-muted-foreground mb-1.5">Your saved interests:</p>
                   <div className="flex flex-wrap gap-1.5">
                     {goalLabelList.map(g => (
                       <Badge key={g} variant="secondary" className="text-[10px] py-0 h-5">
@@ -676,23 +566,18 @@ export function MyStackScreen() {
             >
               <Target size={14} className="text-muted-foreground" />
               <p className="text-xs text-muted-foreground">
-                Set your goals in <span className="text-primary font-medium">Settings → Profile</span> to personalize recommendations.
+                Add interests in <span className="text-primary font-medium">Settings → Profile</span> to organise your workspace.
               </p>
             </a>
           );
         })()}
       </GradientCard>
 
-      {/* Cycle Break Alerts */}
-      {cycles.length > 0 && (
-        <CycleBreakAlert cycles={cycles} onStartBreak={handleStartBreak} />
-      )}
-
       {/* Active Stack Overview */}
       <div>
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold text-foreground">Active Stack</h3>
+            <h3 className="text-lg font-semibold text-foreground">Recorded Workspace</h3>
             <StackSyncBadge
               status={
                 !user
@@ -709,13 +594,7 @@ export function MyStackScreen() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-primary font-medium">{activeStack.length} peptides</span>
-            <a href="/cycles">
-              <Button variant="outline" size="sm" className="gap-1">
-                <CalendarIcon size={14} />
-                Cycles
-              </Button>
-            </a>
+            <span className="text-sm text-primary font-medium">{activeStack.length} items</span>
             {undoAvailable && (
               <Button
                 variant="outline"
@@ -742,9 +621,9 @@ export function MyStackScreen() {
 
         {activeStack.length === 0 ? (
           <GradientCard className="text-center py-8">
-            <p className="text-muted-foreground mb-3">No peptides in your stack yet.</p>
+            <p className="text-muted-foreground mb-3">No items have been recorded yet.</p>
             <Button onClick={() => setEditModalOpen(true)}>
-              Add Your First Peptide
+              Add a recorded item
             </Button>
           </GradientCard>
         ) : (
@@ -763,63 +642,19 @@ export function MyStackScreen() {
                 isEditing={editingCycleId === getCycleForPeptide(item.peptideId)?.id}
                 onStartCycle={openStartCycleDialog}
                 onEndCycle={handleEndCycle}
-                onRestartCycle={handleRestartCycle}
                 onTogglePauseEdit={handleTogglePauseEdit}
                 onSavePauseEdit={handleSavePauseEdit}
                 onResume={handleResumeCycle}
-                onRecalculate={handleRecalculateCycle}
               />
             );
           })
         )}
       </div>
 
-      {/* Three clean CTAs — unified AI + Buy stack + Book a consultation */}
-      {activeStack.length > 0 && (
-        <div className="space-y-3" id="stack-ctas">
-          {/* CTA 1: Unified AI recommendation (merged optimize + recommend) */}
-          <AIAgentPanel
-            mode="recommend"
-            currentStack={activeStack.map(item => {
-              const peptide = findPeptideOrBlend(item.peptideId);
-              return peptide?.name || item.peptideId;
-            })}
-            userWeight={profile.weight}
-            userGoals={profile.goals}
-            experienceLevel={profile.experience}
-          />
-
-          {/* CTA 2: Buy this stack — one-tap reorder */}
-          <BuyStackCard
-            items={activeStack.map(item => {
-              const peptide = findPeptideOrBlend(item.peptideId);
-              return { peptideId: item.peptideId, name: peptide?.name };
-            })}
-            medium="my_stack"
-          />
-
-          {/* CTA 3: Book a 1:1 consultation */}
-          <a
-            href={`mailto:webinars@fintiba.com?subject=${encodeURIComponent('1:1 Peptide Consultation Request')}&body=${encodeURIComponent("Hi,\n\nI'd like to book a 1:1 peptide consultation call.\n\nPreferred date/time:\nTimezone:\nTopics I want to cover:\n\nThanks!")}`}
-            className="group flex items-center gap-3 rounded-2xl border border-accent/30 bg-card p-4 shadow-md transition hover:border-accent/60 hover:shadow-lg"
-          >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent/15 text-accent">
-              <CalendarIcon size={22} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-accent">1:1 expert</p>
-              <h3 className="mt-0.5 text-base font-bold leading-tight text-foreground">Book a consultation</h3>
-              <p className="text-xs text-muted-foreground">60-min Zoom · webinars@fintiba.com</p>
-            </div>
-            <ExternalLink size={18} className="shrink-0 text-muted-foreground transition group-hover:text-accent" />
-          </a>
-        </div>
-      )}
-
       {/* Active Cycles Summary */}
       {cycles.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-foreground mb-3">Active Cycles</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-3">Recorded tracking periods</h3>
           <div className="space-y-2">
             {cycles.filter(c => c.status === 'active' || c.status === 'break').map((cycle) => {
               const info = computeCycleProgress(cycle, doses);
@@ -842,7 +677,8 @@ export function MyStackScreen() {
                     />
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    Dose {info.dosesLogged}/{info.dosesPlanned} · {info.calendarDays}d in · {cycle.breakDuration}d break after
+                    {info.dosesLogged}/{info.dosesPlanned} entries logged · day {info.calendarDays + 1}
+                    {cycle.breakDuration > 0 ? ` · ${cycle.breakDuration}d recorded pause` : ''}
                   </p>
                 </GradientCard>
               );
@@ -854,8 +690,9 @@ export function MyStackScreen() {
       {/* Research Disclaimer */}
       <div className="p-4 rounded-xl border border-border bg-muted/30">
         <p className="text-xs text-muted-foreground leading-relaxed">
-          <strong className="text-foreground">Research Use Only:</strong> All peptides mentioned are for 
-          research purposes. Consult healthcare professionals before use. Monitor bloodwork regularly.
+          <strong className="text-foreground">Medical disclaimer:</strong> This workspace stores information
+          you enter and provides educational context. It does not diagnose, prescribe, select products or
+          supply dosages. Clinical decisions belong with a qualified healthcare professional.
         </p>
       </div>
 
@@ -873,7 +710,7 @@ export function MyStackScreen() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CalendarIcon size={18} className="text-primary" />
-              Start cycle{pendingCycle ? ` — ${pendingCycle.peptideName}` : ''}
+              Start tracking period{pendingCycle ? ` — ${pendingCycle.peptideName}` : ''}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
@@ -915,10 +752,35 @@ export function MyStackScreen() {
               max={new Date().toISOString().split('T')[0]}
               onChange={(e) => setPendingStartDate(e.target.value)}
             />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="cycle-duration" className="text-xs text-muted-foreground">Recorded length (days)</Label>
+                <Input
+                  id="cycle-duration"
+                  inputMode="numeric"
+                  min="1"
+                  type="number"
+                  value={pendingDuration}
+                  onChange={(e) => setPendingDuration(e.target.value)}
+                  placeholder="From your plan"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="cycle-break-duration" className="text-xs text-muted-foreground">Recorded pause (optional)</Label>
+                <Input
+                  id="cycle-break-duration"
+                  inputMode="numeric"
+                  min="0"
+                  type="number"
+                  value={pendingBreakDuration}
+                  onChange={(e) => setPendingBreakDuration(e.target.value)}
+                  placeholder="From your plan"
+                />
+              </div>
+            </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Pick the real start date. If you're already a few weeks in, backdating keeps the
-              week counter, doses-logged total, and "behind schedule" warnings accurate — past
-              doses you've already logged will count toward this cycle.
+              Enter only values from your existing plan or research record. The app records these
+              values and does not choose a length, pause or frequency for you.
             </p>
             {pendingCycle && (() => {
               const v = validateBackdate(
@@ -977,7 +839,7 @@ export function MyStackScreen() {
           <DialogFooter>
             <Button variant="ghost" onClick={() => setStartCycleDialogOpen(false)}>Cancel</Button>
             <Button onClick={confirmStartCycle} className="gap-2">
-              <Play size={14} /> Start cycle
+              <Play size={14} /> Start tracking period
             </Button>
           </DialogFooter>
         </DialogContent>

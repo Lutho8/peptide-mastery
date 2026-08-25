@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { NewsTicker } from '@/components/home/NewsTicker';
@@ -12,16 +12,14 @@ import { ActiveStackPreview } from '@/components/home/ActiveStackPreview';
 import { QuickActions } from '@/components/home/QuickActions';
 import { StackCategories } from '@/components/home/StackCategories';
 import { SafetyDisclaimer } from '@/components/home/SafetyDisclaimer';
-import { BookCallSection } from '@/components/booking/BookCallSection';
-import { WelcomeGuide } from '@/components/home/WelcomeGuide';
-import { ReorderWidget } from '@/components/home/ReorderWidget';
-import { NextClubEventCard } from '@/components/home/NextClubEventCard';
-import { AgeResearchGuide } from '@/components/home/AgeResearchGuide';
+import { JourneyDashboard } from '@/components/home/JourneyDashboard';
+import { OrderJourneyCard } from '@/components/home/OrderJourneyCard';
+import { WorkspaceMomentumCard } from '@/components/home/WorkspaceMomentumCard';
 import { PullToRefresh } from '@/components/ui/PullToRefresh';
-import { DashboardTour } from '@/components/onboarding/DashboardTour';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCustomerJourney } from '@/hooks/useCustomerJourney';
 
 interface HomeScreenProps {
   onOpenBodyComposition: () => void;
@@ -31,7 +29,6 @@ interface HomeScreenProps {
   onOpenInventory: () => void;
   onNavigatePeptides: () => void;
   onNavigateStack: () => void;
-  onNavigateDosage: () => void;
   onOpenSettings: () => void;
   onNavigateResearch?: () => void;
 }
@@ -68,25 +65,18 @@ export function HomeScreen({
   onOpenInventory,
   onNavigatePeptides,
   onNavigateStack,
-  onNavigateDosage,
   onOpenSettings,
   onNavigateResearch
 }: HomeScreenProps) {
   const { reminders, refreshReminders } = useDoseReminders();
   const { refreshDoses } = useDailyDoses();
   const { user } = useAuth();
+  const journey = useCustomerJourney();
   const navigate = useNavigate();
-  const [tourForceKey, setTourForceKey] = useState(0);
-
-  useEffect(() => {
-    const onStart = () => setTourForceKey(k => k + 1);
-    window.addEventListener('rtd-start-tour', onStart);
-    return () => window.removeEventListener('rtd-start-tour', onStart);
-  }, []);
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([refreshDoses(), refreshReminders()]);
-  }, [refreshDoses, refreshReminders]);
+    await Promise.all([refreshDoses(), refreshReminders(), journey.refresh()]);
+  }, [journey, refreshDoses, refreshReminders]);
   
   // Get display name from user metadata or fallback to email
   const displayName = user?.user_metadata?.display_name 
@@ -99,6 +89,8 @@ export function HomeScreen({
     .join('')
     .toUpperCase()
     .slice(0, 2);
+
+  const showAdvancedDashboard = journey.snapshot?.journey?.experience_mode === 'experienced';
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
@@ -127,31 +119,54 @@ export function HomeScreen({
         </motion.div>
       </motion.div>
 
-      {/* Beginner Welcome Guide */}
       <motion.div variants={itemVariants}>
-        <WelcomeGuide
-          onCycles={onOpenCycles}
-          onDosage={onNavigateDosage}
-          onResearch={onNavigateResearch}
+        <JourneyDashboard
+          snapshot={journey.snapshot}
+          isLoading={journey.isLoading}
+          error={journey.error}
+          onRetry={journey.refresh}
+          onSelectExperience={journey.selectExperience}
+          onSelectPathway={journey.selectPathway}
+          onTrack={journey.trackEvent}
+          onResearch={onNavigateResearch || onNavigatePeptides}
+          onWorkspace={onNavigateStack}
         />
       </motion.div>
 
-      <motion.div variants={itemVariants}>
-        <AgeResearchGuide onOpenResearch={onNavigateResearch} />
-      </motion.div>
+      {!journey.isLoading && journey.snapshot && (
+        <motion.div variants={itemVariants}>
+          <OrderJourneyCard
+            journey={journey.snapshot.journey}
+            commerce={journey.snapshot.commerce}
+            onTrack={journey.trackEvent}
+          />
+        </motion.div>
+      )}
 
-      {/* Primary mobile actions stay above the fold. */}
-      <motion.div variants={itemVariants} data-tour="quick-actions">
-        <QuickActions
-          onDoseTracker={onOpenDoseTracker}
-          onBodyStats={onOpenBodyComposition}
-          onCycles={onOpenCycles}
-          onPeptides={onNavigatePeptides}
-          onBloodwork={onOpenBloodwork}
-          onInventory={onOpenInventory}
-          onResearch={onNavigateResearch}
-        />
-      </motion.div>
+      {showAdvancedDashboard ? (
+        <>
+          {journey.snapshot && (
+            <motion.div variants={itemVariants}>
+              <WorkspaceMomentumCard
+                snapshot={journey.snapshot}
+                onWorkspace={onNavigateStack}
+                onBloodwork={onOpenBloodwork}
+                onInventory={onOpenInventory}
+                onTrack={journey.trackEvent}
+              />
+            </motion.div>
+          )}
+          {/* Primary mobile actions stay above the fold for experienced users. */}
+          <motion.div variants={itemVariants} data-tour="quick-actions">
+            <QuickActions
+              onBodyStats={onOpenBodyComposition}
+              onCycles={onOpenCycles}
+              onPeptides={onNavigatePeptides}
+              onBloodwork={onOpenBloodwork}
+              onInventory={onOpenInventory}
+              onResearch={onNavigateResearch}
+            />
+          </motion.div>
 
       {/* News Ticker */}
       <motion.div variants={itemVariants}>
@@ -210,25 +225,18 @@ export function HomeScreen({
         <StackCategories />
       </motion.div>
 
-      {/* Book a Call Section */}
-      <motion.div variants={itemVariants}>
-        <BookCallSection />
-      </motion.div>
-
-      {/* Cross-property widgets */}
-      <motion.div variants={itemVariants} className="grid gap-3 sm:grid-cols-2">
-        <ReorderWidget />
-        <NextClubEventCard />
-      </motion.div>
-
       {/* Safety Disclaimer */}
       <motion.div variants={itemVariants}>
         <SafetyDisclaimer />
       </motion.div>
+        </>
+      ) : (
+        <motion.div variants={itemVariants}>
+          <SafetyDisclaimer />
+        </motion.div>
+      )}
       </motion.div>
 
-      {/* First-visit guided dashboard tour */}
-      {user && <DashboardTour key={tourForceKey} force={tourForceKey > 0 ? true : undefined} />}
     </PullToRefresh>
   );
 }
