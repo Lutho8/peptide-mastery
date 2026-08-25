@@ -34,7 +34,6 @@ const DoseTrackerModal = lazy(() => import('@/components/modals/DoseTrackerModal
 const InventoryModal = lazy(() => import('@/components/modals/InventoryModal').then(m => ({ default: m.InventoryModal })));
 const NotificationActionModal = lazy(() => import('@/components/modals/NotificationActionModal').then(m => ({ default: m.NotificationActionModal })));
 const AuthModal = lazy(() => import('@/components/auth/AuthModal').then(m => ({ default: m.AuthModal })));
-const ProfileSetupWizard = lazy(() => import('@/components/onboarding/ProfileSetupWizard').then(m => ({ default: m.ProfileSetupWizard })));
 const InstallAppStep = lazy(() => import('@/components/onboarding/InstallAppStep').then(m => ({ default: m.InstallAppStep })));
 
 const ScreenLoaderHome = () => <HomeSkeleton />;
@@ -48,7 +47,7 @@ const Index = () => {
   const { addDose } = useDailyDoses();
   const { user, signOut, isLoading } = useAuth();
   const { isLoading: accessLoading } = useAccessControl();
-  const { hydrated: profileHydrated } = useProfileSync();
+  useProfileSync();
   // Mount cloud sync at the app shell so the stack (and other cloud data)
   // hydrates as soon as the user is authenticated, regardless of which tab
   // they happen to land on. Without this, hydration only ran when the user
@@ -89,7 +88,6 @@ const Index = () => {
   const [bodyCompositionOpen, setBodyCompositionOpen] = useState(false);
   const [doseTrackerOpen, setDoseTrackerOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
-  const [profileSetupOpen, setProfileSetupOpen] = useState(false);
   const [installStepOpen, setInstallStepOpen] = useState(false);
 
   // Mark install_completed when user opens app from home screen (standalone)
@@ -124,21 +122,6 @@ const Index = () => {
       // Storage and display-mode APIs can be unavailable in hardened browsers.
     }
   }, [user]);
-
-  // Auto-open the profile setup wizard once per user — wait for cloud hydration first
-  // so we don't prompt a user who already has a profile saved on another device.
-  useEffect(() => {
-    if (!user || !profileHydrated) return;
-    let cancelled = false;
-    import('@/components/onboarding/ProfileSetupWizard').then(({ shouldShowProfileSetup }) => {
-      if (cancelled) return;
-      if (shouldShowProfileSetup(user.id)) {
-        const t = setTimeout(() => setProfileSetupOpen(true), 600);
-        return () => clearTimeout(t);
-      }
-    });
-    return () => { cancelled = true; };
-  }, [user, profileHydrated]);
 
   const handleMarkDoseAsTaken = useCallback((peptideName: string, dose: string, time: string) => {
     const doseMatch = dose.match(/^([\d.]+)(\w+)$/);
@@ -312,12 +295,6 @@ const Index = () => {
         {inventoryOpen && <InventoryModal open={inventoryOpen} onOpenChange={setInventoryOpen} />}
         <NotificationActionModal onMarkAsTaken={handleMarkDoseAsTaken} />
         {authModalOpen && <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />}
-        {profileSetupOpen && (
-          <ProfileSetupWizard
-            open={profileSetupOpen}
-            onOpenChange={setProfileSetupOpen}
-          />
-        )}
         {installStepOpen && (
           <InstallAppStep open={installStepOpen} onClose={() => setInstallStepOpen(false)} />
         )}

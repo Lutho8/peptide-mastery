@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LifeBuoy, ShoppingBag, User, Settings, LogOut } from 'lucide-react';
 import { AnimatedLogo } from '@/components/ui/AnimatedLogo';
 import { SupportSheet } from '@/components/support/SupportSheet';
@@ -23,6 +23,12 @@ const SHOP_HREF =
 
 export function AppHeader({ onLogoClick, onSettingsClick, onSignOut, userName, userEmail }: AppHeaderProps) {
   const [supportOpen, setSupportOpen] = useState(false);
+
+  useEffect(() => {
+    const openSupport = () => setSupportOpen(true);
+    window.addEventListener('psa-open-support', openSupport);
+    return () => window.removeEventListener('psa-open-support', openSupport);
+  }, []);
 
   return (
     <>
