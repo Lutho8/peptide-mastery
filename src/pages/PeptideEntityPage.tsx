@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, FlaskConical, Clock, Syringe, Shield, BookOpen, TrendingUp, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FlaskConical, Clock, Shield, BookOpen, AlertTriangle } from 'lucide-react';
 import { corePeptides, categoryConfig } from '@/data/peptides';
 import { topPeptidesSlugs, categorySlugs } from '@/data/entitySlugs';
 import { SEOHead } from '@/components/seo/SEOHead';
@@ -7,8 +7,6 @@ import { JsonLd, buildPeptideSchema } from '@/components/seo/JsonLd';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { Badge } from '@/components/ui/badge';
-import { DosingSchedule } from '@/components/dosage/DosingSchedule';
-import { getAvailableRoutes } from '@/data/dosingRoutes';
 
 const BASE_URL = 'https://peptide-south-africa.co.za';
 
@@ -34,16 +32,11 @@ export default function PeptideEntityPage() {
     .filter(p => p.category === peptide.category && p.id !== peptide.id)
     .slice(0, 4);
 
-  // Find related peptides from other categories that are commonly stacked
-  const stackablePeptides = peptide.interactions 
-    ? corePeptides.filter(p => peptide.interactions?.includes(p.id)).slice(0, 3)
-    : [];
-
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title={`${peptide.name} – Dosing, Mechanism, Research | Peptide South Africa`}
-        description={`${peptide.name}: ${peptide.mechanism.slice(0, 140)}. Dosing protocols, benefits, risks, and research references.`}
+        title={`${peptide.name} – Mechanism, Evidence and Research | Peptide South Africa`}
+        description={`${peptide.name}: ${peptide.mechanism.slice(0, 140)}. Evidence context, limitations, risks, and research references.`}
         canonical={`${BASE_URL}/peptides/${slug}`}
       />
       <JsonLd
@@ -54,7 +47,6 @@ export default function PeptideEntityPage() {
           category: catConfig?.label || peptide.category,
           molecularWeight: peptide.molecularWeight,
           halfLife: peptide.halfLife,
-          administration: peptide.administration,
         })}
         id={`peptide-${slug}`}
       />
@@ -89,7 +81,7 @@ export default function PeptideEntityPage() {
         </header>
 
         {/* Quick Facts */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+        <div className="grid grid-cols-2 gap-3 mb-8">
           {peptide.molecularWeight && (
             <GradientCard className="p-3 text-center">
               <FlaskConical size={18} className="mx-auto text-primary mb-1" />
@@ -104,16 +96,6 @@ export default function PeptideEntityPage() {
               <p className="text-sm font-semibold text-foreground">{peptide.halfLife}</p>
             </GradientCard>
           )}
-          <GradientCard className="p-3 text-center">
-            <Syringe size={18} className="mx-auto text-primary mb-1" />
-            <p className="text-xs text-muted-foreground">Administration</p>
-            <p className="text-sm font-semibold text-foreground">{peptide.administration}</p>
-          </GradientCard>
-          <GradientCard className="p-3 text-center">
-            <TrendingUp size={18} className="mx-auto text-primary mb-1" />
-            <p className="text-xs text-muted-foreground">Longevity Score</p>
-            <p className="text-sm font-semibold text-foreground">{peptide.longevityScore}/10</p>
-          </GradientCard>
         </div>
 
         {/* Mechanism of Action */}
@@ -127,10 +109,11 @@ export default function PeptideEntityPage() {
           </GradientCard>
         </section>
 
-        {/* Benefits */}
+        {/* Research areas */}
         <section className="mb-8">
-          <h2 className="text-xl font-bold text-foreground mb-3">Research-Backed Benefits</h2>
+          <h2 className="text-xl font-bold text-foreground mb-3">Research areas reported in source material</h2>
           <GradientCard>
+            <p className="mb-3 text-sm text-muted-foreground">These topics describe the catalogue's research index. They are not promised outcomes or personal recommendations.</p>
             <ul className="space-y-2">
               {peptide.benefits.map((b, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -140,45 +123,6 @@ export default function PeptideEntityPage() {
               ))}
             </ul>
           </GradientCard>
-        </section>
-
-        {/* Dosing Protocols */}
-        <section className="mb-8">
-          <h2 className="text-xl font-bold text-foreground mb-3 flex items-center gap-2">
-            <Syringe size={20} className="text-primary" />
-            Dosing Protocols
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {Object.entries(peptide.dosing).map(([level, dose]) => (
-              <GradientCard key={level} className="p-3">
-                <p className="text-xs text-muted-foreground capitalize">{level}</p>
-                <p className="text-sm font-semibold text-foreground">{dose}</p>
-              </GradientCard>
-            ))}
-          </div>
-          <p className="text-sm text-muted-foreground mt-2">
-            Frequency: {peptide.frequency} · Duration: {peptide.recommendedDuration || 'Consult research'}
-          </p>
-          {getAvailableRoutes(peptide.id).length > 0 && (
-            <div className="mt-4">
-              <DosingSchedule peptideId={peptide.id} />
-            </div>
-          )}
-        </section>
-
-        {/* Expected Results Timeline */}
-        <section className="mb-8">
-          <h2 className="text-xl font-bold text-foreground mb-3">Expected Results Timeline</h2>
-          <div className="space-y-2">
-            {Object.entries(peptide.expectedResults).map(([period, result]) => (
-              <GradientCard key={period} className="p-3">
-                <p className="text-xs text-primary font-medium">
-                  {period.replace('_', '-').replace('week', 'Week ').replace('longTerm', 'Long Term')}
-                </p>
-                <p className="text-sm text-muted-foreground">{result}</p>
-              </GradientCard>
-            ))}
-          </div>
         </section>
 
         {/* Safety & Risks */}
@@ -267,31 +211,6 @@ export default function PeptideEntityPage() {
               View All {catConfig?.label} Peptides →
             </Link>
           </GradientCard>
-        </section>
-
-        {/* Cross-Linking: Guides */}
-        <section className="mb-8">
-          <h2 className="text-xl font-bold text-foreground mb-3">Related Guides</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <Link to="/guides/reconstitution">
-              <GradientCard hover className="p-3">
-                <p className="font-medium text-foreground text-sm">How to Reconstitute</p>
-                <p className="text-xs text-muted-foreground">Step-by-step mixing guide</p>
-              </GradientCard>
-            </Link>
-            <Link to="/guides/injection">
-              <GradientCard hover className="p-3">
-                <p className="font-medium text-foreground text-sm">Injection Guide</p>
-                <p className="text-xs text-muted-foreground">Safe administration technique</p>
-              </GradientCard>
-            </Link>
-            <Link to="/guides/bloodwork">
-              <GradientCard hover className="p-3">
-                <p className="font-medium text-foreground text-sm">Bloodwork Monitoring</p>
-                <p className="text-xs text-muted-foreground">Panels to track on protocol</p>
-              </GradientCard>
-            </Link>
-          </div>
         </section>
 
         {/* Disclaimer */}

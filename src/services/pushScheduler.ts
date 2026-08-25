@@ -428,17 +428,16 @@ export function getServiceWorkerRegistration(): ServiceWorkerRegistration | null
 // ───────────────────────────── Cycle-aware reminders ─────────────────────────────
 //
 // One ScheduledReminder per (cycleId, splitIndex) using absolute nextFireTime.
-// Pause / behind / complete cycle states are respected:
-//   - status === 'break'         → reminders disabled, no fire
-//   - dosesBehind >= 2 (Behind)  → schedule next dose at now+30min "Catch-up"
-//   - isOverdue / complete       → single "Cycle complete — start break" reminder
+// Reminders are scheduled only when the user explicitly enabled them and
+// explicitly recorded one or more times. The scheduler never creates a
+// catch-up instruction, a break instruction or a default administration time.
 //
 // Caller imports from '@/services/pushScheduler' and calls
 // scheduleCycleReminders(cycle, doses).
 
 import type { Cycle } from '@/data/userData';
 import type { DailyDoseEntry } from '@/hooks/useDailyDoses';
-import { computeNextFireAt, getCycleProgress } from '@/lib/cycleProgress';
+import { computeNextFireAt } from '@/lib/cycleProgress';
 
 function cycleReminderId(cycleId: string, splitIndex: number): string {
   return `cycle:${cycleId}:${splitIndex}`;
@@ -472,12 +471,14 @@ export async function scheduleCycleReminders(cycle: Cycle, doses: DailyDoseEntry
     return;
   }
 
-  const progress = getCycleProgress(cycle, doses);
   const lead = Math.max(0, cycle.reminderLeadMinutes ?? 0);
   const splitParts = Math.max(1, cycle.splitParts ?? 1);
-  const doseTimes = (cycle.doseTimes && cycle.doseTimes.length > 0)
-    ? cycle.doseTimes
-    : ['09:00'];
+  const doseTimes = cycle.doseTimes ?? [];
+
+  if (doseTimes.length === 0) {
+    notifyServiceWorker('SYNC_REMINDERS');
+    return;
+  }
 
   // Cycle paused → record disabled placeholders so popover can read state.
   if (cycle.status === 'break') {
@@ -485,45 +486,7 @@ export async function scheduleCycleReminders(cycle: Cycle, doses: DailyDoseEntry
     return;
   }
 
-  // Complete → single one-shot reminder ~ in 1h.
-  if (progress.isOverdue) {
-    await saveReminderToIndexedDB({
-      id: cycleReminderId(cycle.id, 0),
-      cycleId: cycle.id,
-      mode: 'computed',
-      peptideId: cycle.peptideId,
-      peptideName: cycle.peptideName,
-      dose: cycle.dose,
-      time: doseTimes[0],
-      days: [],
-      enabled: true,
-      nextFireTime: Date.now() + 60 * 60 * 1000,
-      leadMinutes: lead,
-      body: `Cycle complete — start your ${cycle.breakDuration}-day break.`,
-    });
-    return;
-  }
-
-  // Behind ≥ 2 → catch-up reminder in 30 min, ignore split times.
-  if (progress.dosesBehind >= 2) {
-    await saveReminderToIndexedDB({
-      id: cycleReminderId(cycle.id, 0),
-      cycleId: cycle.id,
-      mode: 'computed',
-      peptideId: cycle.peptideId,
-      peptideName: cycle.peptideName,
-      dose: cycle.dose,
-      time: doseTimes[0],
-      days: [],
-      enabled: true,
-      nextFireTime: Date.now() + 30 * 60 * 1000,
-      leadMinutes: lead,
-      body: `Catch-up dose — ${progress.dosesBehind} behind schedule.`,
-    });
-    return;
-  }
-
-  // On-track / nearing: one reminder per administration time.
+  // Schedule one reminder per explicitly recorded time.
   for (let i = 0; i < Math.min(doseTimes.length, splitParts); i++) {
     const time = doseTimes[i];
     const fireAt = computeNextFireAt(cycle, doses, time, lead);

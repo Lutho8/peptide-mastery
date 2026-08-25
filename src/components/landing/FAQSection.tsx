@@ -133,12 +133,12 @@ export const faqCategories = [
     icon: Wrench,
     faqs: [
       {
-        q: 'How should peptides be stored?',
-        a: 'Lyophilized (freeze-dried) peptides should be stored in a cool, dry place, ideally refrigerated at 2–8°C. Once reconstituted with bacteriostatic water, they must be refrigerated and typically used within 4–6 weeks. Avoid repeated freeze-thaw cycles and direct sunlight.',
+        q: 'What can I record in the dashboard?',
+        a: 'You can record an existing plan, completed entries, progress measures, inventory, bloodwork files and support history. Enter only details you already have; the app does not create a clinical plan.',
       },
       {
-        q: 'How are peptides reconstituted?',
-        a: 'Peptides are reconstituted by adding bacteriostatic water to the lyophilized powder. Inject the water slowly along the vial wall to avoid damaging the peptide. Gently swirl—never shake—until dissolved. Use our Reconstitution Calculator for precise measurements based on your desired concentration.',
+        q: 'Where do patient-specific questions go?',
+        a: 'Use the guided pathway or contact support so treatment, monitoring and suitability questions can be routed appropriately. The catalogue and tracker do not answer those questions.',
       },
     ],
   },
@@ -149,23 +149,15 @@ export const faqCategories = [
     faqs: [
       {
         q: 'What does it cost to use Peptide South Africa?',
-        a: 'Nothing. Peptide South Africa is 100% free for registered researchers. You get full access to the peptide database, dose and reconstitution calculators, blends and stacks tools, COA verification, protocol tracking, bloodwork integration, and the monthly group Q&A. No paywalls, no premium tier, no credit card required.',
-      },
-      {
-        q: 'How do I join the monthly Live Q&A?',
-        a: 'The monthly Q&A is free for all registered researchers. Reserve your seat from the home page or the "Live Q&A" link in the footer. Sessions run on Zoom on the first Saturday of each month and cover dosage, stacking, cycles, and protocol questions.',
-      },
-      {
-        q: 'Can I book a 1-on-1 consultation?',
-        a: 'Yes. Use the "Book a Call" link in the app to email webinars@fintiba.com and schedule a 1-hour Zoom consultation. Booking is handled by email — no payment flow inside the app.',
+        a: 'Creating an account and using the current dashboard is free. The dashboard includes existing-plan records, progress tracking, inventory, bloodwork records and the research catalogue.',
       },
       {
         q: 'Do I need an account to start?',
-        a: 'You can browse the research database, calculators, and FAQ without an account. To track protocols, log doses, set reminders, and sync data across devices, create a free account in under a minute.',
+        a: 'You can browse the research catalogue and FAQ without an account. Create an account to save your pathway and keep your own records in sync.',
       },
       {
         q: 'How is my data handled?',
-        a: 'Your protocol logs, doses, and biometrics are stored securely against your account and are private to you. See the Privacy Policy for full details.',
+        a: 'Your saved records are linked to your account. See the Privacy Policy for the current data-handling details, including the separate consent used for lab-report extraction.',
       },
     ],
   },
@@ -176,15 +168,15 @@ export const faqCategories = [
     faqs: [
       {
         q: "What's included for free?",
-        a: 'Everything. All 98+ peptide profiles, reconstitution and dose calculators, the stack and blend builder, COA verification, protocol tracking, dose logging, bloodwork integration, AI insights, advanced cycle planning, the monthly group Q&A, and 1:1 expert calls. No credit card required, free forever.',
+        a: 'The current account includes the guided dashboard, existing-plan records, progress logs, inventory, bloodwork records and catalogue access. Patient-specific clinical services are not represented as an automatic app feature.',
       },
       {
         q: 'Is there a paid tier I am missing?',
-        a: 'No. We removed all paywalls. Every feature in the app is free for registered researchers. If you want to support the project, the best way is to shop research peptides at peptide-south-africa.com — that is what funds the tracker.',
+        a: 'The current dashboard does not require a paid tier. Any future paid service or external store purchase must be presented separately with its own price and scope.',
       },
       {
         q: 'Where do I buy research peptides?',
-        a: 'Our sister site Peptide South Africa Research Peptides at peptide-south-africa.com stocks COA-verified peptides and ships from South Africa. The tracker and the shop are separate properties but built by the same team. New to peptides? Take the 2-minute protocol quiz at peptide-south-africa.com/quiz — every protocol is reviewed by a GP before anything ships.',
+        a: 'The research store is linked separately at peptide-south-africa.com. The dashboard does not choose a product for you. New users should complete the pathway questions first; patient-specific decisions must be routed to an appropriate healthcare professional.',
       },
       {
         q: 'Is Peptide South Africa South African?',
@@ -199,7 +191,7 @@ export const faqCategories = [
     faqs: [
       {
         q: 'What is Peptide South Africa?',
-        a: 'Peptide South Africa is a comprehensive peptide research database featuring 98+ peptides with detailed profiles, mechanisms of action, clinical research citations, dosage calculators, and stacking tools. It serves as an educational resource for researchers and enthusiasts.',
+        a: 'Peptide South Africa is a South African research catalogue and record-keeping dashboard designed to give new and experienced users a clear next step without automatically selecting products or clinical instructions.',
       },
       {
         q: 'How is the information sourced?',

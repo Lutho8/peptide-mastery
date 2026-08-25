@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, Sparkles, Brain, Zap, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { Bot, Brain, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { usePeptideAI } from '@/hooks/usePeptideAI';
@@ -9,71 +9,20 @@ import { cn } from '@/lib/utils';
 interface AIAgentPanelProps {
   peptideId?: string;
   peptideName?: string;
-  currentStack?: string[];
-  userWeight?: number;
-  userBodyFat?: number;
-  userGoals?: string[];
-  experienceLevel?: string;
-  mode?: 'research' | 'recommend' | 'optimize';
 }
 
 export function AIAgentPanel({
   peptideId,
   peptideName,
-  currentStack = [],
-  userWeight,
-  userBodyFat,
-  userGoals,
-  experienceLevel,
-  mode = 'research'
 }: AIAgentPanelProps) {
-  const { isLoading, response, fetchResearch, getRecommendations, optimizeStack, clearResponse } = usePeptideAI();
+  const { isLoading, response, fetchResearch, clearResponse } = usePeptideAI();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleAction = async () => {
-    if (mode === 'research' && peptideId && peptideName) {
+    if (peptideId && peptideName) {
       await fetchResearch(peptideId, peptideName);
-    } else if (mode === 'recommend') {
-      await getRecommendations({
-        weight: userWeight,
-        bodyFat: userBodyFat,
-        goals: userGoals,
-        currentStack,
-        experienceLevel
-      });
-    } else if (mode === 'optimize') {
-      await optimizeStack(currentStack, {
-        weight: userWeight,
-        bodyFat: userBodyFat,
-        goals: userGoals,
-        experienceLevel
-      });
     }
     setIsExpanded(true);
-  };
-
-  const getIcon = () => {
-    switch (mode) {
-      case 'research': return <Brain className="w-5 h-5" />;
-      case 'recommend': return <Sparkles className="w-5 h-5" />;
-      case 'optimize': return <Zap className="w-5 h-5" />;
-    }
-  };
-
-  const getTitle = () => {
-    switch (mode) {
-      case 'research': return 'AI Research Agent';
-      case 'recommend': return 'AI Recommendations';
-      case 'optimize': return 'Stack Optimizer';
-    }
-  };
-
-  const getButtonText = () => {
-    switch (mode) {
-      case 'research': return `Analyze ${peptideName || 'Peptide'}`;
-      case 'recommend': return 'Get Personalized Recommendations';
-      case 'optimize': return 'Optimize My Stack';
-    }
   };
 
   const formatContent = (content: string) => {
@@ -133,42 +82,19 @@ export function AIAgentPanel({
             </motion.div>
             <div>
               <h3 className="font-semibold text-foreground flex items-center gap-2">
-                {getTitle()}
+                Research review checklist
                 <motion.span 
                   className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent border border-accent/30"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.2, type: 'spring' }}
                 >
-                  AI Powered
+                  Structured
                 </motion.span>
               </h3>
               <p className="text-xs text-muted-foreground">
-                {mode === 'research' && 'Latest research & clinical insights'}
-                {mode === 'recommend' && 'Personalized protocol suggestions'}
-                {mode === 'optimize' && 'Stack synergy analysis'}
+                A neutral checklist for reviewing evidence and limitations
               </p>
-              {/* Show goals so users see their wizard selections power the AI */}
-              {(mode === 'recommend' || mode === 'optimize') && userGoals && userGoals.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  <span className="text-[10px] text-muted-foreground/80 self-center mr-0.5">
-                    Tuned to:
-                  </span>
-                  {userGoals.slice(0, 4).map((goal) => (
-                    <span
-                      key={goal}
-                      className="text-[10px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20"
-                    >
-                      {goal}
-                    </span>
-                  ))}
-                  {userGoals.length > 4 && (
-                    <span className="text-[10px] text-muted-foreground/70 self-center">
-                      +{userGoals.length - 4}
-                    </span>
-                  )}
-                </div>
-              )}
             </div>
           </div>
           
@@ -198,7 +124,7 @@ export function AIAgentPanel({
             >
               <Button
                 onClick={handleAction}
-                disabled={isLoading || (mode === 'research' && !peptideId)}
+                disabled={isLoading || !peptideId}
                 className={cn(
                   "w-full relative overflow-hidden",
                   "bg-gradient-to-r from-accent to-accent/80",
@@ -210,12 +136,12 @@ export function AIAgentPanel({
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Analyzing...
+                    Loading...
                   </>
                 ) : (
                   <>
-                    {getIcon()}
-                    <span className="ml-2">{getButtonText()}</span>
+                    <Brain className="w-5 h-5" />
+                    <span className="ml-2">Open review checklist</span>
                   </>
                 )}
               </Button>
@@ -253,7 +179,7 @@ export function AIAgentPanel({
                     disabled={isLoading}
                     className="w-full border-accent/30 text-accent hover:bg-accent/10"
                   >
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Refresh Analysis'}
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Refresh checklist'}
                   </Button>
                 </motion.div>
                 <Button

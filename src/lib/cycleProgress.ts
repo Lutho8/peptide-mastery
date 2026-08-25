@@ -209,15 +209,15 @@ export function getCyclePhase(cycle: Cycle, info: CycleProgress): PhaseInfo {
     return { phase: 'paused', label: 'Paused', weekNow, weeksTotal, weeksLeft };
   }
   if (info.isOverdue) {
-    return { phase: 'complete', label: 'Break recommended', weekNow, weeksTotal, weeksLeft: 0 };
+    return { phase: 'complete', label: 'Recorded period complete', weekNow, weeksTotal, weeksLeft: 0 };
   }
   if (info.dosesLogged === 0) {
     return { phase: 'not_started', label: 'Not started', weekNow: 1, weeksTotal, weeksLeft: weeksTotal };
   }
   const pct = info.dosesLogged / info.dosesPlanned;
-  if (pct < 0.2) return { phase: 'ramp_up', label: 'Ramp-up', weekNow, weeksTotal, weeksLeft };
-  if (pct >= 0.85) return { phase: 'taper', label: 'Taper / nearing end', weekNow, weeksTotal, weeksLeft };
-  return { phase: 'maintenance', label: 'Maintenance', weekNow, weeksTotal, weeksLeft };
+  if (pct < 0.2) return { phase: 'ramp_up', label: 'Early record', weekNow, weeksTotal, weeksLeft };
+  if (pct >= 0.85) return { phase: 'taper', label: 'Recorded period nearly complete', weekNow, weeksTotal, weeksLeft };
+  return { phase: 'maintenance', label: 'In progress', weekNow, weeksTotal, weeksLeft };
 }
 
 export interface NextDoseInfo {
@@ -457,13 +457,13 @@ export function computeNextFireAt(
  * Recalculate cycle metadata from logged doses:
  *  - startDate = earliest logged dose (if earlier than current start)
  *  - plannedDuration unchanged
- *  - status = 'active' if currently 'break' but recent doses logged
+ *  - status is never changed automatically
  * Returns the updated cycle (or the original if nothing to change).
  */
 export function recalculateCycle(
   cycle: Cycle,
   doses: DailyDoseEntry[],
-  now: Date = new Date(),
+  _now: Date = new Date(),
 ): { cycle: Cycle; changed: boolean; summary: string } {
   const cycleSlugs = new Set([slug(cycle.peptideId), slug(cycle.peptideName)].filter(Boolean));
   const matched = doses
@@ -476,9 +476,6 @@ export function recalculateCycle(
 
   const earliest = matched[0].date;
   const latest = matched[matched.length - 1].date;
-  const todayIso = now.toISOString().split('T')[0];
-  const daysSinceLast = Math.floor((new Date(todayIso).getTime() - new Date(latest).getTime()) / 86400000);
-
   let next: Cycle = { ...cycle };
   const changes: string[] = [];
 
@@ -487,22 +484,8 @@ export function recalculateCycle(
     changes.push(`start date moved to ${earliest}`);
   }
 
-  // Auto-resume if paused but doses are recent
-  if (cycle.status === 'break' && daysSinceLast <= 3) {
-    next.status = 'active';
-    next.resumedAt = todayIso;
-    next.pauseReason = undefined;
-    changes.push('cycle resumed (recent doses detected)');
-  }
-
-  // Auto-pause if active but no doses in 14+ days
-  if (cycle.status === 'active' && daysSinceLast >= 14) {
-    next.status = 'break';
-    next.pausedAt = todayIso;
-    next.pauseReason = 'missed_doses';
-    next.missedDays = daysSinceLast;
-    changes.push(`paused (${daysSinceLast} days since last dose)`);
-  }
+  // Status is never changed automatically. Pausing and resuming must be an
+  // explicit user action because a gap in logs is not a clinical instruction.
 
   const changed = changes.length > 0;
   return {
@@ -513,4 +496,3 @@ export function recalculateCycle(
       : `Already in sync (${matched.length} dose${matched.length === 1 ? '' : 's'} logged, last on ${latest}).`,
   };
 }
-

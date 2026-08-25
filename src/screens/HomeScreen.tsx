@@ -12,11 +12,7 @@ import { ActiveStackPreview } from '@/components/home/ActiveStackPreview';
 import { QuickActions } from '@/components/home/QuickActions';
 import { StackCategories } from '@/components/home/StackCategories';
 import { SafetyDisclaimer } from '@/components/home/SafetyDisclaimer';
-import { BookCallSection } from '@/components/booking/BookCallSection';
 import { WelcomeGuide } from '@/components/home/WelcomeGuide';
-import { ReorderWidget } from '@/components/home/ReorderWidget';
-import { NextClubEventCard } from '@/components/home/NextClubEventCard';
-import { AgeResearchGuide } from '@/components/home/AgeResearchGuide';
 import { PullToRefresh } from '@/components/ui/PullToRefresh';
 import { DashboardTour } from '@/components/onboarding/DashboardTour';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
@@ -31,7 +27,6 @@ interface HomeScreenProps {
   onOpenInventory: () => void;
   onNavigatePeptides: () => void;
   onNavigateStack: () => void;
-  onNavigateDosage: () => void;
   onOpenSettings: () => void;
   onNavigateResearch?: () => void;
 }
@@ -68,7 +63,6 @@ export function HomeScreen({
   onOpenInventory,
   onNavigatePeptides,
   onNavigateStack,
-  onNavigateDosage,
   onOpenSettings,
   onNavigateResearch
 }: HomeScreenProps) {
@@ -131,19 +125,13 @@ export function HomeScreen({
       <motion.div variants={itemVariants}>
         <WelcomeGuide
           onCycles={onOpenCycles}
-          onDosage={onNavigateDosage}
           onResearch={onNavigateResearch}
         />
-      </motion.div>
-
-      <motion.div variants={itemVariants}>
-        <AgeResearchGuide onOpenResearch={onNavigateResearch} />
       </motion.div>
 
       {/* Primary mobile actions stay above the fold. */}
       <motion.div variants={itemVariants} data-tour="quick-actions">
         <QuickActions
-          onDoseTracker={onOpenDoseTracker}
           onBodyStats={onOpenBodyComposition}
           onCycles={onOpenCycles}
           onPeptides={onNavigatePeptides}
@@ -208,17 +196,6 @@ export function HomeScreen({
       {/* Stack Categories */}
       <motion.div variants={itemVariants}>
         <StackCategories />
-      </motion.div>
-
-      {/* Book a Call Section */}
-      <motion.div variants={itemVariants}>
-        <BookCallSection />
-      </motion.div>
-
-      {/* Cross-property widgets */}
-      <motion.div variants={itemVariants} className="grid gap-3 sm:grid-cols-2">
-        <ReorderWidget />
-        <NextClubEventCard />
       </motion.div>
 
       {/* Safety Disclaimer */}

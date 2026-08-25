@@ -3,12 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, ChevronDown } from 'lucide-react';
 
 const POINTS = [
-  'All peptides discussed are research compounds. They are NOT FDA-approved for human consumption.',
-  'Nothing in this app is medical advice, diagnosis, or treatment. Always consult a qualified healthcare professional before starting, stopping, or changing any protocol.',
-  'Start with the lowest effective dose, titrate slowly, and never combine compounds without understanding the interactions.',
-  'Run baseline bloodwork before a cycle and at least every 8–12 weeks during use. Stop immediately if you experience adverse effects.',
-  'Do not use if you are pregnant, breastfeeding, under 21, or being treated for a serious medical condition (cancer, cardiovascular disease, endocrine disorders) without specialist supervision.',
-  'Source from vendors with verified third-party Certificates of Analysis (COA). Purity and identity matter as much as dose.',
+  'The catalogue contains educational source material and does not determine whether a product is suitable for a person.',
+  'The app does not diagnose, prescribe, choose a product, generate a dosage, interpret urgency or promise an outcome.',
+  'Only enter schedule, product and monitoring details that come from your own confirmed plan or research record.',
+  'Route patient-specific questions, symptoms, treatment choices and monitoring decisions to a qualified healthcare professional.',
+  'Product status and permitted use vary by product and location; catalogue inclusion is not a suitability or approval claim.',
 ];
 
 export function SafetyDisclaimerBand() {
@@ -33,10 +32,10 @@ export function SafetyDisclaimerBand() {
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-base md:text-lg font-bold text-yellow-100">
-                Research-use only — not medical advice
+                Educational platform — not medical advice
               </h3>
               <p className="text-xs md:text-sm text-yellow-200/80 mt-1">
-                Peptides are not FDA-approved. Always consult a qualified healthcare professional before use.
+                Clear boundaries between research information, record-keeping and patient-specific care.
               </p>
             </div>
             <motion.div

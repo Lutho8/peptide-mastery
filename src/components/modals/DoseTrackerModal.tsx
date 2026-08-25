@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { CycleBreakAlert } from '@/components/doses/CycleBreakAlert';
 import {
   Select,
   SelectContent,
@@ -18,13 +17,9 @@ import {
   getDoseSchedules, 
   saveDoseSchedule,
   saveDoseLog,
-  saveCycle,
   deleteDoseSchedule,
-  getCycles,
-  updateCycle,
   DoseSchedule,
   DoseLog,
-  Cycle 
 } from '@/services/storage';
 import { 
   isNotificationEnabledForSchedule,
@@ -33,12 +28,10 @@ import {
   scheduleNotification
 } from '@/services/notifications';
 import { peptides } from '@/data/peptides';
-import { getCycleSuggestion } from '@/data/cycleSuggestions';
 import { getAllSelectablePeptides } from '@/data/blendAdapters';
 import { FlaskConical } from 'lucide-react';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
-import { Plus, Check, X, ChevronLeft, ChevronRight, Clock, Calendar, Bell, BellOff, Trash2, AlertTriangle, Timer, Play, Pause, Square } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { Plus, Check, X, ChevronLeft, ChevronRight, Clock, Calendar, Bell, BellOff, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -63,7 +56,6 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
   const [showAddSchedule, setShowAddSchedule] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [doses, setDoses] = useState<DoseSchedule[]>([]);
-  const [cycles, setCycles] = useState<Cycle[]>([]);
   // New schedule form state
   const [newPeptideId, setNewPeptideId] = useState('');
   const [newDose, setNewDose] = useState('');
@@ -75,41 +67,8 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
   useEffect(() => {
     if (open) {
       setDoses(getDoseSchedules());
-      setCycles(getCycles());
     }
   }, [open]);
-
-  const handleStartBreak = (cycle: Cycle) => {
-    const updatedCycle = { ...cycle, status: 'break' as const };
-    updateCycle(updatedCycle);
-    setCycles(cycles.map(c => c.id === cycle.id ? updatedCycle : c));
-    toast({
-      title: "Break started",
-      description: `${cycle.peptideName} is now on break. Follow the protocol advice for best results.`,
-    });
-  };
-
-  const handleStartCycle = (dose: DoseSchedule) => {
-    const cycleSuggestion = getCycleSuggestion(dose.peptideId);
-    const protocol = cycleSuggestion?.protocols?.[0];
-    const newCycle: Cycle = {
-      id: `cycle-${Date.now()}`,
-      peptideId: dose.peptideId,
-      peptideName: dose.peptideName,
-      dose: dose.dose,
-      frequency: dose.frequency,
-      startDate: new Date().toISOString().split('T')[0],
-      plannedDuration: protocol?.cycleDuration || 60,
-      breakDuration: protocol?.breakDuration || 14,
-      status: 'active',
-    };
-    saveCycle(newCycle);
-    setCycles([...cycles, newCycle]);
-    toast({
-      title: "Cycle started",
-      description: `${dose.peptideName} cycle started — ${newCycle.plannedDuration} days.`,
-    });
-  };
 
   const handleMarkTaken = (dose: DoseSchedule) => {
     const updatedDoses = doses.map(d => 
@@ -277,9 +236,6 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
             })}
           </div>
 
-          {/* Cycle Break Alerts */}
-          <CycleBreakAlert cycles={cycles} onStartBreak={handleStartBreak} />
-
           {/* Add Schedule Button */}
           <Button
             variant="outline"
@@ -381,9 +337,6 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
               ) : (
                 doses.map((dose) => {
                   const notificationEnabled = isNotificationEnabledForSchedule(dose.id);
-                  const cycleSuggestion = getCycleSuggestion(dose.peptideId);
-                  const protocol = cycleSuggestion?.protocols?.[0]; // default to beginner
-                  
                   return (
                     <GradientCard key={dose.id} className="p-3">
                       <div className="flex items-center justify-between mb-2">
@@ -419,94 +372,6 @@ export function DoseTrackerModal({ open, onOpenChange }: DoseTrackerModalProps) 
                           <StatusBadge status={dose.status} />
                         </div>
                       </div>
-
-                      {/* Cycle Progress Bar */}
-                      {protocol && (() => {
-                        const activeCycle = cycles.find(c => c.peptideId === dose.peptideId && c.status === 'active');
-                        const cycleDuration = activeCycle?.plannedDuration || protocol.cycleDuration;
-                        const breakDuration = activeCycle?.breakDuration ?? protocol.breakDuration;
-                        const daysElapsed = activeCycle
-                          ? Math.floor((Date.now() - new Date(activeCycle.startDate).getTime()) / (1000 * 60 * 60 * 24))
-                          : 0;
-                        const progress = activeCycle ? Math.min((daysElapsed / cycleDuration) * 100, 100) : 0;
-                        const daysRemaining = Math.max(0, cycleDuration - daysElapsed);
-                        const isNearEnd = daysElapsed >= cycleDuration * 0.85;
-                        const isOverdue = daysElapsed >= cycleDuration;
-
-                        return (
-                          <div className="space-y-1.5 px-1 mb-2">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-1.5">
-                                <Timer size={13} className={cn(
-                                  isOverdue ? "text-destructive" : isNearEnd ? "text-amber-400" : "text-primary"
-                                )} />
-                                <span className="text-[11px] font-medium text-foreground">
-                                  {activeCycle ? (
-                                    isOverdue ? 'Cycle complete — start break' : `Day ${daysElapsed} of ${cycleDuration}`
-                                  ) : (
-                                    `${cycleDuration}d cycle, ${breakDuration > 0 ? `${breakDuration}d break` : 'continuous'}`
-                                  )}
-                                </span>
-                              </div>
-                              {activeCycle && !isOverdue && (
-                                <span className="text-[10px] text-muted-foreground">{daysRemaining}d left</span>
-                              )}
-                              {isOverdue && activeCycle && (
-                                <span className="text-[10px] font-medium text-destructive">
-                                  {daysElapsed - cycleDuration}d overdue
-                                </span>
-                              )}
-                            </div>
-                            {activeCycle ? (
-                              <>
-                                <div className="relative">
-                                  <Progress
-                                    value={progress}
-                                    className={cn("h-2", isOverdue && "[&>div]:bg-destructive", isNearEnd && !isOverdue && "[&>div]:bg-amber-400")}
-                                  />
-                                </div>
-                                {(isNearEnd || isOverdue) && (
-                                  <div className="flex items-center justify-between">
-                                    <p className={cn("text-[10px] flex items-center gap-1", isOverdue ? "text-destructive" : "text-amber-400")}>
-                                      <AlertTriangle size={10} />
-                                      {isOverdue ? 'Cycle complete — time for a break' : 'Approaching end of recommended cycle'}
-                                    </p>
-                                    <div className="flex gap-1.5">
-                                      <button
-                                        onClick={() => handleStartBreak(activeCycle)}
-                                        className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-md bg-amber-400/15 text-amber-400 hover:bg-amber-400/25 transition-colors"
-                                      >
-                                        <Pause size={10} />
-                                        Break
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          const updated = { ...activeCycle, status: 'completed' as const };
-                                          updateCycle(updated);
-                                          setCycles(cycles.map(c => c.id === activeCycle.id ? updated : c));
-                                          toast({ title: "Cycle ended", description: `${activeCycle.peptideName} cycle completed.` });
-                                        }}
-                                        className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-md bg-destructive/15 text-destructive hover:bg-destructive/25 transition-colors"
-                                      >
-                                        <Square size={10} />
-                                        End
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
-                              </>
-                            ) : (
-                              <button
-                                onClick={() => handleStartCycle(dose)}
-                                className="flex items-center gap-1.5 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors"
-                              >
-                                <Play size={12} />
-                                Start cycle ({cycleDuration} days)
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })()}
 
                       {dose.status === 'pending' && (
                         <div className="flex gap-2 mt-3 pt-3 border-t border-border/50">

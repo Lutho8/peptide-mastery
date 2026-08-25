@@ -27,11 +27,10 @@ export function SafetyDisclaimer() {
         isExpanded ? "max-h-96 mt-3" : "max-h-0"
       )}>
         <p className="text-xs text-yellow-200/80 leading-relaxed">
-          This app is for educational and research purposes only. Peptides discussed are research 
-          chemicals NOT approved by the FDA for human consumption. The information provided should 
-          not be considered medical advice. Always consult with qualified healthcare professionals 
-          before using any research compounds. Start with the lowest effective dose and increase 
-          gradually. Monitor bloodwork regularly and discontinue use if adverse effects occur.
+          This app stores information you provide and presents educational source material. It does
+          not diagnose, prescribe, choose a product, generate a dosage or promise an outcome. Product
+          status and permitted use vary. A qualified healthcare professional must make patient-specific
+          clinical decisions, including whether treatment or monitoring is appropriate.
         </p>
       </div>
     </div>

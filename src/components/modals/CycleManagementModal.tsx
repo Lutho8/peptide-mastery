@@ -6,7 +6,6 @@ import { GradientCard } from '@/components/ui/GradientCard';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { CycleHistoryTimeline } from '@/components/doses/CycleHistoryTimeline';
-import { CycleBreakAlert } from '@/components/doses/CycleBreakAlert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -558,12 +557,6 @@ export function CycleManagementModal({ open, onOpenChange }: CycleManagementModa
               )}
             </div>
           </div>
-
-          {/* Cycle Break Alerts */}
-          <CycleBreakAlert
-            cycles={cycles}
-            onStartBreak={(cycle) => handleToggleCycleStatus(cycle)}
-          />
 
           {/* Cycle History Timeline */}
           <div>

@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { corePeptides, categoryConfig, PeptideCategory } from '@/data/peptides';
-import { categorySlugs, categoryMeta, guidePages } from '@/data/entitySlugs';
+import { categorySlugs, categoryMeta } from '@/data/entitySlugs';
 import { topPeptidesSlugs } from '@/data/entitySlugs';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { JsonLd, buildCollectionSchema } from '@/components/seo/JsonLd';
@@ -87,21 +87,6 @@ export default function CategoryHubPage() {
                 <div key={p.id}>{CardContent}</div>
               );
             })}
-          </div>
-        </section>
-
-        {/* Guides */}
-        <section className="mb-10">
-          <h2 className="text-xl font-bold text-foreground mb-4">Related Guides</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {Object.values(guidePages).map(guide => (
-              <Link key={guide.slug} to={`/guides/${guide.slug}`}>
-                <GradientCard hover className="p-3">
-                  <p className="font-medium text-foreground text-sm">{guide.title.split('–')[0].trim()}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{guide.description.slice(0, 80)}…</p>
-                </GradientCard>
-              </Link>
-            ))}
           </div>
         </section>
 
