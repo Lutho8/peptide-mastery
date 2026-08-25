@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Calendar, Mail, Shield, GraduationCap, Tag, Upload, Search, ScrollText, Truck } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, Mail, Shield, GraduationCap, Tag, Upload, Search, ScrollText, Truck, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ import VialLabelMaker from '@/components/admin/VialLabelMaker';
 import COAUploadManager from '@/components/admin/COAUploadManager';
 import AuditLogViewer from '@/components/admin/AuditLogViewer';
 import FulfilmentQueue from '@/components/admin/FulfilmentQueue';
+import CustomerValueFunnel from '@/components/admin/CustomerValueFunnel';
 import { logAudit } from '@/lib/auditLog';
 
 interface UserRow {
@@ -160,6 +161,10 @@ export default function AdminDashboard() {
               <Truck className="h-4 w-4" />
               Fulfilment
             </TabsTrigger>
+            <TabsTrigger value="value" className="gap-1.5">
+              <BarChart3 className="h-4 w-4" />
+              Customer Value
+            </TabsTrigger>
             <TabsTrigger value="labels" className="gap-1.5">
               <Tag className="h-4 w-4" />
               Label Maker
@@ -257,6 +262,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="fulfilment">
             <FulfilmentQueue />
+          </TabsContent>
+
+          <TabsContent value="value">
+            <CustomerValueFunnel />
           </TabsContent>
 
           <TabsContent value="labels">

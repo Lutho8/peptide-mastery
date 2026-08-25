@@ -14,6 +14,7 @@ import { StackCategories } from '@/components/home/StackCategories';
 import { SafetyDisclaimer } from '@/components/home/SafetyDisclaimer';
 import { JourneyDashboard } from '@/components/home/JourneyDashboard';
 import { OrderJourneyCard } from '@/components/home/OrderJourneyCard';
+import { WorkspaceMomentumCard } from '@/components/home/WorkspaceMomentumCard';
 import { PullToRefresh } from '@/components/ui/PullToRefresh';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
@@ -144,6 +145,17 @@ export function HomeScreen({
 
       {showAdvancedDashboard ? (
         <>
+          {journey.snapshot && (
+            <motion.div variants={itemVariants}>
+              <WorkspaceMomentumCard
+                snapshot={journey.snapshot}
+                onWorkspace={onNavigateStack}
+                onBloodwork={onOpenBloodwork}
+                onInventory={onOpenInventory}
+                onTrack={journey.trackEvent}
+              />
+            </motion.div>
+          )}
           {/* Primary mobile actions stay above the fold for experienced users. */}
           <motion.div variants={itemVariants} data-tour="quick-actions">
             <QuickActions
