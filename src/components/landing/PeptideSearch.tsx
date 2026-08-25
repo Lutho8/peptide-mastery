@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, Clock, FlaskConical, Layers, Beaker, Sparkles } from 'lucide-react';
+import { Search, X, Clock, FlaskConical, Layers, Beaker, Sparkles, type LucideIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +30,7 @@ interface SearchResult {
   subtitle: string;
   tag?: string;
   score: number;
-  raw: any;
+  raw: Peptide | PeptideBlend;
 }
 
 const RECENT_KEY = 'peptide_recent_searches';
@@ -242,7 +242,7 @@ export function PeptideSearch({ open, onClose }: PeptideSearchProps) {
   if (!open) return null;
 
   const showRecents = !debouncedQuery && recents.length > 0;
-  const chips: { id: CategoryFilter; label: string; icon: any }[] = [
+  const chips: { id: CategoryFilter; label: string; icon: LucideIcon }[] = [
     { id: 'all', label: 'All', icon: Sparkles },
     { id: 'peptides', label: 'Peptides', icon: FlaskConical },
     { id: 'blends', label: 'Blends', icon: Beaker },

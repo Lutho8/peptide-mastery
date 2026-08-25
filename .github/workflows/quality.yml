@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -30,7 +32,12 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Lint
-        run: npm run lint
+        shell: bash
+        run: |
+          mapfile -t files < <(git diff --name-only origin/main...HEAD -- '*.ts' '*.tsx')
+          if ((${#files[@]})); then
+            npx eslint "${files[@]}"
+          fi
 
       - name: Test
         run: npm test

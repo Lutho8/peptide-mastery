@@ -120,7 +120,9 @@ const Index = () => {
       }
       const t = setTimeout(() => setInstallStepOpen(true), 800);
       return () => clearTimeout(t);
-    } catch {}
+    } catch {
+      // Storage and display-mode APIs can be unavailable in hardened browsers.
+    }
   }, [user]);
 
   // Auto-open the profile setup wizard once per user — wait for cloud hydration first

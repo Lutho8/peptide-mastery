@@ -263,7 +263,7 @@ export function getNextDose(
   }
 
   let anchor: Date;
-  let time: string | null = slots[0] || null;
+  const time: string | null = slots[0] || null;
 
   if (logs.length === 0) {
     anchor = new Date(cycle.startDate);
@@ -476,7 +476,7 @@ export function recalculateCycle(
 
   const earliest = matched[0].date;
   const latest = matched[matched.length - 1].date;
-  let next: Cycle = { ...cycle };
+  const next: Cycle = { ...cycle };
   const changes: string[] = [];
 
   if (earliest < cycle.startDate) {

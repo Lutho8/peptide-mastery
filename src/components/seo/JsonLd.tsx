@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async';
 import { businessInfo, postalAddressSchema } from '@/data/businessInfo';
 
 interface JsonLdProps {
-  data: Record<string, any> | Record<string, any>[];
+  data: Record<string, unknown> | Record<string, unknown>[];
   id?: string;
 }
 

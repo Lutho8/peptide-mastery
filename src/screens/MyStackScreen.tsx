@@ -451,7 +451,7 @@ export function MyStackScreen() {
   };
 
   const handleEndCycle = (cycle: Cycle) => {
-    const updated: Cycle = { ...cycle, status: 'completed' as any };
+    const updated: Cycle = { ...cycle, status: 'completed' };
     updateCycle(updated);
     setCycles(getCycles());
     toast({
