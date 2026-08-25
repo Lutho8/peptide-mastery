@@ -25,7 +25,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install locked dependencies
@@ -34,7 +34,7 @@ jobs:
       - name: Lint
         shell: bash
         run: |
-          mapfile -t files < <(git diff --name-only origin/main...HEAD -- '*.ts' '*.tsx')
+          mapfile -t files < <(git diff --diff-filter=ACMR --name-only origin/main...HEAD -- '*.ts' '*.tsx')
           if ((${#files[@]})); then
             npx eslint "${files[@]}"
           fi
