@@ -1,7 +1,7 @@
 {
-  "name": "Peptide South Africa - Peptide Protocol Tracker",
+  "name": "Peptide South Africa - Research & Routine Tracker",
   "short_name": "Peptide SA",
-  "description": "Simple, guided peptide protocol tracking for South Africa and Germany",
+  "description": "Mobile-first research records, routine reminders, inventory, bloodwork uploads and order tracking for South African users",
   "id": "/?psa",
   "start_url": "/?utm_source=pwa",
   "scope": "/",
@@ -11,7 +11,7 @@
   "background_color": "#F4F8F8",
   "theme_color": "#082B57",
   "orientation": "portrait",
-  "categories": ["health", "fitness", "medical"],
+  "categories": ["education", "productivity", "utilities"],
   "prefer_related_applications": false,
   "icons": [
     {
@@ -47,9 +47,9 @@
   "screenshots": [],
   "shortcuts": [
     {
-      "name": "Log Dose",
-      "short_name": "Log",
-      "description": "Quickly log a dose",
+      "name": "Record Routine Entry",
+      "short_name": "Record",
+      "description": "Record an entry from an existing research routine",
       "url": "/?action=log",
       "icons": [{ "src": "/favicon.png?v=psa5", "sizes": "96x96" }]
     }

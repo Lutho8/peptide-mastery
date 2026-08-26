@@ -1,41 +1,40 @@
 # Peptide South Africa
 
-> Free peptide research and protocol tracking platform: dosage calculators, reconstitution guides, stack compatibility, bloodwork decoding, and a 50+ peptide research library. For research and educational use only — peptides referenced are not FDA approved for human consumption.
+> Mobile-first South African workspace for source-led peptide research, user-entered routine records, inventory, bloodwork uploads, order tracking, and guided-support routing. General information only; not medical advice, diagnosis, treatment, or a product recommendation.
 
 ## Pages
 
-- [Home](/): Peptide protocol tracker with dose logging, cycle management, and stack builder.
-- [Live Q&A](/live-qna): Monthly live peptide research Q&A sessions.
+- [Home](/): Choose a guided or research pathway, then access the relevant dashboard tools.
 - [COA Verification](/coa-verification): Certificate of Analysis verification for peptide vendors.
-- [Bloodwork](/bloodwork): AI-powered lab report analysis with biomarker decoding.
+- [Bloodwork](/bloodwork): AI-assisted extraction of values from an uploaded report for review; clinical interpretation is routed to a qualified professional.
 - [Privacy Policy](/privacy): How user data is handled.
 - [Terms of Service](/terms): Terms governing use of the platform.
 - [Disclaimer](/disclaimer): Research-only safety disclaimer.
 
 ## Peptide research library
 
-- [BPC-157](/peptides/bpc-157): Healing and gut-repair peptide profile.
-- [TB-500](/peptides/tb-500): Tissue repair and recovery peptide.
-- [Retatrutide](/peptides/retatrutide): GLP-1/GIP/glucagon triple agonist for weight loss.
-- [Tirzepatide](/peptides/tirzepatide): GLP-1/GIP dual agonist.
-- [Semaglutide](/peptides/semaglutide): GLP-1 receptor agonist.
-- [Ipamorelin](/peptides/ipamorelin): Selective GH secretagogue.
-- [CJC-1295](/peptides/cjc-1295): GHRH analog for growth hormone release.
-- [GHK-Cu](/peptides/ghk-cu): Copper peptide for skin and tissue repair.
-- [Epitalon](/peptides/epitalon): Telomerase activator and longevity peptide.
-- [SS-31](/peptides/ss-31): Mitochondrial-targeted peptide.
+- [BPC-157](/peptides/bpc-157): Source-led BPC-157 research profile.
+- [TB-500](/peptides/tb-500): Source-led TB-500 research profile.
+- [Retatrutide](/peptides/retatrutide): Investigational retatrutide research profile.
+- [Tirzepatide](/peptides/tirzepatide): Tirzepatide mechanism and study profile.
+- [Semaglutide](/peptides/semaglutide): Semaglutide mechanism and study profile.
+- [Ipamorelin](/peptides/ipamorelin): Ipamorelin research profile.
+- [CJC-1295](/peptides/cjc-1295): CJC-1295 research profile.
+- [GHK-Cu](/peptides/ghk-cu): GHK-Cu research profile.
+- [Epitalon](/peptides/epitalon): Epitalon research profile.
+- [SS-31](/peptides/ss-31): SS-31 research profile.
 
 ## Categories
 
 - [Healing peptides](/categories/healing): BPC-157, TB-500, and recovery research.
-- [Weight loss peptides](/categories/weight-loss): GLP-1 agonists and metabolic peptides.
+- [Metabolic and weight-management research](/categories/weight-loss): GLP-1 and multi-agonist study profiles.
 - [Longevity peptides](/categories/longevity): Telomerase and senescence research.
 - [Cognitive peptides](/categories/cognitive): Semax, Selank, and nootropic research.
-- [Growth hormone peptides](/categories/growth-hormone): Ipamorelin, CJC-1295 protocols.
+- [Growth-hormone pathway research](/categories/growth-hormone): Ipamorelin and CJC-1295 study profiles.
 - [Immune peptides](/categories/immune): Thymosin Alpha-1, Thymalin research.
 
-## Guides
+## Boundaries
 
-- [Reconstitution guide](/guides/reconstitution): Step-by-step peptide reconstitution.
-- [Injection guide](/guides/injection): Subcutaneous injection technique.
-- [Bloodwork guide](/guides/bloodwork): Biomarker tracking for peptide research.
+- The app does not invent clinical advice, dosages, treatment selection, or medical outcomes.
+- Guided-support routing is used for suitability, treatment, monitoring, injection and other clinical questions.
+- Research catalogue links are navigation paths and are not personalised recommendations.

@@ -31,52 +31,53 @@ export const categorySlugs: Record<string, string> = {
   'metabolic': 'metabolic',
 };
 
-// SEO-optimized meta descriptions per category
+// Neutral, source-led category descriptions. These pages describe research
+// themes and do not provide treatment selection, dosing or outcome promises.
 export const categoryMeta: Record<string, { title: string; description: string; intro: string }> = {
   'healing': {
-    title: 'Healing Peptides – BPC-157, TB-500 & Tissue Repair Protocols',
-    description: 'Research-backed healing peptides for tissue repair, injury recovery, and inflammation. Dosing protocols, stacking guides, and safety data for BPC-157, TB-500, and more.',
-    intro: 'Healing peptides accelerate tissue repair through angiogenesis, collagen synthesis, and modulation of growth factors. These peptides are among the most researched for musculoskeletal and gastrointestinal recovery.'
+    title: 'Tissue-Support Peptide Research – BPC-157 & TB-500',
+    description: 'Source-led profiles for peptides studied in tissue, angiogenesis, collagen and inflammation models, including BPC-157 and TB-500.',
+    intro: 'This category groups compounds studied in tissue, angiogenesis, collagen and inflammation models. Evidence strength, model type and investigational status vary by compound.'
   },
   'weight-loss': {
-    title: 'Weight Loss Peptides – Retatrutide, Tirzepatide & GLP-1 Agonists',
-    description: 'Evidence-based weight loss peptides including GLP-1 receptor agonists. Protocols, dosing, and clinical data for Retatrutide, Tirzepatide, Semaglutide.',
-    intro: 'GLP-1 receptor agonists and multi-agonist peptides represent the most significant advancement in metabolic therapy. These peptides work through appetite regulation, insulin sensitization, and metabolic rate enhancement.'
+    title: 'Metabolic & Weight-Management Peptide Research',
+    description: 'Study profiles for GLP-1 and multi-agonist compounds, including semaglutide, tirzepatide and investigational retatrutide.',
+    intro: 'This category describes GLP-1 and multi-agonist mechanisms studied in metabolic and weight-management research. Product suitability and treatment decisions require an appropriate clinical pathway.'
   },
   'longevity': {
     title: 'Longevity Peptides – Epitalon, SS-31 & Anti-Aging Research',
-    description: 'Anti-aging and longevity peptides targeting telomeres, mitochondria, and cellular senescence. Research protocols for Epitalon, SS-31, GHK-Cu.',
-    intro: 'Longevity peptides target the fundamental mechanisms of aging: telomere maintenance, mitochondrial function, and cellular senescence. Research in this category spans from telomerase activation to mitochondrial membrane stabilization.'
+    description: 'Source-led profiles for compounds studied in telomere, mitochondrial and cellular-senescence models, including Epitalon, SS-31 and GHK-Cu.',
+    intro: 'This category groups compounds studied in telomere, mitochondrial and cellular-senescence models. Findings from laboratory or early clinical research do not establish individual outcomes.'
   },
   'cognitive': {
-    title: 'Cognitive Peptides – Semax, Selank & Nootropic Protocols',
-    description: 'Nootropic peptides for cognitive enhancement, neuroprotection, and focus. Research data on Semax, Selank, Dihexa, and P21.',
-    intro: 'Cognitive peptides enhance neuroplasticity, neurotrophic factor expression, and neuroprotection. These compounds are researched for memory enhancement, focus optimization, and neurodegenerative disease prevention.'
+    title: 'Cognitive & Neurological Peptide Research',
+    description: 'Research profiles for Semax, Selank and other compounds studied in neurological, neurotrophic and behavioural models.',
+    intro: 'This category groups compounds studied in neurological, neurotrophic and behavioural models. It does not claim cognitive enhancement or disease prevention.'
   },
   'immune': {
     title: 'Immune Peptides – Thymosin Alpha-1, Thymalin & Immune Support',
-    description: 'Immunomodulating peptides for immune optimization. Research protocols for Thymosin Alpha-1, Thymalin, and LL-37.',
-    intro: 'Immune-modulating peptides enhance both innate and adaptive immune responses through T-cell activation, dendritic cell maturation, and cytokine modulation. These peptides are among the most clinically validated in the field.'
+    description: 'Research profiles for Thymosin Alpha-1, Thymalin, LL-37 and other compounds studied in immune signalling models.',
+    intro: 'This category groups compounds studied in innate and adaptive immune signalling. Evidence and authorised uses differ by compound and jurisdiction.'
   },
   'growth-hormone': {
-    title: 'GH Secretagogues – Ipamorelin, CJC-1295 Protocols',
-    description: 'Growth hormone releasing peptides and secretagogues. Dosing protocols for Ipamorelin, CJC-1295, GHRP-6, and MK-677.',
-    intro: 'Growth hormone secretagogues stimulate the pituitary gland to release GH through GHRH receptor or ghrelin receptor activation. Stacking a GHRP with a GHRH analog produces synergistic GH pulses that mimic physiological patterns.'
+    title: 'Growth-Hormone Pathway Peptide Research',
+    description: 'Mechanism and study profiles for compounds associated with GHRH and ghrelin-receptor pathways, including Ipamorelin and CJC-1295.',
+    intro: 'This category describes compounds studied in GHRH and ghrelin-receptor pathways. It does not recommend combinations, administration or dosing.'
   },
   'skin-hair': {
-    title: 'Skin & Hair Peptides – GHK-Cu, SNAP-8 & Cosmetic Protocols',
-    description: 'Peptides for skin rejuvenation, hair growth, and cosmetic applications. Research protocols for GHK-Cu, SNAP-8, and copper peptides.',
-    intro: 'Cosmetic peptides promote collagen synthesis, reduce wrinkle depth, and stimulate hair follicle growth through growth factor signaling and extracellular matrix remodeling.'
+    title: 'Skin & Hair Peptide Research – GHK-Cu & SNAP-8',
+    description: 'Research profiles for GHK-Cu, SNAP-8 and other compounds studied in collagen, extracellular-matrix and follicle models.',
+    intro: 'This category groups compounds studied in collagen, extracellular-matrix and follicle models. Research findings are not individual cosmetic outcomes.'
   },
   'hormonal': {
-    title: 'Hormonal Peptides – PT-141, Kisspeptin & Hormone Optimization',
-    description: 'Peptides for hormonal optimization including sexual health, fertility, and endocrine support. Research on PT-141, Kisspeptin, and HCG.',
-    intro: 'Hormonal peptides modulate the hypothalamic-pituitary-gonadal axis, influencing sexual function, fertility, and endocrine balance through receptor-specific signaling.'
+    title: 'Hormonal-Pathway Peptide Research',
+    description: 'Research profiles for PT-141, kisspeptin and other compounds studied in endocrine and receptor-signalling pathways.',
+    intro: 'This category describes compounds studied in endocrine and receptor-signalling pathways. Clinical questions about sexual health, fertility or hormones belong with a qualified professional.'
   },
   'metabolic': {
-    title: 'Metabolic Peptides – AOD-9604, MOTS-c & Fat Loss Research',
-    description: 'Metabolic peptides for fat oxidation, insulin sensitivity, and energy metabolism. Research data on AOD-9604 and MOTS-c.',
-    intro: 'Metabolic peptides enhance fat oxidation, insulin sensitivity, and mitochondrial energy production. Unlike GLP-1 agonists which work through appetite suppression, these peptides directly target metabolic pathways.'
+    title: 'Metabolic Peptide Research – AOD-9604 & MOTS-c',
+    description: 'Research profiles for AOD-9604, MOTS-c and compounds studied in energy-metabolism and mitochondrial models.',
+    intro: 'This category groups compounds studied in energy-metabolism and mitochondrial models. Mechanistic research does not establish a treatment effect or individual outcome.'
   },
 };
 
