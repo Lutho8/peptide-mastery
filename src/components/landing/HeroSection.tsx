@@ -7,14 +7,17 @@ import { FloatingStatCards } from './FloatingStatCards';
 import { HeroCategoryBadges } from './HeroCategoryBadges';
 import { PeptideCategory } from '@/data/peptides';
 import { useAuth } from '@/contexts/AuthContext';
-import { captureLead } from '@/lib/crm';
+import { track } from '@/lib/analytics';
+import { DASHBOARD_PATH } from '@/lib/authRedirect';
+import { getStoreCategoryHref } from '@/lib/storeLinks';
+import { recordStoreCtaClick } from '@/lib/storeCta';
 
 interface HeroSectionProps {
   onCategoryClick?: (category: PeptideCategory) => void;
   onSignInClick?: () => void;
 }
 
-const SHOP_URL = 'https://peptide-south-africa.com?utm_source=tracker&utm_medium=hero&utm_campaign=buy_peptides';
+const SHOP_URL = getStoreCategoryHref('all', 'landing_hero');
 
 const capabilities = [
   'Keep schedules, logs and inventory in one account',
@@ -33,16 +36,10 @@ export function HeroSection({ onCategoryClick, onSignInClick }: HeroSectionProps
   const { user } = useAuth();
 
   const handleStartTracking = () => {
-    captureLead({
-      email: user?.email ?? null,
-      source: 'hero_signup_cta',
-      planInterest: 'free',
-      activityType: 'course_start',
-      activityData: { surface: 'hero', intent: 'open_tracker' },
-    });
+    track('onboarding_cta_clicked', { placement: 'hero', authenticated: Boolean(user) });
     if (user) {
-      try { localStorage.removeItem('rtd-dashboard-tour-done'); } catch {}
-      navigate('/');
+      try { localStorage.removeItem('rtd-dashboard-tour-done'); } catch { /* storage may be unavailable */ }
+      navigate(DASHBOARD_PATH);
     } else {
       onSignInClick?.();
     }
@@ -105,8 +102,13 @@ export function HeroSection({ onCategoryClick, onSignInClick }: HeroSectionProps
                 variant="outline"
                 className="min-h-14 w-full gap-2 rounded-2xl border-accent/40 bg-card/90 px-6 text-base font-semibold text-primary shadow-sm hover:bg-secondary sm:w-auto"
               >
-                <a href={SHOP_URL} target="_blank" rel="noopener noreferrer">
-                  <ShoppingBag className="h-5 w-5 text-accent" /> Browse the Store
+                <a
+                  href={SHOP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => recordStoreCtaClick({ placement: 'landing_hero', destination: SHOP_URL })}
+                >
+                  <ShoppingBag className="h-5 w-5 text-accent" /> Buy Peptides
                 </a>
               </Button>
             </motion.div>

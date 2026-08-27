@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
-import { motion, useAnimation } from 'framer-motion';
-import markAsset from '@/assets/peptide-sa-mark.jpg.asset.json';
+import horizontalLogo from '@/assets/logo-horizontal.png';
+import iconLogo from '@/assets/logo-icon.png';
 import { cn } from '@/lib/utils';
 
 interface AnimatedLogoProps {
@@ -10,93 +9,60 @@ interface AnimatedLogoProps {
   className?: string;
 }
 
-const sizeMap = {
-  sm: 'w-7 h-7',
-  md: 'w-10 h-10',
-  lg: 'w-16 h-16',
+const horizontalSizeMap = {
+  sm: 'h-9 w-auto',
+  md: 'h-11 w-auto',
+  lg: 'h-16 w-auto',
 };
 
-const textSizeMap = {
-  sm: 'text-sm',
-  md: 'text-lg',
-  lg: 'text-2xl',
+const iconSizeMap = {
+  sm: 'h-9 w-9',
+  md: 'h-11 w-11',
+  lg: 'h-16 w-16',
 };
 
+/**
+ * Approved Peptide South Africa brand lockup.
+ *
+ * `showText` selects between the supplied horizontal wordmark and supplied
+ * compact brand mark. Neither asset is reconstructed, recoloured or animated,
+ * so the logo remains identical across the public journey and signed-in app.
+ */
 export function AnimatedLogo({ size = 'md', showText = true, onClick, className }: AnimatedLogoProps) {
-  const controls = useAnimation();
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const logo = (
+    <img
+      src={showText ? horizontalLogo : iconLogo}
+      alt=""
+      aria-hidden="true"
+      className={cn(
+        'block shrink-0 object-contain',
+        showText ? horizontalSizeMap[size] : iconSizeMap[size],
+      )}
+      loading="eager"
+      decoding="async"
+    />
+  );
 
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mediaQuery.matches);
-    const handleChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
-  useEffect(() => {
-    if (prefersReducedMotion || isSpinning) return;
-    controls.start({
-      rotate: 360,
-      transition: { duration: 8, repeat: Infinity, ease: 'linear' },
-    });
-  }, [controls, prefersReducedMotion, isSpinning]);
-
-  const handleClick = async () => {
-    if (isSpinning) return;
-    setIsSpinning(true);
-    await controls.start({
-      rotate: [null, 360],
-      scale: [1, 1.15, 1],
-      transition: {
-        rotate: { duration: 0.5, ease: 'easeInOut' },
-        scale: { duration: 0.3, times: [0, 0.5, 1] },
-      },
-    });
-    setIsSpinning(false);
-    controls.set({ rotate: 0 });
-    onClick?.();
-  };
+  if (!onClick) {
+    return (
+      <div className={cn('inline-flex items-center', className)} aria-label="Peptide South Africa">
+        {logo}
+      </div>
+    );
+  }
 
   return (
     <button
-      onClick={handleClick}
+      type="button"
+      onClick={onClick}
       className={cn(
-        'flex items-center gap-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg',
-        'hover:opacity-90 group min-h-11',
-        className
+        'inline-flex min-h-11 items-center rounded-lg transition-opacity hover:opacity-90',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+        className,
       )}
-      aria-label="Peptide South Africa — Home"
+      aria-label="Peptide South Africa — dashboard home"
     >
-      <motion.div
-        animate={controls}
-        className={cn(
-          'relative rounded-full overflow-hidden bg-white shrink-0',
-          sizeMap[size],
-          isSpinning && 'logo-glow'
-        )}
-        style={{ willChange: 'transform' }}
-      >
-        <img
-          src={markAsset.url}
-          alt="Peptide South Africa logo"
-          className="w-full h-full object-contain"
-          loading="eager"
-        />
-      </motion.div>
-
-      {showText && (
-        <span className={cn(
-          'font-bold tracking-tight leading-none flex flex-col items-start',
-          textSizeMap[size]
-        )}>
-          <span className="text-foreground">PEPTIDE</span>
-          <span className="text-[0.55em] tracking-[0.18em] text-muted-foreground font-semibold">
-            SOUTH AFRICA
-          </span>
-        </span>
-      )}
+      {logo}
     </button>
   );
 }

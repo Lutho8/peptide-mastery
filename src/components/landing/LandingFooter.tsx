@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 import { Twitter, Mail, Linkedin } from 'lucide-react';
-import logoIcon from '@/assets/logo-icon.png';
+import { AnimatedLogo } from '@/components/ui/AnimatedLogo';
 import { businessInfo } from '@/data/businessInfo';
+import { getStoreCategoryHref } from '@/lib/storeLinks';
+import { recordStoreCtaClick } from '@/lib/storeCta';
 
 type FooterLink = { label: string; href: string; isRoute?: boolean; external?: boolean };
 
@@ -27,7 +29,7 @@ const footerLinks: Record<string, FooterLink[]> = {
     { label: 'Contact', href: 'mailto:contact@peptide-south-africa.com' },
   ],
   Network: [
-    { label: 'PSA Research Peptides', href: 'https://peptide-south-africa.com?utm_source=tracker&utm_medium=footer&utm_campaign=buy_peptides' },
+    { label: 'PSA Research Peptides', href: getStoreCategoryHref('all', 'landing_footer'), external: true },
     { label: 'Cape Town Peptide Club', href: 'https://capetownpeptideclub.co.za' },
     { label: 'WhatsApp Us', href: 'https://wa.me/27641344646?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20Peptide%20South%20Africa' },
   ],
@@ -44,14 +46,7 @@ export function LandingFooter() {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-8">
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-1">
-            <button
-              onClick={scrollToTop}
-              className="flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity"
-              aria-label="Back to top"
-            >
-              <img src={logoIcon} alt="Peptide South Africa" className="w-8 h-8 rounded-lg" />
-              <span className="text-lg font-bold">Peptide South Africa</span>
-            </button>
+            <AnimatedLogo size="sm" showText onClick={scrollToTop} className="mb-4" />
             <p className="text-sm text-muted-foreground mb-4">
               Your research-grade peptide database with comprehensive scientific data and tracking tools.
             </p>
@@ -87,6 +82,11 @@ export function LandingFooter() {
                         href={link.href}
                         target={link.external ? '_blank' : undefined}
                         rel={link.external ? 'noopener noreferrer' : undefined}
+                        onClick={() => {
+                          if (link.label === 'PSA Research Peptides') {
+                            recordStoreCtaClick({ placement: 'landing_footer', destination: link.href });
+                          }
+                        }}
                         className="text-sm text-muted-foreground hover:text-primary transition-colors line-clamp-2"
                       >
                         {link.label}

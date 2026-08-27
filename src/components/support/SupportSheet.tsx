@@ -6,6 +6,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { getStoreCategoryHref } from '@/lib/storeLinks';
+import { recordStoreCtaClick } from '@/lib/storeCta';
 
 interface SupportSheetProps {
   open: boolean;
@@ -15,7 +17,7 @@ interface SupportSheetProps {
 const WA_HREF = 'https://wa.me/27641344646?text=Hi%2C%20I%20need%20help%20with%20my%20Peptide%20South%20Africa%20account%20or%20pathway.';
 const GUIDED_HREF = 'mailto:support@peptide-south-africa.com?subject=Guided%20Pathway%20Request%20%E2%80%94%20Peptide%20South%20Africa';
 const EMAIL_HREF = 'mailto:support@peptide-south-africa.com?subject=Support%20%E2%80%94%20Peptide%20South%20Africa';
-const SHOP_HREF = 'https://peptide-south-africa.com/?utm_source=psa_app&utm_medium=support&utm_campaign=shop';
+const SHOP_HREF = getStoreCategoryHref('all', 'support');
 
 interface Row {
   icon: React.ReactNode;
@@ -74,7 +76,12 @@ export function SupportSheet({ open, onOpenChange }: SupportSheetProps) {
               href={r.href}
               target={r.href.startsWith('mailto:') ? undefined : '_blank'}
               rel="noopener noreferrer"
-              onClick={() => onOpenChange(false)}
+              onClick={() => {
+                if (r.href === SHOP_HREF) {
+                  recordStoreCtaClick({ placement: 'support', destination: SHOP_HREF });
+                }
+                onOpenChange(false);
+              }}
               className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 min-h-14 transition-all hover:border-primary/40 hover:bg-card/80 active:scale-[0.98]"
             >
               <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${r.accent}`}>

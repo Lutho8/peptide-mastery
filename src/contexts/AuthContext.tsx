@@ -11,6 +11,7 @@ import {
 import { clearAllScheduledNotifications } from '@/services/pushScheduler';
 import { shouldPromptForMigration } from '@/services/migration';
 import { DataMigrationModal } from '@/components/auth/DataMigrationModal';
+import { getDashboardHref, getOAuthCallbackUrl } from '@/lib/authRedirect';
 
 interface AuthContextType {
   user: User | null;
@@ -72,8 +73,8 @@ async function handleRootOAuthCallback(): Promise<boolean> {
     }
 
     if (data.session) {
-      // Clean the code from the URL so it doesn't get reused on refresh
-      window.history.replaceState({}, document.title, window.location.pathname);
+      // Legacy root callbacks must still resolve to the app, never the store.
+      window.history.replaceState({}, document.title, getDashboardHref());
       toast.success('Signed in successfully');
       return true;
     }
@@ -188,7 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: new Error(`Provider ${provider} not supported`) };
       }
       const result = await startOAuth(provider, {
-        redirectTo: window.location.origin,
+        redirectTo: getOAuthCallbackUrl(),
       });
       if (result.error) {
         console.error('[OAuth] error:', result.error);

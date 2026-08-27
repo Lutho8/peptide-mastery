@@ -9,6 +9,8 @@ import { toast } from 'sonner';
 import { Loader2, Mail, Lock, User } from 'lucide-react';
 import { z } from 'zod';
 import { captureLead } from '@/lib/crm';
+import { useNavigate } from 'react-router-dom';
+import { DASHBOARD_PATH } from '@/lib/authRedirect';
 
 interface AuthModalProps {
   open: boolean;
@@ -28,6 +30,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const { signIn, signUp, signInWithOAuth } = useAuth();
+  const navigate = useNavigate();
 
   // Apple Sign In via the company-owned Supabase Auth project.
   const APPLE_SIGNIN_ENABLED = true;
@@ -82,6 +85,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
         if (error) throw error;
         toast.success('Signed in successfully');
         onOpenChange(false);
+        navigate(DASHBOARD_PATH, { replace: true });
       } else {
         const { error } = await signUp(email, password, displayName);
         if (error) throw error;
@@ -90,12 +94,13 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
           firstName: displayName || undefined,
           source: 'auth_modal_signup',
           planInterest: 'free',
-          activityType: 'course_start',
+          activityType: 'account_created',
           activityData: { method: 'email' },
         });
-        try { localStorage.setItem('rtd-install-prompt-pending', '1'); } catch {}
-        toast.success('Account created! You can now sign in.');
+        try { localStorage.setItem('rtd-install-prompt-pending', '1'); } catch { /* storage may be unavailable */ }
+        toast.success('Account created. Opening your dashboard…');
         onOpenChange(false);
+        navigate(DASHBOARD_PATH, { replace: true });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Authentication failed');

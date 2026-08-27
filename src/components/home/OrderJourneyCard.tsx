@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { CustomerJourney, OrderDashboard, JourneyEventName } from '@/hooks/useCustomerJourney';
 import type { Json } from '@/integrations/supabase/types';
 import { getStoreCategoryHref, getStoreProductHref, type StoreCategory } from '@/lib/storeLinks';
+import { recordStoreCtaClick } from '@/lib/storeCta';
 
 interface OrderJourneyCardProps {
   journey: CustomerJourney | null | undefined;
@@ -76,16 +77,22 @@ export function OrderJourneyCard({ journey, commerce, onTrack }: OrderJourneyCar
           <p className="text-sm leading-relaxed text-muted-foreground">These links open the matching store category. They are navigation shortcuts—not a product, dose or treatment recommendation.</p>
         </CardHeader>
         <CardContent className="grid gap-2 sm:grid-cols-2">
-          {CATEGORY_LINKS.map(({ category, label }) => (
-            <Button key={category} variant="outline" className="min-h-11 justify-between" asChild>
-              <a
-                href={getStoreCategoryHref(category, `category_${category}`)}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => { void onTrack('order_cta_clicked', { category, placement: 'order_journey' }); }}
-              >{label}<ExternalLink size={15} /></a>
-            </Button>
-          ))}
+          {CATEGORY_LINKS.map(({ category, label }) => {
+            const destination = getStoreCategoryHref(category, `category_${category}`);
+            return (
+              <Button key={category} variant="outline" className="min-h-11 justify-between" asChild>
+                <a
+                  href={destination}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    recordStoreCtaClick({ placement: `dashboard_category_${category}`, destination });
+                    void onTrack('order_cta_clicked', { category, placement: 'order_journey' });
+                  }}
+                >{label}<ExternalLink size={15} /></a>
+              </Button>
+            );
+          })}
         </CardContent>
       </Card>
     );
@@ -94,6 +101,8 @@ export function OrderJourneyCard({ journey, commerce, onTrack }: OrderJourneyCar
   const effectiveStatus = shipment?.status ?? order.status;
   const serviceLabel = shipment?.service === 'postnet_to_postnet' ? 'PostNet to PostNet' : shipment?.service === 'postnet_to_door' ? 'PostNet to Door' : shipment?.service;
   const reorderDue = reminder ? new Date(reminder.due_at).getTime() <= Date.now() : false;
+  const reorderHref = reminder ? getStoreProductHref(reminder.product_slug, 'reorder_due') : null;
+  const existingStoreHref = getStoreCategoryHref('all', 'existing_customer_store');
 
   return (
     <Card className="overflow-hidden border-primary/20">
@@ -125,20 +134,26 @@ export function OrderJourneyCard({ journey, commerce, onTrack }: OrderJourneyCar
             <Button className="min-h-11" disabled={!reorderDue} asChild={reorderDue}>
               {reorderDue ? (
                 <a
-                  href={getStoreProductHref(reminder.product_slug, 'reorder_due')}
+                  href={reorderHref ?? undefined}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={() => { void onTrack('reorder_cta_clicked', { source_order_id: reminder.source_order_id, product_slug: reminder.product_slug }); }}
+                  onClick={() => {
+                    if (reorderHref) recordStoreCtaClick({ placement: 'dashboard_reorder_due', destination: reorderHref });
+                    void onTrack('reorder_cta_clicked', { source_order_id: reminder.source_order_id, product_slug: reminder.product_slug });
+                  }}
                 ><ShoppingBag className="mr-2" size={16} />Reorder from verified store</a>
               ) : <span>Reorder available {formatDate(reminder.due_at)}</span>}
             </Button>
           ) : (
             <Button variant="outline" className="min-h-11" asChild>
               <a
-                href={getStoreCategoryHref('all', 'existing_customer_store')}
+                href={existingStoreHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => { void onTrack('order_cta_clicked', { placement: 'existing_customer' }); }}
+                onClick={() => {
+                  recordStoreCtaClick({ placement: 'dashboard_existing_customer', destination: existingStoreHref });
+                  void onTrack('order_cta_clicked', { placement: 'existing_customer' });
+                }}
               >Open verified store <ExternalLink className="ml-2" size={15} /></a>
             </Button>
           )}

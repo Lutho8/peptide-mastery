@@ -2,6 +2,8 @@ import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SparkleButton } from '@/components/ui/SparkleButton';
+import { getStoreCategoryHref } from '@/lib/storeLinks';
+import { recordStoreCtaClick } from '@/lib/storeCta';
 
 interface CTASectionProps {
   onSignInClick: () => void;
@@ -14,6 +16,8 @@ const benefits = [
   'Source-linked research',
   'Inventory record',
 ];
+
+const SHOP_URL = getStoreCategoryHref('all', 'landing_final_cta');
 
 export function CTASection({ onSignInClick }: CTASectionProps) {
   return (
@@ -66,8 +70,13 @@ export function CTASection({ onSignInClick }: CTASectionProps) {
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
             <SparkleButton asChild size="lg" className="w-full sm:w-auto">
-              <a href="https://peptide-south-africa.com?utm_source=tracker&utm_medium=cta_section&utm_campaign=buy_peptides" target="_blank" rel="noopener noreferrer">
-                Browse Research Store →
+              <a
+                href={SHOP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => recordStoreCtaClick({ placement: 'landing_final_cta', destination: SHOP_URL })}
+              >
+                Buy Peptides →
               </a>
             </SparkleButton>
           </div>

@@ -3,6 +3,7 @@ import { LifeBuoy, ShoppingBag, User, Settings, LogOut } from 'lucide-react';
 import { AnimatedLogo } from '@/components/ui/AnimatedLogo';
 import { SupportSheet } from '@/components/support/SupportSheet';
 import { getStoreCategoryHref } from '@/lib/storeLinks';
+import { recordStoreCtaClick } from '@/lib/storeCta';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +38,7 @@ export function AppHeader({ onLogoClick, onSettingsClick, onSignOut, userName, u
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-2 px-3">
-        <div className="shrink-0 rounded-xl border border-border bg-card px-2.5 py-2 shadow-sm transition-all hover:border-accent/40">
+        <div className="shrink-0 rounded-xl border border-border bg-card px-2.5 py-1.5 shadow-sm transition-all hover:border-accent/40">
           <AnimatedLogo size="sm" showText={true} onClick={onLogoClick} className="hidden sm:flex" />
           <AnimatedLogo size="sm" showText={false} onClick={onLogoClick} className="sm:hidden" />
         </div>
@@ -48,10 +49,11 @@ export function AppHeader({ onLogoClick, onSettingsClick, onSignOut, userName, u
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Shop peptides"
+            onClick={() => recordStoreCtaClick({ placement: 'dashboard_header', destination: SHOP_HREF })}
             className="flex items-center gap-1.5 min-h-11 px-2.5 sm:px-3 rounded-xl bg-card border border-border shadow-sm hover:border-accent/50 transition-all active:scale-[0.97]"
           >
             <ShoppingBag size={18} className="text-primary" />
-            <span className="text-sm font-semibold hidden sm:inline">Research Store</span>
+            <span className="text-sm font-semibold hidden sm:inline">Buy Peptides</span>
           </a>
           <button
             type="button"

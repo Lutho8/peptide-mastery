@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getDashboardHref } from '@/lib/authRedirect';
 
 /**
  * AuthCallback — Handles OAuth redirects from Google, Apple, etc.
@@ -9,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
  * Vercel serves index.html (via vercel.json), then this component:
  * 1. Reads ?code= from window.location.search
  * 2. Exchanges it for a Supabase session
- * 3. Redirects to /#/ (app root)
+ * 3. Redirects to the signed-in dashboard
  */
 export default function AuthCallback() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -30,7 +31,7 @@ export default function AuthCallback() {
           setMessage(errorDescription || `Authentication error: ${error}`);
           // Redirect to app after showing error briefly
           setTimeout(() => {
-            window.location.replace('/#/');
+            window.location.replace('/');
           }, 3000);
           return;
         }
@@ -40,7 +41,7 @@ export default function AuthCallback() {
           setStatus('error');
           setMessage('No authorization code found. Please try signing in again.');
           setTimeout(() => {
-            window.location.replace('/#/');
+            window.location.replace('/');
           }, 3000);
           return;
         }
@@ -53,7 +54,7 @@ export default function AuthCallback() {
           setStatus('error');
           setMessage(exchangeError.message || 'Failed to complete sign-in. Please try again.');
           setTimeout(() => {
-            window.location.replace('/#/');
+            window.location.replace('/');
           }, 3000);
           return;
         }
@@ -63,13 +64,13 @@ export default function AuthCallback() {
           setMessage('Signed in successfully! Redirecting...');
           // Small delay so user sees success state
           setTimeout(() => {
-            window.location.replace('/#/');
+            window.location.replace(getDashboardHref());
           }, 1200);
         } else {
           setStatus('error');
           setMessage('Authentication incomplete. Please try again.');
           setTimeout(() => {
-            window.location.replace('/#/');
+            window.location.replace('/');
           }, 3000);
         }
       } catch (err) {
@@ -77,7 +78,7 @@ export default function AuthCallback() {
         setStatus('error');
         setMessage('Something went wrong. Please try signing in again.');
         setTimeout(() => {
-          window.location.replace('/#/');
+          window.location.replace('/');
         }, 3000);
       }
     };
