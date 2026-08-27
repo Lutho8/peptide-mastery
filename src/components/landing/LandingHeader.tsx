@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Activity,
   ArrowRight,
@@ -13,14 +13,16 @@ import {
 import { AnimatedLogo } from '@/components/ui/AnimatedLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import { track } from '@/lib/analytics';
+import { DASHBOARD_PATH } from '@/lib/authRedirect';
+import { getStoreCategoryHref } from '@/lib/storeLinks';
+import { recordStoreCtaClick } from '@/lib/storeCta';
 
 interface LandingHeaderProps {
   onSignInClick: () => void;
   onSearch?: (query: string) => void;
-  onBackToDashboard?: () => void;
 }
 
-const SHOP_URL = 'https://peptide-south-africa.com?utm_source=tracker&utm_medium=header&utm_campaign=buy_peptides';
+const SHOP_URL = getStoreCategoryHref('all', 'landing_header');
 
 type NavItem = {
   label: string;
@@ -30,10 +32,11 @@ type NavItem = {
   action?: 'browse' | 'dashboard';
 };
 
-export function LandingHeader({ onSignInClick, onSearch, onBackToDashboard }: LandingHeaderProps) {
+export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -68,8 +71,7 @@ export function LandingHeader({ onSignInClick, onSearch, onBackToDashboard }: La
     if (item.action === 'browse') return onSearch?.('');
     if (item.action === 'dashboard') {
       if (user) {
-        if (onBackToDashboard) onBackToDashboard();
-        else window.location.assign('/');
+        navigate(DASHBOARD_PATH);
       } else {
         onSignInClick();
       }
@@ -91,9 +93,9 @@ export function LandingHeader({ onSignInClick, onSearch, onBackToDashboard }: La
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
       <div className="h-1 bg-[linear-gradient(90deg,hsl(var(--sa-green))_0_34%,hsl(var(--sa-yellow))_34%_50%,hsl(var(--sa-red))_50%_66%,hsl(var(--primary))_66%_100%)]" aria-hidden="true" />
-      <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center gap-2 px-3 sm:px-4">
+      <div className="mx-auto flex h-[4.5rem] w-full max-w-[1400px] items-center gap-2 px-3 sm:px-4">
         <AnimatedLogo
-          size="sm"
+          size="md"
           showText
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           className="mr-auto min-w-0 shrink"
@@ -125,7 +127,7 @@ export function LandingHeader({ onSignInClick, onSearch, onBackToDashboard }: La
           href={SHOP_URL}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => track('header_shop_click', { mobile: window.innerWidth < 1024 })}
+          onClick={() => recordStoreCtaClick({ placement: 'landing_header', destination: SHOP_URL })}
           className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-12px_hsl(var(--primary)/0.8)] transition-transform active:scale-[0.98] sm:px-4"
           aria-label="Shop Peptide South Africa products"
         >
@@ -186,7 +188,10 @@ export function LandingHeader({ onSignInClick, onSearch, onBackToDashboard }: La
               target="_blank"
               rel="noopener noreferrer"
               className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-base font-semibold text-primary-foreground shadow-lg"
-              onClick={() => { setMobileMenuOpen(false); track('header_shop_click', { mobileMenu: true }); }}
+              onClick={() => {
+                setMobileMenuOpen(false);
+                recordStoreCtaClick({ placement: 'landing_mobile_menu', destination: SHOP_URL });
+              }}
             >
               <ShoppingBag className="h-5 w-5" /> Browse the store <ArrowRight className="h-5 w-5" />
             </a>

@@ -12,7 +12,9 @@ export type ActivityType =
   | 'pricing_view'
   | 'peptide_search'
   | 'email_open'
-  | 'consultation_booked';
+  | 'consultation_booked'
+  | 'store_click'
+  | 'account_created';
 
 export type PlanInterest = 'free' | 'premium' | 'undecided';
 
@@ -53,7 +55,7 @@ function rememberLeadEmail(email: string) {
   }
 }
 
-function getSessionId(): string {
+export function getCrmSessionId(): string {
   if (typeof window === 'undefined') return 'server';
   try {
     let id = sessionStorage.getItem(SESSION_KEY);
@@ -79,7 +81,7 @@ export async function captureLead(input: CaptureLeadInput): Promise<void> {
 
   try {
     const pageUrl = typeof window !== 'undefined' ? window.location.href : undefined;
-    const sessionId = getSessionId();
+    const sessionId = getCrmSessionId();
 
     await supabase.functions.invoke('crm-capture', {
       body: {

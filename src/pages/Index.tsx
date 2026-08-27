@@ -33,7 +33,6 @@ const BodyCompositionModal = lazy(() => import('@/components/modals/BodyComposit
 const DoseTrackerModal = lazy(() => import('@/components/modals/DoseTrackerModal').then(m => ({ default: m.DoseTrackerModal })));
 const InventoryModal = lazy(() => import('@/components/modals/InventoryModal').then(m => ({ default: m.InventoryModal })));
 const NotificationActionModal = lazy(() => import('@/components/modals/NotificationActionModal').then(m => ({ default: m.NotificationActionModal })));
-const AuthModal = lazy(() => import('@/components/auth/AuthModal').then(m => ({ default: m.AuthModal })));
 const InstallAppStep = lazy(() => import('@/components/onboarding/InstallAppStep').then(m => ({ default: m.InstallAppStep })));
 
 const ScreenLoaderHome = () => <HomeSkeleton />;
@@ -42,7 +41,11 @@ const ScreenLoaderCards = () => <CardSkeleton />;
 
 type TabId = 'home' | 'stack' | 'daily-log' | 'transformation';
 
-const Index = () => {
+interface IndexProps {
+  dashboardRoute?: boolean;
+}
+
+const Index = ({ dashboardRoute = false }: IndexProps) => {
   useStorageInit();
   const { addDose } = useDailyDoses();
   const { user, signOut, isLoading } = useAuth();
@@ -83,8 +86,6 @@ const Index = () => {
   }, []);
   const [showSettings, setShowSettings] = useState(false);
   const [showResearch, setShowResearch] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [showLandingPage, setShowLandingPage] = useState(false);
   const [bodyCompositionOpen, setBodyCompositionOpen] = useState(false);
   const [doseTrackerOpen, setDoseTrackerOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
@@ -141,15 +142,7 @@ const Index = () => {
 
   const handleLogoClick = () => {
     setShowSettings(false);
-    if (user) {
-      setShowLandingPage(true);
-    } else {
-      setActiveTab('home');
-    }
-  };
-  
-  const handleBackToDashboard = () => {
-    setShowLandingPage(false);
+    setShowResearch(false);
     setActiveTab('home');
   };
 
@@ -240,16 +233,7 @@ const Index = () => {
   if (!user) {
     return (
       <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
-        <LandingPage />
-      </Suspense>
-    );
-  }
-
-  // Landing page for authenticated users browsing public content
-  if (showLandingPage) {
-    return (
-      <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
-        <LandingPage onBackToDashboard={handleBackToDashboard} />
+        <LandingPage openSignInOnLoad={dashboardRoute} />
       </Suspense>
     );
   }
@@ -294,7 +278,6 @@ const Index = () => {
         {doseTrackerOpen && <DoseTrackerModal open={doseTrackerOpen} onOpenChange={setDoseTrackerOpen} />}
         {inventoryOpen && <InventoryModal open={inventoryOpen} onOpenChange={setInventoryOpen} />}
         <NotificationActionModal onMarkAsTaken={handleMarkDoseAsTaken} />
-        {authModalOpen && <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />}
         {installStepOpen && (
           <InstallAppStep open={installStepOpen} onClose={() => setInstallStepOpen(false)} />
         )}

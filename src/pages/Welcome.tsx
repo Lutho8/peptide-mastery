@@ -5,15 +5,18 @@ import { ShoppingBag, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedLogo } from "@/components/ui/AnimatedLogo";
 import { useAuth } from "@/contexts/AuthContext";
+import { DASHBOARD_PATH } from "@/lib/authRedirect";
+import { getStoreCategoryHref } from "@/lib/storeLinks";
+import { recordStoreCtaClick } from "@/lib/storeCta";
 
-const SHOP_URL = "https://peptide-south-africa.com";
+const SHOP_URL = getStoreCategoryHref('all', 'welcome');
 
 export default function Welcome() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) navigate("/", { replace: true });
+    if (user) navigate(DASHBOARD_PATH, { replace: true });
   }, [user, navigate]);
 
   return (
@@ -42,7 +45,7 @@ export default function Welcome() {
         </p>
 
         <div className="mt-8 sm:mt-10 mx-auto flex w-full max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center sm:items-center sm:gap-4">
-          <Link to="/" className="w-full sm:w-auto">
+          <Link to={DASHBOARD_PATH} className="w-full sm:w-auto">
             <Button
               size="lg"
               className="w-full sm:w-auto h-14 px-8 text-base font-bold gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-2xl shadow-primary/40 hover:shadow-primary/60 hover:scale-[1.02] transition-all ring-2 ring-primary/20"
@@ -51,7 +54,13 @@ export default function Welcome() {
               <ArrowRight className="w-5 h-5" />
             </Button>
           </Link>
-          <a href={SHOP_URL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+          <a
+            href={SHOP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full sm:w-auto"
+            onClick={() => recordStoreCtaClick({ placement: 'welcome', destination: SHOP_URL })}
+          >
             <Button
               size="lg"
               variant="outline"

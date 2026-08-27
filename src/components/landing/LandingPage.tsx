@@ -32,15 +32,16 @@ const SectionPlaceholder = ({ minH = 400 }: { minH?: number }) => (
 );
 
 interface LandingPageProps {
-  onBackToDashboard?: () => void;
+  openSignInOnLoad?: boolean;
 }
 
-export function LandingPage({ onBackToDashboard }: LandingPageProps) {
-  const [authModalOpen, setAuthModalOpen] = useState(false);
+export function LandingPage({ openSignInOnLoad = false }: LandingPageProps) {
+  const [authModalOpen, setAuthModalOpen] = useState(openSignInOnLoad);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [searchOpen, setSearchOpen] = useState(false);
 
-  const handleSignInClick = () => { setAuthMode('signup'); setAuthModalOpen(true); };
+  const handleSignInClick = () => { setAuthMode('signin'); setAuthModalOpen(true); };
+  const handleSignUpClick = () => { setAuthMode('signup'); setAuthModalOpen(true); };
   const handleCategoryClick = (_category: PeptideCategory) => { setSearchOpen(true); };
 
   const allFaqs = faqCategories.flatMap(cat => cat.faqs);
@@ -59,19 +60,18 @@ export function LandingPage({ onBackToDashboard }: LandingPageProps) {
       <LandingHeader
         onSignInClick={handleSignInClick}
         onSearch={() => setSearchOpen(true)}
-        onBackToDashboard={onBackToDashboard}
       />
 
       <ErrorBoundary fallbackTitle="The landing page hit a snag">
         <main>
-          <HeroSection onCategoryClick={handleCategoryClick} onSignInClick={handleSignInClick} />
+          <HeroSection onCategoryClick={handleCategoryClick} onSignInClick={handleSignUpClick} />
 
           <SafeSection name="PWA Install Journey" enabled={LANDING_SECTIONS.pwaJourney} minH={2200} component={PWAInstallJourney} />
           <SafeSection name="Install Verification" enabled={LANDING_SECTIONS.pwaJourney} minH={800} component={InstallVerification} />
 
           <SafeSection name="Why Free Band" enabled={LANDING_SECTIONS.whyFreeBand} minH={300}>
             <Suspense fallback={<SectionPlaceholder minH={300} />}>
-              <WhyFreeBand onPrimaryClick={handleSignInClick} />
+              <WhyFreeBand onPrimaryClick={handleSignUpClick} />
             </Suspense>
           </SafeSection>
 
@@ -79,7 +79,7 @@ export function LandingPage({ onBackToDashboard }: LandingPageProps) {
             <Suspense fallback={<SectionPlaceholder minH={500} />}>
               <ResearchTools
                 onSearchClick={() => setSearchOpen(true)}
-                onStartClick={handleSignInClick}
+                onStartClick={handleSignUpClick}
               />
             </Suspense>
           </SafeSection>
@@ -99,7 +99,7 @@ export function LandingPage({ onBackToDashboard }: LandingPageProps) {
 
           <SafeSection name="CTA" enabled={LANDING_SECTIONS.cta} minH={300}>
             <Suspense fallback={<SectionPlaceholder minH={300} />}>
-              <CTASection onSignInClick={handleSignInClick} />
+              <CTASection onSignInClick={handleSignUpClick} />
             </Suspense>
           </SafeSection>
 
