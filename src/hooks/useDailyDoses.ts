@@ -38,10 +38,12 @@ export function useDailyDoses() {
     setIsLoading(true);
     try {
       if (user) {
+        const localBeforeCloud = loadLocalDoses();
         // Fetch from Supabase
         const { data, error } = await supabase
           .from('daily_doses')
           .select('*')
+          .eq('user_id', user.id)
           .order('date', { ascending: false });
 
         if (error) throw error;
@@ -53,14 +55,44 @@ export function useDailyDoses() {
           peptide_name: d.peptide_name,
           dose: Number(d.dose),
           unit: d.unit as 'mg' | 'IU' | 'units',
-          time: d.time,
+          time: String(d.time).slice(0, 5),
           notes: d.notes || undefined,
           user_id: d.user_id,
         }));
 
-        setDoses(mappedDoses);
-        // Also sync to localStorage (per-user namespace) for offline access
-        saveLocalDoses(mappedDoses);
+        // Preserve entries recorded locally while authentication or the network
+        // was unavailable. Push only IDs not already present in the owner-scoped
+        // cloud result, then keep one merged copy on this device.
+        const cloudIds = new Set(mappedDoses.map((dose) => dose.id));
+        const localOnly = localBeforeCloud.filter((dose) => !cloudIds.has(dose.id));
+        if (localOnly.length > 0) {
+          setIsSyncing(true);
+          try {
+            const { error: recoveryError } = await supabase.from('daily_doses').upsert(
+              localOnly.map((dose) => ({
+                id: dose.id,
+                user_id: user.id,
+                date: dose.date,
+                peptide_id: dose.peptide_id,
+                peptide_name: dose.peptide_name,
+                dose: dose.dose,
+                unit: dose.unit,
+                time: dose.time,
+                notes: dose.notes || null,
+              })),
+              { onConflict: 'id' },
+            );
+            if (recoveryError) throw recoveryError;
+            toast({ title: 'Unsynced entries restored', description: `${localOnly.length} local ${localOnly.length === 1 ? 'entry is' : 'entries are'} now backed up.` });
+          } finally {
+            setIsSyncing(false);
+          }
+        }
+
+        const merged = [...mappedDoses, ...localOnly]
+          .filter((dose, index, all) => all.findIndex((item) => item.id === dose.id) === index);
+        setDoses(merged);
+        saveLocalDoses(merged);
       } else {
         // Use localStorage when not logged in (guest namespace)
         setDoses(loadLocalDoses());
@@ -72,7 +104,7 @@ export function useDailyDoses() {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [toast, user]);
 
   // Reset in-memory state immediately when the user changes so a stale list
   // from a previous user never flashes on screen.
@@ -82,67 +114,27 @@ export function useDailyDoses() {
     loadDoses();
   }, [user?.id, loadDoses]);
 
-  // Sync local doses to cloud when user logs in
-  const syncLocalToCloud = useCallback(async () => {
-    if (!user) return;
-
-    const localDoses = loadLocalDoses();
-    if (localDoses.length === 0) return;
-
-    setIsSyncing(true);
-    try {
-      // Check which doses already exist in cloud
-      const { data: existingDoses } = await supabase
-        .from('daily_doses')
-        .select('id');
-
-      const existingIds = new Set((existingDoses || []).map(d => d.id));
-      const newDoses = localDoses.filter(d => !existingIds.has(d.id));
-
-      if (newDoses.length > 0) {
-        const { error } = await supabase.from('daily_doses').upsert(
-          newDoses.map(d => ({
-            id: d.id,
-            user_id: user.id,
-            date: d.date,
-            peptide_id: d.peptide_id,
-            peptide_name: d.peptide_name,
-            dose: d.dose,
-            unit: d.unit,
-            time: d.time,
-            notes: d.notes || null,
-          })),
-          { onConflict: 'id' }
-        );
-
-        if (error) throw error;
-
-        toast({
-          title: 'Doses synced',
-          description: `${newDoses.length} local dose${newDoses.length > 1 ? 's' : ''} synced to cloud`,
-        });
-      }
-
-      // Reload to get merged data
-      await loadDoses();
-    } catch (error) {
-      console.error('Sync error:', error);
-      toast({
-        title: 'Sync failed',
-        description: 'Could not sync local doses to cloud',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [user, loadDoses, toast]);
-
-  // Sync when user logs in
+  // Refresh immediately after the user accepts local-history recovery.
   useEffect(() => {
-    if (user) {
-      syncLocalToCloud();
-    }
-  }, [user?.id]);
+    const handleRecovered = () => { void loadDoses(); };
+    window.addEventListener('rtd:local-history-recovered', handleRecovered);
+    return () => window.removeEventListener('rtd:local-history-recovered', handleRecovered);
+  }, [loadDoses]);
+
+  // Cross-device changes appear without a manual refresh.
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`daily-doses:${user.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'tracker',
+        table: 'daily_doses',
+        filter: `user_id=eq.${user.id}`,
+      }, () => { void loadDoses(); })
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [loadDoses, user]);
 
   const addDose = useCallback(async (dose: Omit<DailyDoseEntry, 'id' | 'user_id'>) => {
     const newDose: DailyDoseEntry = {
@@ -167,7 +159,9 @@ export function useDailyDoses() {
           const { error } = await supabase.from('daily_doses').insert(row);
           if (error) throw error;
         } catch (netErr) {
-          console.warn('addDose offline — enqueuing', netErr);
+          const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+          if (!isOffline) throw netErr;
+          console.warn('addDose offline — enqueuing');
           await enqueueOffline('daily_doses', 'insert', row);
         }
       }

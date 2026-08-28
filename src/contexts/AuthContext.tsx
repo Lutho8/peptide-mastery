@@ -5,33 +5,28 @@ import { supabase } from '@/integrations/supabase/client';
 import { signInWithOAuth as startOAuth } from '@/integrations/auth/oauth';
 import {
   setActiveUserId,
-  clearLegacyGlobalKeys,
   initializeStorage,
 } from '@/services/storage';
 import { clearAllScheduledNotifications } from '@/services/pushScheduler';
 import { shouldPromptForMigration } from '@/services/migration';
 import { DataMigrationModal } from '@/components/auth/DataMigrationModal';
-import { getDashboardHref, getOAuthCallbackUrl } from '@/lib/authRedirect';
+import { getDashboardHref, getOAuthCallbackUrl, getPasswordRecoveryUrl } from '@/lib/authRedirect';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
-  signUp: (email: string, password: string, displayName?: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, displayName?: string) => Promise<{ error: Error | null; needsEmailConfirmation: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signInWithOAuth: (provider: Provider) => Promise<{ error: Error | null }>;
+  sendSignInLink: (email: string) => Promise<{ error: Error | null }>;
+  requestPasswordReset: (email: string) => Promise<{ error: Error | null }>;
+  resendConfirmation: (email: string) => Promise<{ error: Error | null }>;
+  updatePassword: (password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// One-time legacy cleanup flag
-let legacyCleared = false;
-function ensureLegacyCleared() {
-  if (legacyCleared) return;
-  clearLegacyGlobalKeys();
-  legacyCleared = true;
-}
 
 function applyUserScope(currentUser: User | null, _prevUserId: string | null) {
   // Switch the storage namespace to the current user (or guest). Each user has
@@ -50,6 +45,7 @@ function applyUserScope(currentUser: User | null, _prevUserId: string | null) {
  * This function checks for the code and exchanges it for a session.
  */
 async function handleRootOAuthCallback(): Promise<boolean> {
+  if (window.location.pathname !== '/' && window.location.pathname !== '') return false;
   const params = new URLSearchParams(window.location.search);
   const code = params.get('code');
   const error = params.get('error');
@@ -95,8 +91,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const migrationCheckedRef = React.useRef(false);
 
   React.useEffect(() => {
-    ensureLegacyCleared();
-
     const handleAuth = (currentSession: Session | null) => {
       const currentUser = currentSession?.user ?? null;
       // Only apply scope changes after the first resolution, OR on actual user-id change.
@@ -120,10 +114,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             duration: 3500,
           });
 
-          // Prompt for data migration if old-namespaced localStorage exists
-          if (!migrationCheckedRef.current && shouldPromptForMigration(newId)) {
-            setShowMigrationModal(true);
-          }
+        }
+
+        // Check on both a fresh sign-in and a restored browser session. This
+        // recovers entries recorded while sign-in was unavailable.
+        if (newId && !migrationCheckedRef.current && shouldPromptForMigration(newId)) {
+          setShowMigrationModal(true);
         }
 
         prevUserIdRef.current = newId;
@@ -164,7 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, displayName?: string) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -172,7 +168,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: { display_name: displayName },
       },
     });
-    return { error: error as Error | null };
+    return {
+      error: error as Error | null,
+      needsEmailConfirmation: !error && !data.session,
+    };
   };
 
   const signIn = async (email: string, password: string) => {
@@ -205,6 +204,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const sendSignInLink = async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: getOAuthCallbackUrl(),
+      },
+    });
+    return { error: error as Error | null };
+  };
+
+  const requestPasswordReset = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: getPasswordRecoveryUrl(),
+    });
+    return { error: error as Error | null };
+  };
+
+  const resendConfirmation = async (email: string) => {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: getOAuthCallbackUrl() },
+    });
+    return { error: error as Error | null };
+  };
+
+  const updatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    return { error: error as Error | null };
+  };
+
   const signOut = async () => {
     // Clear scheduled reminders + active OS notifications BEFORE auth sign-out
     // so the previous user's reminders never fire for the next user.
@@ -217,7 +248,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signUp, signIn, signInWithOAuth, signOut }}>
+    <AuthContext.Provider value={{
+      user,
+      session,
+      isLoading,
+      signUp,
+      signIn,
+      signInWithOAuth,
+      sendSignInLink,
+      requestPasswordReset,
+      resendConfirmation,
+      updatePassword,
+      signOut,
+    }}>
       {children}
       {user && (
         <DataMigrationModal

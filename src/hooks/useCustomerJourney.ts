@@ -17,7 +17,10 @@ export type JourneyEventName =
   | 'order_cta_clicked'
   | 'order_status_viewed'
   | 'reorder_cta_clicked'
-  | 'support_opened';
+  | 'support_opened'
+  | 'measurement_tool_opened'
+  | 'dose_history_viewed'
+  | 'local_history_recovered';
 
 export interface CustomerJourney {
   experience_mode: ExperienceMode | null;

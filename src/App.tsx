@@ -26,6 +26,7 @@ const SEODashboard = lazy(() => import("./pages/admin/SEODashboard"));
 const SEOVerifyPage = lazy(() => import("./pages/admin/SEOVerifyPage"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const InstallPage = lazy(() => import("./pages/InstallPage"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 
@@ -52,7 +53,7 @@ function isOAuthCallback(): boolean {
   return (
     pathname === '/auth/callback' ||
     pathname === '/auth/callback/' ||
-    (search.includes('code=') && search.includes('type='))
+    ((pathname === '/' || pathname === '') && search.includes('code=') && search.includes('type='))
   );
 }
 
@@ -87,6 +88,7 @@ const App = () => {
                     <Route path="/welcome" element={<Welcome />} />
                     <Route path="/" element={<Index />} />
                     <Route path="/dashboard" element={<Index dashboardRoute />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="/disclaimer" element={<Disclaimer />} />
                     <Route path="/terms" element={<TermsOfService />} />

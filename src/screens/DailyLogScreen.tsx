@@ -16,7 +16,6 @@ import { useDailyDoses } from '@/hooks/useDailyDoses';
 import { useSwipeNav } from '@/hooks/useSwipeNav';
 import { DoseSummary } from '@/components/doses/DoseSummary';
 import { QuickAddReminderButton } from '@/components/doses/QuickAddReminderButton';
-import { InsulinNeedleGuide } from '@/components/doses/InsulinNeedleGuide';
 import { UnitToggle } from '@/components/doses/UnitToggle';
 import { DoseLoggedAnimation } from '@/components/doses/DoseLoggedAnimation';
 import { EditDoseModal } from '@/components/doses/EditDoseModal';
@@ -24,6 +23,9 @@ import { LastDoseRecall } from '@/components/doses/LastDoseRecall';
 import type { DailyDoseEntry } from '@/hooks/useDailyDoses';
 import { logAudit } from '@/lib/auditLog';
 import { z } from 'zod';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { track } from '@/lib/analytics';
 
 const doseEntrySchema = z.object({
   peptideId: z.string().min(1, 'Please select a peptide'),
@@ -35,7 +37,12 @@ const doseEntrySchema = z.object({
 
 type SortOrder = 'asc' | 'desc';
 
-export function DailyLogScreen() {
+interface DailyLogScreenProps {
+  onOpenMeasurement?: () => void;
+}
+
+export function DailyLogScreen({ onOpenMeasurement }: DailyLogScreenProps) {
+  const { user } = useAuth();
   const { toast } = useToast();
   const { doses, isLoading, isSyncing, isCloudEnabled, addDose, updateDose, deleteDose, getDosesForDate } = useDailyDoses();
   
@@ -56,6 +63,21 @@ export function DailyLogScreen() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [highlightedDoseId, setHighlightedDoseId] = useState<string | null>(null);
   const highlightTimerRef = useRef<number | null>(null);
+  const viewTrackedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!user || viewTrackedRef.current === user.id) return;
+    viewTrackedRef.current = user.id;
+    track('dose_history_viewed', { source: 'dashboard_tab' });
+    void supabase.from('journey_events').insert({
+      user_id: user.id,
+      event_name: 'dose_history_viewed',
+      source: 'dashboard',
+      context: {},
+    }).then(({ error }) => {
+      if (error) console.warn('[Journey] Dose-history event was not recorded:', error.message);
+    });
+  }, [user]);
 
   // Deep-link support: `?date=YYYY-MM-DD&doseId=...` from the MyStack backdate
   // conflict list → jump to that day and flash the matching log row.
@@ -366,7 +388,7 @@ export function DailyLogScreen() {
 
             <div className="grid grid-cols-7 gap-1">
               {emptyDays.map((_, i) => (
-                <div key={`empty-${i}`} className="aspect-square" />
+                <div key={`empty-${i}`} className="h-12 sm:h-14" />
               ))}
               {daysInMonth.map((day) => {
                 const dayDoses = getDosesForDay(day);
@@ -378,7 +400,7 @@ export function DailyLogScreen() {
                     key={day.toISOString()}
                     onClick={() => setSelectedDate(day)}
                     className={cn(
-                      "aspect-square rounded-lg flex flex-col items-center justify-center text-sm transition-all relative",
+                      "h-12 sm:h-14 rounded-lg flex flex-col items-center justify-center text-sm transition-all relative",
                       isSelected && "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background",
                       !isSelected && isToday(day) && "bg-primary/20 text-primary",
                       !isSelected && !isToday(day) && "hover:bg-muted text-foreground",
@@ -601,14 +623,14 @@ export function DailyLogScreen() {
               />
             </div>
 
-            {/* Insulin Needle Dosage Guide */}
-            {formData.dose && parseFloat(formData.dose) > 0 && (
-              <InsulinNeedleGuide 
-                dose={parseFloat(formData.dose) || 0}
-                unit={formData.unit}
-                peptideId={formData.peptideId}
-              />
-            )}
+            <div className="rounded-xl border border-border bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">
+              This form records the amount you enter; it does not select an amount for you.
+              {onOpenMeasurement && (
+                <button type="button" className="ml-1 font-semibold text-primary hover:underline" onClick={() => { setIsAddModalOpen(false); onOpenMeasurement(); }}>
+                  Open the U-40/U-100 Measurement Tool
+                </button>
+              )}
+            </div>
           </div>
 
           <DialogFooter className="flex-col sm:flex-row gap-2 flex-shrink-0 border-t pt-4">
