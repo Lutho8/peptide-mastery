@@ -449,6 +449,15 @@ export interface DosagePreset {
   syringeType: 'u100' | 'u40' | 'u50';
   /** Unit type for the vial amount (and target dose). Defaults to 'mg'. */
   vialUnitType?: VialUnitType;
+  /** Unit used for the recorded target amount. New measurement presets only. */
+  targetUnit?: 'mg' | 'mcg';
+  /** User-recorded schedule context. It never changes the conversion maths. */
+  scheduleMode?: 'not-recorded' | 'daily' | 'twice-daily' | 'weekly' | 'twice-weekly' | 'three-weekly' | 'custom';
+  scheduleDetails?: string;
+  /** Physical barrel capacity selected when the preset was saved. */
+  barrelCapacityMl?: string;
+  /** Controls explanation density only; it must never change an amount. */
+  guidanceMode?: 'beginner' | 'intermediate' | 'athlete';
   createdAt: string;
 }
 
