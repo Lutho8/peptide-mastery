@@ -10,7 +10,7 @@ import {
 import { clearAllScheduledNotifications } from '@/services/pushScheduler';
 import { shouldPromptForMigration } from '@/services/migration';
 import { DataMigrationModal } from '@/components/auth/DataMigrationModal';
-import { getDashboardHref, getOAuthCallbackUrl, getPasswordRecoveryUrl } from '@/lib/authRedirect';
+import { getOAuthCallbackUrl, getPasswordRecoveryUrl } from '@/lib/authRedirect';
 
 interface AuthContextType {
   user: User | null;
@@ -37,48 +37,6 @@ function applyUserScope(currentUser: User | null, _prevUserId: string | null) {
   setActiveUserId(newUserId);
   // Seed defaults only if this user/guest has no namespaced data yet.
   initializeStorage();
-}
-
-/**
- * Detect and process an OAuth callback that landed on the root path.
- * With HashRouter, OAuth providers may redirect to /?code=xxx (root with query params).
- * This function checks for the code and exchanges it for a session.
- */
-async function handleRootOAuthCallback(): Promise<boolean> {
-  if (window.location.pathname !== '/' && window.location.pathname !== '') return false;
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('code');
-  const error = params.get('error');
-
-  if (error) {
-    console.error('OAuth provider error:', error, params.get('error_description'));
-    // Clean the URL so the error doesn't persist on refresh
-    window.history.replaceState({}, document.title, window.location.pathname);
-    return false;
-  }
-
-  if (!code) return false;
-
-  try {
-    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-    if (exchangeError) {
-      console.error('OAuth code exchange error:', exchangeError);
-      toast.error('Sign-in failed. Please try again.');
-      window.history.replaceState({}, document.title, window.location.pathname);
-      return false;
-    }
-
-    if (data.session) {
-      // Legacy root callbacks must still resolve to the app, never the store.
-      window.history.replaceState({}, document.title, getDashboardHref());
-      toast.success('Signed in successfully');
-      return true;
-    }
-  } catch (err) {
-    console.error('Unexpected error during OAuth callback:', err);
-  }
-
-  return false;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -129,20 +87,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(currentUser);
       setIsLoading(false);
     };
-
-    // Check for OAuth callback on the root path BEFORE setting up listeners
-    // This handles cases where OAuth providers redirect to /?code=xxx
-    const isCallbackPath = window.location.pathname === '/auth/callback' || window.location.pathname === '/auth/callback/';
-    if (!isCallbackPath) {
-      handleRootOAuthCallback().then((handled) => {
-        if (handled) {
-          // Refresh session after successful OAuth exchange
-          supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-            handleAuth(currentSession);
-          });
-        }
-      });
-    }
 
     // Set up auth state listener BEFORE checking session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(

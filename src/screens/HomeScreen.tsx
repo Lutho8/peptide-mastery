@@ -146,22 +146,23 @@ export function HomeScreen({
         </motion.div>
       )}
 
+      {journey.snapshot && (
+        <motion.div variants={itemVariants}>
+          <TrackerReadinessCard
+            recordedItems={journey.snapshot.workspace.stack_items}
+            entryCount={doses.length}
+            enabledReminders={reminders.filter((reminder) => reminder.enabled).length}
+            inventoryItems={inventoryItems.length}
+            onWorkspace={onNavigateStack}
+            onDailyLog={onOpenDoseTracker}
+            onReminders={() => navigate('/reminders/today')}
+            onInventory={onOpenInventory}
+          />
+        </motion.div>
+      )}
+
       {showAdvancedDashboard ? (
         <>
-          {journey.snapshot && (
-            <motion.div variants={itemVariants}>
-              <TrackerReadinessCard
-                recordedItems={journey.snapshot.workspace.stack_items}
-                entryCount={doses.length}
-                enabledReminders={reminders.filter((reminder) => reminder.enabled).length}
-                inventoryItems={inventoryItems.length}
-                onWorkspace={onNavigateStack}
-                onDailyLog={onOpenDoseTracker}
-                onReminders={() => navigate('/reminders/today')}
-                onInventory={onOpenInventory}
-              />
-            </motion.div>
-          )}
           {journey.snapshot && (
             <motion.div variants={itemVariants}>
               <WorkspaceMomentumCard

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { getDashboardHref, PASSWORD_RECOVERY_PATH } from '@/lib/authRedirect';
-import { getFriendlyAuthError } from '@/lib/authErrors';
+import { resolveAuthCallback } from '@/lib/authCallback';
+import { track } from '@/lib/analytics';
 
 /**
  * AuthCallback — Handles OAuth redirects from Google, Apple, etc.
@@ -19,71 +19,19 @@ export default function AuthCallback() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      try {
-        // Parse query parameters from the URL
-        const params = new URLSearchParams(window.location.search);
-        const code = params.get('code');
-        const error = params.get('error');
-        const errorDescription = params.get('error_description');
-        const flow = params.get('flow');
-
-        // Handle OAuth provider errors
-        if (error) {
-          setStatus('error');
-          console.error('OAuth provider error:', error, errorDescription);
-          setMessage('We could not complete sign-in. Please try again or use an email sign-in link.');
-          // Redirect to app after showing error briefly
-          setTimeout(() => {
-            window.location.replace('/');
-          }, 3000);
-          return;
-        }
-
-        // No code present — invalid or already consumed callback
-        if (!code) {
-          setStatus('error');
-          setMessage('No authorization code found. Please try signing in again.');
-          setTimeout(() => {
-            window.location.replace('/');
-          }, 3000);
-          return;
-        }
-
-        // Exchange the authorization code for a session
-        const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-
-        if (exchangeError) {
-          console.error('OAuth callback exchange error:', exchangeError);
-          setStatus('error');
-          setMessage(getFriendlyAuthError(exchangeError, 'We could not complete sign-in. Please try again or use an email sign-in link.'));
-          setTimeout(() => {
-            window.location.replace('/');
-          }, 3000);
-          return;
-        }
-
-        if (data.session) {
-          setStatus('success');
-          setMessage(flow === 'password-recovery' ? 'Recovery verified. Opening password setup…' : 'Signed in successfully! Redirecting...');
-          // Small delay so user sees success state
-          setTimeout(() => {
-            window.location.replace(flow === 'password-recovery' ? PASSWORD_RECOVERY_PATH : getDashboardHref());
-          }, 1200);
-        } else {
-          setStatus('error');
-          setMessage('Authentication incomplete. Please try again.');
-          setTimeout(() => {
-            window.location.replace('/');
-          }, 3000);
-        }
-      } catch (err) {
-        console.error('Unexpected error in auth callback:', err);
-        setStatus('error');
-        setMessage('Something went wrong. Please try signing in again.');
-        setTimeout(() => {
-          window.location.replace('/');
-        }, 3000);
-      }
+      const outcome = await resolveAuthCallback(
+        window.location.search,
+        (code) => supabase.auth.exchangeCodeForSession(code),
+      );
+      setStatus(outcome.status);
+      setMessage(outcome.message);
+      track(outcome.status === 'success' ? 'sign_in_completed' : 'auth_callback_failed', {
+        method: 'oauth_or_email_link',
+        reason: outcome.reason,
+      });
+      setTimeout(() => {
+        window.location.replace(outcome.redirectTo);
+      }, outcome.status === 'success' ? 1200 : 3000);
     };
 
     handleCallback();

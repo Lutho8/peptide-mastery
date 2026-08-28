@@ -40,7 +40,7 @@ function isPlaceholder(value: string): boolean {
 }
 
 function warnIfStaleDeploymentConfig(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || !import.meta.env.DEV) return;
 
   if (
     CONFIGURED_SUPABASE_URL &&

@@ -7,25 +7,47 @@ import {
   Brain, 
   Shield, 
   Dna, 
-  Activity 
+  Activity,
+  Sparkles,
 } from 'lucide-react';
+import { getAllCategories, type PeptideCategory } from '@/data/peptides';
 
 interface PeptideCategoriesProps {
   onCategoryClick?: () => void;
 }
 
-const categories = [
-  { name: 'Weight Loss', icon: Scale, count: 8, color: 'text-accent', bg: 'bg-accent/10' },
-  { name: 'Growth Hormone', icon: Zap, count: 15, color: 'text-primary', bg: 'bg-primary/10' },
-  { name: 'Healing & Recovery', icon: Heart, count: 12, color: 'text-destructive', bg: 'bg-destructive/10' },
-  { name: 'Anti-Aging', icon: Timer, count: 10, color: 'text-accent', bg: 'bg-accent/10' },
-  { name: 'Cognitive', icon: Brain, count: 8, color: 'text-primary', bg: 'bg-primary/10' },
-  { name: 'Immune Support', icon: Shield, count: 6, color: 'text-primary', bg: 'bg-primary/10' },
-  { name: 'Longevity', icon: Dna, count: 7, color: 'text-accent', bg: 'bg-accent/10' },
-  { name: 'Metabolic', icon: Activity, count: 9, color: 'text-primary', bg: 'bg-primary/10' },
+const CATEGORY_PRESENTATION: Record<PeptideCategory, { icon: typeof Scale; color: string; bg: string }> = {
+  'weight-loss': { icon: Scale, color: 'text-accent', bg: 'bg-accent/10' },
+  'gh-secretagogue': { icon: Zap, color: 'text-primary', bg: 'bg-primary/10' },
+  healing: { icon: Heart, color: 'text-destructive', bg: 'bg-destructive/10' },
+  'anti-aging': { icon: Timer, color: 'text-accent', bg: 'bg-accent/10' },
+  cognitive: { icon: Brain, color: 'text-primary', bg: 'bg-primary/10' },
+  immune: { icon: Shield, color: 'text-primary', bg: 'bg-primary/10' },
+  longevity: { icon: Dna, color: 'text-accent', bg: 'bg-accent/10' },
+  metabolic: { icon: Activity, color: 'text-primary', bg: 'bg-primary/10' },
+  'skin-hair': { icon: Sparkles, color: 'text-accent', bg: 'bg-accent/10' },
+  hormonal: { icon: Activity, color: 'text-primary', bg: 'bg-primary/10' },
+  bioregulators: { icon: Dna, color: 'text-accent', bg: 'bg-accent/10' },
+};
+
+const DISPLAYED_CATEGORIES: PeptideCategory[] = [
+  'weight-loss',
+  'gh-secretagogue',
+  'healing',
+  'skin-hair',
+  'cognitive',
+  'immune',
+  'longevity',
+  'metabolic',
 ];
 
 export function PeptideCategories({ onCategoryClick }: PeptideCategoriesProps) {
+  const categoryById = new Map(getAllCategories().map((category) => [category.id, category]));
+  const categories = DISPLAYED_CATEGORIES.map((id) => ({
+    ...categoryById.get(id)!,
+    ...CATEGORY_PRESENTATION[id],
+  }));
+
   return (
     <section id="categories" className="py-16 lg:py-24">
       <div className="container mx-auto px-4">
@@ -45,7 +67,7 @@ export function PeptideCategories({ onCategoryClick }: PeptideCategoriesProps) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
           {categories.map((category, index) => (
             <motion.button
-              key={category.name}
+              key={category.id}
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
@@ -56,7 +78,7 @@ export function PeptideCategories({ onCategoryClick }: PeptideCategoriesProps) {
               className={`${category.bg} border border-border/50 rounded-xl p-4 text-left hover:border-accent/50 transition-all group`}
             >
               <category.icon className={`w-8 h-8 ${category.color} mb-3 group-hover:scale-110 transition-transform`} />
-              <h3 className="font-semibold text-foreground mb-1">{category.name}</h3>
+              <h3 className="font-semibold text-foreground mb-1">{category.label}</h3>
               <p className="text-sm text-muted-foreground">{category.count} peptides</p>
             </motion.button>
           ))}
