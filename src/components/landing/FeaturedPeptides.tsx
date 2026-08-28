@@ -51,7 +51,7 @@ export function FeaturedPeptides({ limit }: FeaturedPeptidesProps = {}) {
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Featured Peptides</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Explore our most researched peptides with comprehensive scientific data.
+            Review selected compound profiles with evidence context, limitations and clearly separated store navigation.
           </p>
         </motion.div>
 

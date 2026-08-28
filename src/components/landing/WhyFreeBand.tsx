@@ -18,13 +18,13 @@ const features = [
   },
   {
     icon: Calculator,
-    title: 'Dose calculator',
-    desc: 'Reconstitution math in mg / IU / units — no mcg confusion.',
+    title: 'Measurement tool',
+    desc: 'User-entered mg or mcg conversions with U-40/U-100 barrel markers.',
   },
   {
     icon: Layers,
-    title: 'Blends & stacks',
-    desc: 'Compatibility matrix and pre-built stack templates.',
+    title: 'Recorded workspace',
+    desc: 'Keep compounds, blends, amounts and schedules from an existing plan in one place.',
   },
   {
     icon: ShieldCheck,
@@ -33,13 +33,13 @@ const features = [
   },
   {
     icon: ClipboardList,
-    title: 'Free protocol tracking',
-    desc: 'Log doses, set reminders, and view adherence — no credit card.',
+    title: 'Routine tracking',
+    desc: 'Record entries, set reminders and review your own history — no credit card.',
   },
   {
     icon: Activity,
-    title: 'Cycle insights',
-    desc: 'Visualize cycles end-to-end with pre/post bloodwork hints.',
+    title: 'Progress records',
+    desc: 'Compare your logged periods, body records and uploaded bloodwork over time.',
   },
 ];
 
@@ -62,7 +62,7 @@ export function WhyFreeBand({ onPrimaryClick }: Props) {
             </span>
           </h2>
           <p className="mt-3 text-base text-muted-foreground">
-            Every tool, every peptide profile, every calculator — open to every researcher.
+            Practical tracking, measurement and source-led research tools—without automatically choosing a compound, amount or schedule.
           </p>
         </div>
 

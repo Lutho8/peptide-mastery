@@ -24,6 +24,7 @@ const MyStackScreen = lazy(() => import('@/screens/MyStackScreen').then(m => ({ 
 const DailyLogScreen = lazy(() => import('@/screens/DailyLogScreen').then(m => ({ default: m.DailyLogScreen })));
 const ResearchLibraryScreen = lazy(() => import('@/screens/ResearchLibraryScreen').then(m => ({ default: m.ResearchLibraryScreen })));
 const TransformationScreen = lazy(() => import('@/screens/TransformationScreen').then(m => ({ default: m.TransformationScreen })));
+const MeasurementToolScreen = lazy(() => import('@/screens/MeasurementToolScreen').then(m => ({ default: m.MeasurementToolScreen })));
 const SettingsScreen = lazy(() => import('@/screens/SettingsScreen').then(m => ({ default: m.SettingsScreen })));
 const LandingPage = lazy(() => import('@/components/landing/LandingPage').then(m => ({ default: m.LandingPage })));
 
@@ -39,7 +40,7 @@ const ScreenLoaderHome = () => <HomeSkeleton />;
 const ScreenLoaderList = () => <ListSkeleton />;
 const ScreenLoaderCards = () => <CardSkeleton />;
 
-type TabId = 'home' | 'stack' | 'daily-log' | 'transformation';
+type TabId = 'home' | 'stack' | 'daily-log' | 'transformation' | 'measurement';
 
 interface IndexProps {
   dashboardRoute?: boolean;
@@ -74,7 +75,7 @@ const Index = ({ dashboardRoute = false }: IndexProps) => {
           setShowSettings(true);
           return;
         }
-        if (['home', 'stack', 'daily-log', 'transformation'].includes(screen)) {
+        if (['home', 'stack', 'daily-log', 'transformation', 'measurement'].includes(screen)) {
           setShowSettings(false);
           setActiveTab(screen as TabId);
         }
@@ -187,6 +188,7 @@ const Index = ({ dashboardRoute = false }: IndexProps) => {
       stack: <ScreenLoaderList />,
       'daily-log': <ScreenLoaderList />,
       transformation: <ScreenLoaderCards />,
+      measurement: <ScreenLoaderCards />,
     };
 
     const screenNames: Record<TabId, string> = {
@@ -194,6 +196,7 @@ const Index = ({ dashboardRoute = false }: IndexProps) => {
       stack: 'My Stack',
       'daily-log': 'Daily Log',
       transformation: 'Transformation',
+      measurement: 'Measurement Tool',
     };
 
     return (
@@ -213,8 +216,9 @@ const Index = ({ dashboardRoute = false }: IndexProps) => {
             />
           )}
           {activeTab === 'stack' && <MyStackScreen />}
-          {activeTab === 'daily-log' && <DailyLogScreen />}
+          {activeTab === 'daily-log' && <DailyLogScreen onOpenMeasurement={() => setActiveTab('measurement')} />}
           {activeTab === 'transformation' && <TransformationScreen />}
+          {activeTab === 'measurement' && <MeasurementToolScreen />}
         </Suspense>
       </ErrorBoundary>
     );

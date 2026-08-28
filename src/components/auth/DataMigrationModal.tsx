@@ -58,7 +58,8 @@ export function DataMigrationModal({ userId, open, onClose }: DataMigrationModal
     }
 
     setPhase('done');
-    toast.success('Data migrated and synced to cloud');
+    try { window.dispatchEvent(new CustomEvent('rtd:local-history-recovered')); } catch { /* noop */ }
+    toast.success('Tracker history recovered and synced to cloud');
   };
 
   const handleSkip = () => {
@@ -78,38 +79,38 @@ export function DataMigrationModal({ userId, open, onClose }: DataMigrationModal
             {phase === 'backfilling' && <Cloud className="w-5 h-5 text-primary animate-pulse" />}
             {phase === 'done' && <CheckCircle2 className="w-5 h-5 text-green-500" />}
             {phase === 'error' && <AlertTriangle className="w-5 h-5 text-red-500" />}
-            {phase === 'detected' && 'Previous data found'}
+            {phase === 'detected' && 'Unsynced tracker history found'}
             {phase === 'migrating' && 'Migrating local data...'}
             {phase === 'backfilling' && 'Syncing to cloud...'}
-            {phase === 'done' && 'Migration complete'}
+            {phase === 'done' && 'Recovery complete'}
             {phase === 'error' && 'Migration failed'}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
             {phase === 'detected' && (
               <>
-                We found data from a previous account in this browser.
+                We found tracker records stored on this device that are not yet attached to your signed-in account.
                 <br /><br />
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <HardDrive className="w-4 h-4 text-muted-foreground" />
-                    <span>{summary.totalLegacyKeys} local data entries</span>
+                    <span>{summary.totalLegacyKeys} groups of local tracker records</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Database className="w-4 h-4 text-muted-foreground" />
-                    <span>{summary.namespaces.length} previous account(s)</span>
+                    <span>{summary.namespaces.map((item) => item.displayLabel).join(', ')}</span>
                   </div>
                 </div>
                 <br />
-                Migrate it to your current account so you can continue your cycles and stacks.
+                Recover them into this account so your logs, cycles and settings can continue here.
               </>
             )}
             {phase === 'migrating' && 'Copying local data to your current account...'}
             {phase === 'backfilling' && 'Pushing migrated data to the new cloud project...'}
             {phase === 'done' && (
               <>
-                Successfully migrated <strong>{migratedKeys}</strong> data entries.
+                Successfully recovered <strong>{migratedKeys}</strong> groups of tracker data.
                 <br />
-                Your cycles, stacks, and settings are now available.
+                Your recovered entries, cycles, stacks and settings are now available.
               </>
             )}
             {phase === 'error' && (
@@ -129,10 +130,10 @@ export function DataMigrationModal({ userId, open, onClose }: DataMigrationModal
             <>
               <Button onClick={handleMigrate} className="w-full">
                 <Database className="w-4 h-4 mr-2" />
-                Migrate My Data
+                Recover My Tracker History
               </Button>
               <Button variant="ghost" onClick={handleSkip} className="w-full text-muted-foreground">
-                Skip — start fresh
+                Not now
               </Button>
             </>
           )}

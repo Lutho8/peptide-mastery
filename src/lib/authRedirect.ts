@@ -1,5 +1,6 @@
 export const DASHBOARD_PATH = '/dashboard';
 export const AUTH_CALLBACK_PATH = '/auth/callback';
+export const PASSWORD_RECOVERY_PATH = '/reset-password';
 
 function usesHashRouting(): boolean {
   const flag = import.meta.env.VITE_ROUTER as string | undefined;
@@ -17,6 +18,14 @@ function usesHashRouting(): boolean {
 export function getOAuthCallbackUrl(): string {
   if (typeof window === 'undefined') return AUTH_CALLBACK_PATH;
   return new URL(AUTH_CALLBACK_PATH, window.location.origin).toString();
+}
+
+/** Exact password-recovery return URL that must be allow-listed in Supabase Auth. */
+export function getPasswordRecoveryUrl(): string {
+  if (typeof window === 'undefined') return PASSWORD_RECOVERY_PATH;
+  const callback = new URL(AUTH_CALLBACK_PATH, window.location.origin);
+  callback.searchParams.set('flow', 'password-recovery');
+  return callback.toString();
 }
 
 /** Full dashboard URL for redirects performed outside React Router. */

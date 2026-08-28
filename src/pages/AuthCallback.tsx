@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { getDashboardHref } from '@/lib/authRedirect';
+import { getDashboardHref, PASSWORD_RECOVERY_PATH } from '@/lib/authRedirect';
+import { getFriendlyAuthError } from '@/lib/authErrors';
 
 /**
  * AuthCallback — Handles OAuth redirects from Google, Apple, etc.
@@ -24,11 +25,13 @@ export default function AuthCallback() {
         const code = params.get('code');
         const error = params.get('error');
         const errorDescription = params.get('error_description');
+        const flow = params.get('flow');
 
         // Handle OAuth provider errors
         if (error) {
           setStatus('error');
-          setMessage(errorDescription || `Authentication error: ${error}`);
+          console.error('OAuth provider error:', error, errorDescription);
+          setMessage('We could not complete sign-in. Please try again or use an email sign-in link.');
           // Redirect to app after showing error briefly
           setTimeout(() => {
             window.location.replace('/');
@@ -52,7 +55,7 @@ export default function AuthCallback() {
         if (exchangeError) {
           console.error('OAuth callback exchange error:', exchangeError);
           setStatus('error');
-          setMessage(exchangeError.message || 'Failed to complete sign-in. Please try again.');
+          setMessage(getFriendlyAuthError(exchangeError, 'We could not complete sign-in. Please try again or use an email sign-in link.'));
           setTimeout(() => {
             window.location.replace('/');
           }, 3000);
@@ -61,10 +64,10 @@ export default function AuthCallback() {
 
         if (data.session) {
           setStatus('success');
-          setMessage('Signed in successfully! Redirecting...');
+          setMessage(flow === 'password-recovery' ? 'Recovery verified. Opening password setup…' : 'Signed in successfully! Redirecting...');
           // Small delay so user sees success state
           setTimeout(() => {
-            window.location.replace(getDashboardHref());
+            window.location.replace(flow === 'password-recovery' ? PASSWORD_RECOVERY_PATH : getDashboardHref());
           }, 1200);
         } else {
           setStatus('error');

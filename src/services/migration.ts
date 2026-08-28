@@ -15,6 +15,7 @@ let migrationPrompted = false;
 
 export interface LegacyNamespace {
   userId: string;
+  storageSuffix: string | null;
   displayLabel: string;
   keysFound: number;
   hasData: boolean;
@@ -33,6 +34,21 @@ export interface MigrationSummary {
 
 const ALL_STORAGE_BASE_KEYS = Object.values(STORAGE_KEYS);
 
+function hasMeaningfulStoredValue(baseKey: string, raw: string | null): boolean {
+  if (raw === null) return false;
+  try {
+    const value = JSON.parse(raw) as unknown;
+    if (Array.isArray(value)) return value.length > 0;
+    if (!value || typeof value !== 'object') return false;
+    if (baseKey === STORAGE_KEYS.CALCULATOR_SETTINGS) {
+      return Boolean((value as Record<string, unknown>).savedAt);
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Scan localStorage for app keys that belong to namespaces other than
  * the current user or 'guest'. Returns a summary of what legacy data exists.
@@ -50,8 +66,11 @@ export function scanForLegacyData(currentUserId: string | null): MigrationSummar
       if (!match) continue;
 
       const suffix = key.slice(match.length + 2); // everything after "baseKey::"
-      if (!suffix || suffix === 'guest') continue;
+      if (!suffix) continue;
       if (suffix === currentUserId) continue;
+
+      const raw = localStorage.getItem(key);
+      if (!hasMeaningfulStoredValue(match, raw)) continue;
 
       if (!namespaces.has(suffix)) {
         namespaces.set(suffix, new Set());
@@ -62,11 +81,23 @@ export function scanForLegacyData(currentUserId: string | null): MigrationSummar
     console.error('Error scanning localStorage for legacy data:', e);
   }
 
+  // Older builds also used bare keys with no namespace. Preserve and offer
+  // those records instead of deleting them during authentication.
+  for (const baseKey of ALL_STORAGE_BASE_KEYS) {
+    const raw = localStorage.getItem(baseKey);
+    if (!hasMeaningfulStoredValue(baseKey, raw)) continue;
+    if (!namespaces.has('__legacy_unscoped__')) namespaces.set('__legacy_unscoped__', new Set());
+    namespaces.get('__legacy_unscoped__')!.add(baseKey);
+  }
+
   const results: LegacyNamespace[] = [];
   namespaces.forEach((keys, userId) => {
+    const isGuest = userId === 'guest';
+    const isUnscoped = userId === '__legacy_unscoped__';
     results.push({
       userId,
-      displayLabel: userId.slice(0, 8) + '...',
+      storageSuffix: isUnscoped ? null : userId,
+      displayLabel: isGuest ? 'Signed-out tracker data' : isUnscoped ? 'Earlier tracker data' : 'Previous app account',
       keysFound: keys.size,
       hasData: keys.size > 0,
     });
@@ -106,7 +137,7 @@ export function migrateLegacyLocalData(currentUserId: string): MigrationResult {
   try {
     for (const ns of summary.namespaces) {
       for (const baseKey of ALL_STORAGE_BASE_KEYS) {
-        const legacyKey = `${baseKey}::${ns.userId}`;
+        const legacyKey = ns.storageSuffix === null ? baseKey : `${baseKey}::${ns.storageSuffix}`;
         const newKey = `${baseKey}::${currentUserId}`;
 
         const raw = localStorage.getItem(legacyKey);
@@ -261,9 +292,51 @@ export async function backfillToCloud(currentUserId: string): Promise<{ success:
       // For now we skip cycles since the cloud schema only has user_stacks.
     }
 
+    // 6. Daily entries. IDs are retained so retries are idempotent and
+    // existing cloud rows cannot be duplicated.
+    const dailyDoses = read(STORAGE_KEYS.DAILY_DOSES);
+    if (Array.isArray(dailyDoses) && dailyDoses.length > 0) {
+      const validUnits = new Set(['mg', 'IU', 'units']);
+      const validRows = dailyDoses.filter((entry: Record<string, unknown>) => (
+        typeof entry.id === 'string' &&
+        /^\d{4}-\d{2}-\d{2}$/.test(String(entry.date ?? '')) &&
+        typeof entry.peptide_id === 'string' &&
+        typeof entry.peptide_name === 'string' &&
+        Number(entry.dose) > 0 &&
+        validUnits.has(String(entry.unit)) &&
+        /^\d{2}:\d{2}(?::\d{2})?$/.test(String(entry.time ?? ''))
+      ));
+
+      if (validRows.length > 0) {
+        const { error } = await supabase.from('daily_doses').upsert(
+          validRows.map((entry: Record<string, unknown>) => ({
+            id: String(entry.id),
+            user_id: currentUserId,
+            date: String(entry.date),
+            peptide_id: String(entry.peptide_id),
+            peptide_name: String(entry.peptide_name),
+            dose: Number(entry.dose),
+            unit: String(entry.unit),
+            time: String(entry.time),
+            notes: typeof entry.notes === 'string' ? entry.notes : null,
+          })),
+          { onConflict: 'id' },
+        );
+        if (error) errors.push(`Daily entries: ${error.message}`);
+      }
+    }
+
     if (errors.length > 0) {
       return { success: false, message: `Partial backfill: ${errors.join('; ')}` };
     }
+
+    const { error: eventError } = await supabase.from('journey_events').insert({
+      user_id: currentUserId,
+      event_name: 'local_history_recovered',
+      source: 'account_recovery',
+      context: {},
+    });
+    if (eventError) console.warn('[Migration] Recovery event was not recorded:', eventError.message);
 
     return { success: true, message: 'All data backfilled to cloud' };
   } catch (e) {
