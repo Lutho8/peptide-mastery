@@ -1224,9 +1224,11 @@ export const getCategoryLabel = (category: PeptideCategory): string => {
 };
 
 export const getAllCategories = () => {
-  return Object.entries(categoryConfig).map(([key, value]) => ({
-    id: key as PeptideCategory,
-    ...value,
-    count: peptides.filter((peptide) => peptide.category === key).length,
-  }));
+  return Object.entries(categoryConfig)
+    .map(([key, value]) => ({
+      id: key as PeptideCategory,
+      ...value,
+      count: peptides.filter((peptide) => peptide.category === key).length,
+    }))
+    .filter((category) => category.count > 0);
 };
