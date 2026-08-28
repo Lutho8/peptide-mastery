@@ -12,4 +12,8 @@ describe('peptide category counts', () => {
     const known = new Set(getAllCategories().map((category) => category.id));
     expect(peptides.filter((peptide) => !known.has(peptide.category))).toEqual([]);
   });
+
+  it('does not advertise empty categories', () => {
+    expect(getAllCategories().every((category) => category.count > 0)).toBe(true);
+  });
 });

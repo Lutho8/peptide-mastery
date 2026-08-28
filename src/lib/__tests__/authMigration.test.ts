@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 describe('legacy Supabase Auth compatibility migration', () => {
   it('keeps every GoTrue string token scan-safe without changing credentials', () => {
     const sql = readFileSync(
-      resolve(process.cwd(), 'supabase/migrations/20260827195000_normalize_legacy_auth_user_tokens.sql'),
+      resolve(process.cwd(), 'supabase/migrations/20260827195140_normalize_legacy_auth_user_tokens.sql'),
       'utf8',
     );
 

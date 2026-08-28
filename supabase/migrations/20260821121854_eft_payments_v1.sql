@@ -1,0 +1,2 @@
+-- Migration history marker for the shared Peptide South Africa Supabase project.
+-- Applied and owned by the platform/store repository; do not replay it here.
