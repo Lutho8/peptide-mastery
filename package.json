@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:auth": "vitest run src/lib/__tests__/authCallback.test.ts src/lib/__tests__/authErrors.test.ts src/lib/__tests__/authMigration.test.ts src/lib/__tests__/authRedirect.test.ts src/integrations/auth/__tests__/providers.test.ts",
     "test:watch": "vitest",
     "build:native": "vite build --mode native && npx cap sync",
     "prerender": "node scripts/prerender.mjs",

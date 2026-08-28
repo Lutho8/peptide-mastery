@@ -4,19 +4,20 @@ import { VIAL_SIZES_MG } from './vialSizes';
 
 export type PeptideCategory = 'immune' | 'longevity' | 'cognitive' | 'metabolic' | 'healing' | 'gh-secretagogue' | 'weight-loss' | 'anti-aging' | 'skin-hair' | 'hormonal' | 'bioregulators';
 
-// Category configuration with counts matching actual database
-export const categoryConfig: Record<PeptideCategory, { label: string; count: number; color: string; bgColor: string }> = {
-  'weight-loss': { label: 'Weight Loss', count: 9, color: 'text-purple-400', bgColor: 'bg-purple-500/10' },
-  'gh-secretagogue': { label: 'Growth Hormone', count: 11, color: 'text-yellow-400', bgColor: 'bg-yellow-500/10' },
-  'healing': { label: 'Healing', count: 4, color: 'text-red-400', bgColor: 'bg-red-500/10' },
-  'anti-aging': { label: 'Anti-Aging', count: 0, color: 'text-green-400', bgColor: 'bg-green-500/10' },
-  'cognitive': { label: 'Cognitive', count: 6, color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
-  'immune': { label: 'Immune', count: 5, color: 'text-indigo-400', bgColor: 'bg-indigo-500/10' },
-  'skin-hair': { label: 'Skin & Hair', count: 8, color: 'text-pink-400', bgColor: 'bg-pink-500/10' },
-  'hormonal': { label: 'Hormonal', count: 3, color: 'text-orange-400', bgColor: 'bg-orange-500/10' },
-  'bioregulators': { label: 'Bioregulators', count: 0, color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
-  'longevity': { label: 'Longevity', count: 8, color: 'text-emerald-400', bgColor: 'bg-emerald-500/10' },
-  'metabolic': { label: 'Metabolic', count: 2, color: 'text-amber-400', bgColor: 'bg-amber-500/10' },
+// Category presentation is static; counts are derived from the merged catalog
+// in getAllCategories so every landing surface stays consistent as data changes.
+export const categoryConfig: Record<PeptideCategory, { label: string; color: string; bgColor: string }> = {
+  'weight-loss': { label: 'Weight Loss', color: 'text-purple-400', bgColor: 'bg-purple-500/10' },
+  'gh-secretagogue': { label: 'Growth Hormone', color: 'text-yellow-400', bgColor: 'bg-yellow-500/10' },
+  'healing': { label: 'Healing', color: 'text-red-400', bgColor: 'bg-red-500/10' },
+  'anti-aging': { label: 'Anti-Aging', color: 'text-green-400', bgColor: 'bg-green-500/10' },
+  'cognitive': { label: 'Cognitive', color: 'text-blue-400', bgColor: 'bg-blue-500/10' },
+  'immune': { label: 'Immune', color: 'text-indigo-400', bgColor: 'bg-indigo-500/10' },
+  'skin-hair': { label: 'Skin & Hair', color: 'text-pink-400', bgColor: 'bg-pink-500/10' },
+  'hormonal': { label: 'Hormonal', color: 'text-orange-400', bgColor: 'bg-orange-500/10' },
+  'bioregulators': { label: 'Bioregulators', color: 'text-cyan-400', bgColor: 'bg-cyan-500/10' },
+  'longevity': { label: 'Longevity', color: 'text-emerald-400', bgColor: 'bg-emerald-500/10' },
+  'metabolic': { label: 'Metabolic', color: 'text-amber-400', bgColor: 'bg-amber-500/10' },
 };
 
 export interface Peptide {
@@ -1225,6 +1226,7 @@ export const getCategoryLabel = (category: PeptideCategory): string => {
 export const getAllCategories = () => {
   return Object.entries(categoryConfig).map(([key, value]) => ({
     id: key as PeptideCategory,
-    ...value
+    ...value,
+    count: peptides.filter((peptide) => peptide.category === key).length,
   }));
 };

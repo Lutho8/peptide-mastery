@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { isAuthCallbackLocation } from "@/lib/authCallback";
 
 // Lazy load all route pages for better code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -47,18 +48,8 @@ const queryClient = new QueryClient();
  * We detect this BEFORE the router renders so the code exchange happens
  * immediately, regardless of whether the active router is Browser or Hash.
  */
-function isOAuthCallback(): boolean {
-  const pathname = window.location.pathname;
-  const search = window.location.search;
-  return (
-    pathname === '/auth/callback' ||
-    pathname === '/auth/callback/' ||
-    ((pathname === '/' || pathname === '') && search.includes('code=') && search.includes('type='))
-  );
-}
-
 const App = () => {
-  const [isCallback, setIsCallback] = useState(() => isOAuthCallback());
+  const [isCallback] = useState(() => isAuthCallbackLocation(window.location.pathname, window.location.search));
 
   // If this is an OAuth callback, render the callback handler directly
   // bypassing the router so the code exchange can happen immediately.
