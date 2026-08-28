@@ -48,7 +48,7 @@ export function LandingFooter() {
           <div className="col-span-2 md:col-span-1">
             <AnimatedLogo size="sm" showText onClick={scrollToTop} className="mb-4" />
             <p className="text-sm text-muted-foreground mb-4">
-              Your research-grade peptide database with comprehensive scientific data and tracking tools.
+              Source-led peptide research, user-entered tracking, measurement and account continuity in one South African app.
             </p>
             <div className="flex gap-3">
               <a href="#" className="text-muted-foreground hover:text-primary transition-colors">

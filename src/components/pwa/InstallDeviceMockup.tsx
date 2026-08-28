@@ -18,18 +18,18 @@ function TrackerPreview() {
       </div>
       <div className="rounded-2xl bg-[#082B57] p-4 text-white shadow-lg">
         <p className="text-[9px] font-medium text-white/70">Today</p>
-        <p className="mt-1 text-[16px] font-semibold">Your protocol, simplified.</p>
+        <p className="mt-1 text-[16px] font-semibold">Your records, together.</p>
         <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/20">
           <div className="h-full w-2/3 rounded-full bg-[#4DC7C0]" />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-xl border border-[#DBE6E7] bg-white p-3">
-          <p className="text-[8px] text-[#5D7182]">Next dose</p>
+          <p className="text-[8px] text-[#5D7182]">Next recorded entry</p>
           <p className="mt-1 text-[11px] font-semibold text-[#0B1F33]">08:00</p>
         </div>
         <div className="rounded-xl border border-[#DBE6E7] bg-[#E8F7F5] p-3">
-          <p className="text-[8px] text-[#5D7182]">Adherence</p>
+          <p className="text-[8px] text-[#5D7182]">Logging</p>
           <p className="mt-1 text-[11px] font-semibold text-[#082B57]">92%</p>
         </div>
       </div>

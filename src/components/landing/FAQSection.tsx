@@ -31,33 +31,33 @@ export const faqCategories = [
     ],
   },
   {
-    id: 'dosing-adherence',
-    title: 'Dosing & Adherence',
+    id: 'measurement-records',
+    title: 'Measurement & Records',
     icon: Syringe,
     faqs: [
       {
-        q: 'How do I know the right starting dose?',
-        a: 'Start at the lowest researched dose for the specific peptide and titrate up only if needed. Each peptide profile in Peptide South Africa lists a conservative starting range based on published literature. Body weight, goals, and prior experience all matter — when in doubt, start lower than you think and consult a qualified healthcare professional.',
+        q: 'Does the app choose an amount for me?',
+        a: 'No. You enter an amount from your own research record or a documented plan. The app stores that value and performs neutral arithmetic; it does not select a starting amount, change it, or titrate it.',
       },
       {
-        q: 'mg, IU, and U-40 units — what is the difference?',
-        a: 'mg (milligrams) measures mass. IU (international units) is a standardized activity unit used for some peptides like HCG and HGH. U-40/U-100 refers to insulin syringe markings — U-100 means 100 units = 1 mL. The Reconstitution Calculator converts your vial size and bacteriostatic water volume into the exact insulin-syringe units to draw. Peptide South Africa never uses mcg.',
+        q: 'What do mg, mcg, mL, IU, U-40 and U-100 mean?',
+        a: 'mg and mcg are mass units; 1 mg equals 1,000 mcg. mL measures liquid volume. IU measures biological activity and is not automatically interchangeable with mass. U-40 and U-100 are printed syringe scales: 40 or 100 barrel units equal 1 mL. The Measurement Tool converts only the valid user-entered mass, volume and selected barrel scale.',
       },
       {
-        q: 'What if I miss a dose?',
-        a: 'For most short half-life peptides (BPC-157, TB-500, GHRPs), take the missed dose as soon as you remember if it is the same day, otherwise skip and resume the next scheduled dose. Never double up. For long half-life compounds (semaglutide, tirzepatide), consult the prescribing guidance — doubling can cause significant side effects.',
+        q: 'What if I miss an entry?',
+        a: 'You can leave it unrecorded or add an accurate historical entry later. The app does not tell you to catch up, double an amount or change a schedule. Follow the documented plan or ask a qualified professional when a real-world action is unclear.',
       },
       {
-        q: 'How strict do I need to be with timing?',
-        a: 'GH-releasing peptides (CJC-1295, Ipamorelin, GHRP-6) are best dosed on an empty stomach (≥2 hours after food, ≥30 min before food) to avoid blunting the GH pulse. Most healing and metabolic peptides are more forgiving — consistency over weeks matters more than perfect timing on a single day.',
+        q: 'Does the app select timing or reminders?',
+        a: 'No. Reminders use only a time you explicitly record. The dashboard can notify you and show your history, but it does not invent timing, catch-up instructions or administration advice.',
       },
       {
-        q: 'Can I stack peptides safely?',
-        a: 'Some peptides are synergistic (CJC-1295 + Ipamorelin), some are compatible (BPC-157 + TB-500), and some require caution or should be avoided together. Use the Stacking Matrix in Peptide South Africa before combining compounds, and never introduce more than one new peptide at a time so you can attribute any effects.',
+        q: 'Can I record more than one compound or blend?',
+        a: 'Yes. The Advanced Workspace can store multiple items that you enter from an existing plan or your own research record. Recording items together is not a compatibility or safety conclusion, and the app does not recommend combinations.',
       },
       {
-        q: 'When should I cycle off?',
-        a: 'Most growth-hormone secretagogues are cycled 8–12 weeks on, 4 weeks off, to preserve receptor sensitivity. Healing peptides like BPC-157 are typically used until the issue resolves. Cycle length depends on the compound, your goal, and bloodwork — Peptide South Africa cycle templates default to research-backed durations and warn you when a cycle is overdue.',
+        q: 'Does the app choose a cycle length or pause?',
+        a: 'No. You may record a start date, length or pause from an existing plan, then compare it with your own entries. The app does not choose a cycle duration, washout period, pause or restart date.',
       },
     ],
   },
