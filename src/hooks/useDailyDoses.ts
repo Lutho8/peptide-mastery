@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { getStoredData, setStoredData, STORAGE_KEYS } from '@/services/storage';
 import { enqueue as enqueueOffline } from '@/services/offlineQueue';
-import { recoveredDoseId } from '@/services/migration';
+import { recoveredRecordId } from '@/services/migration';
 
 export interface DailyDoseEntry {
   id: string;
@@ -68,7 +68,7 @@ export function useDailyDoses() {
         const cloudIds = new Set(mappedDoses.map((dose) => dose.id));
         const localOnly = localBeforeCloud
           .filter((dose) => !cloudIds.has(dose.id))
-          .map((dose) => ({ ...dose, id: recoveredDoseId(user.id, dose.id) }))
+          .map((dose) => ({ ...dose, id: recoveredRecordId(user.id, dose.id) }))
           .filter((dose) => !cloudIds.has(dose.id));
         if (localOnly.length > 0) {
           setIsSyncing(true);

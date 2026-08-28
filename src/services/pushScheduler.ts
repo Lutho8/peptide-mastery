@@ -1,4 +1,5 @@
 // IndexedDB-based push notification scheduler for service worker
+import { getStoredData, STORAGE_KEYS } from './storage';
 
 const DB_NAME = 'peptide-reminders-db';
 const DB_VERSION = 2;
@@ -136,6 +137,43 @@ export async function bulkSaveReminders(reminders: ScheduledReminder[]): Promise
   });
 }
 
+// Replace only the ordinary weekly reminder set for the active account.
+// Cycle-aware reminders use computed mode and are intentionally preserved.
+// This prevents reminders removed in the cloud (or owned by a previous
+// session) from lingering in the shared service-worker database.
+export async function replaceWeeklyRemindersInIndexedDB(reminders: ScheduledReminder[]): Promise<void> {
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.openCursor();
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const cursor = request.result;
+      if (cursor) {
+        const existing = cursor.value as ScheduledReminder;
+        if (existing.mode !== 'computed' && !existing.cycleId) cursor.delete();
+        cursor.continue();
+        return;
+      }
+
+      for (const reminder of reminders) {
+        const nextFireTime = reminder.enabled
+          ? calculateNextFireTime(reminder.time, reminder.days)
+          : undefined;
+        store.put({ ...reminder, mode: 'weekly', nextFireTime });
+      }
+    };
+    transaction.oncomplete = () => {
+      notifyServiceWorker('SYNC_REMINDERS');
+      resolve();
+    };
+    transaction.onerror = () => reject(transaction.error);
+  });
+}
+
 // Delete reminder from IndexedDB
 export async function deleteReminderFromIndexedDB(id: string): Promise<void> {
   const db = await openDB();
@@ -231,10 +269,7 @@ export async function clearAllScheduledNotifications(): Promise<void> {
 // Sync reminders from localStorage to IndexedDB
 export async function syncRemindersToIndexedDB(): Promise<void> {
   try {
-    const stored = localStorage.getItem('peptide-dose-reminders');
-    if (!stored) return;
-    
-    const reminders = JSON.parse(stored) as Array<{
+    const reminders = getStoredData<Array<{
       id: string;
       peptide_id: string;
       peptide_name: string;
@@ -242,7 +277,7 @@ export async function syncRemindersToIndexedDB(): Promise<void> {
       time: string;
       days: string[];
       enabled: boolean;
-    }>;
+    }>>(STORAGE_KEYS.SCHEDULED_REMINDERS, []);
     
     // Map to ScheduledReminder format
     const scheduledReminders: ScheduledReminder[] = reminders.map(r => ({
@@ -255,7 +290,7 @@ export async function syncRemindersToIndexedDB(): Promise<void> {
       enabled: r.enabled,
     }));
     
-    await bulkSaveReminders(scheduledReminders);
+    await replaceWeeklyRemindersInIndexedDB(scheduledReminders);
     console.log(`Synced ${scheduledReminders.length} reminders to IndexedDB`);
   } catch (error) {
     console.error('Error syncing reminders to IndexedDB:', error);
