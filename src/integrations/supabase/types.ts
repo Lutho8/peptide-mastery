@@ -1182,6 +1182,78 @@ type GeneratedDatabase = {
         }
         Relationships: []
       }
+      tracking_periods: {
+        Row: {
+          created_at: string
+          dose_times: string[]
+          id: string
+          missed_days: number | null
+          notes: string | null
+          pause_reason: string | null
+          paused_at: string | null
+          peptide_id: string
+          peptide_name: string
+          planned_duration_days: number
+          recorded_amount: string
+          recorded_frequency: string
+          recorded_pause_days: number
+          reminder_enabled: boolean
+          reminder_lead_minutes: number | null
+          resumed_at: string | null
+          split_parts: number | null
+          start_date: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dose_times?: string[]
+          id?: string
+          missed_days?: number | null
+          notes?: string | null
+          pause_reason?: string | null
+          paused_at?: string | null
+          peptide_id: string
+          peptide_name: string
+          planned_duration_days: number
+          recorded_amount: string
+          recorded_frequency: string
+          recorded_pause_days?: number
+          reminder_enabled?: boolean
+          reminder_lead_minutes?: number | null
+          resumed_at?: string | null
+          split_parts?: number | null
+          start_date: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dose_times?: string[]
+          id?: string
+          missed_days?: number | null
+          notes?: string | null
+          pause_reason?: string | null
+          paused_at?: string | null
+          peptide_id?: string
+          peptide_name?: string
+          planned_duration_days?: number
+          recorded_amount?: string
+          recorded_frequency?: string
+          recorded_pause_days?: number
+          reminder_enabled?: boolean
+          reminder_lead_minutes?: number | null
+          resumed_at?: string | null
+          split_parts?: number | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean

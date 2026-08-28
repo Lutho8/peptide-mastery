@@ -210,6 +210,10 @@ export function getCycles(): Cycle[] {
   return cycles;
 }
 
+export function replaceCycles(cycles: Cycle[]): void {
+  setStoredData(STORAGE_KEYS.CYCLES, cycles);
+}
+
 // Fire-and-forget audit hook. Dynamic import avoids pulling supabase into any
 // caller that might be running in a non-browser context (SSR/tests).
 function auditFireAndForget(action: string, metadata: Record<string, unknown>) {
@@ -224,11 +228,11 @@ export function saveCycle(cycle: Cycle): void {
   setStoredData(STORAGE_KEYS.CYCLES, cycles);
   auditFireAndForget('dose.cycle.create', {
     cycleId: cycle.id,
-    peptideId: (cycle as any).peptideId,
-    peptideName: (cycle as any).peptideName,
-    doseMg: (cycle as any).doseMg ?? (cycle as any).dose,
-    frequency: (cycle as any).frequency,
-    status: (cycle as any).status,
+    peptideId: cycle.peptideId,
+    peptideName: cycle.peptideName,
+    recordedAmount: cycle.dose,
+    frequency: cycle.frequency,
+    status: cycle.status,
   });
 }
 
@@ -236,13 +240,14 @@ export function updateCycle(cycle: Cycle): void {
   const cycles = getCycles();
   const index = cycles.findIndex(c => c.id === cycle.id);
   if (index !== -1) {
-    const before = cycles[index] as any;
+    const before = cycles[index];
     cycles[index] = cycle;
     setStoredData(STORAGE_KEYS.CYCLES, cycles);
-    const after = cycle as any;
+    const after = cycle;
     const diff: Record<string, { before: unknown; after: unknown }> = {};
-    for (const k of ['doseMg', 'dose', 'frequency', 'status', 'startDate', 'endDate']) {
-      if (before?.[k] !== after?.[k]) diff[k] = { before: before?.[k], after: after?.[k] };
+    const auditedKeys: Array<keyof Cycle> = ['dose', 'frequency', 'status', 'startDate', 'plannedDuration', 'breakDuration'];
+    for (const key of auditedKeys) {
+      if (before[key] !== after[key]) diff[key] = { before: before[key], after: after[key] };
     }
     auditFireAndForget('dose.cycle.update', {
       cycleId: cycle.id,
@@ -262,7 +267,7 @@ export function updateCycle(cycle: Cycle): void {
 
 export function deleteCycle(cycleId: string): void {
   const cycles = getCycles();
-  const target = cycles.find(c => c.id === cycleId) as any;
+  const target = cycles.find(c => c.id === cycleId);
   const filtered = cycles.filter(c => c.id !== cycleId);
   setStoredData(STORAGE_KEYS.CYCLES, filtered);
   auditFireAndForget('dose.cycle.delete', {
@@ -416,8 +421,8 @@ export function getActiveStack(): ActiveStackItem[] {
 export function saveActiveStack(stack: ActiveStackItem[]): void {
   const prev = getActiveStack();
   setStoredData(STORAGE_KEYS.ACTIVE_STACK, stack);
-  const prevIds = new Set(prev.map((p: any) => p.peptideId ?? p.id));
-  const nextIds = new Set(stack.map((p: any) => p.peptideId ?? p.id));
+  const prevIds = new Set(prev.map((item) => item.peptideId));
+  const nextIds = new Set(stack.map((item) => item.peptideId));
   const addedIds = [...nextIds].filter((id) => !prevIds.has(id));
   const removedIds = [...prevIds].filter((id) => !nextIds.has(id));
   import('@/lib/auditLog')

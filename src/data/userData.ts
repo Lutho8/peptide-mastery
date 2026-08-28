@@ -61,6 +61,8 @@ export interface Cycle {
   reminderEnabled?: boolean;
   /** Lead-time minutes before scheduled dose. */
   reminderLeadMinutes?: number;
+  /** Cloud conflict-resolution timestamp; not customer-facing. */
+  updatedAt?: string;
 }
 
 // Default empty profile for new members. Each user fills in their own data.

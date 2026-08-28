@@ -67,12 +67,10 @@ export interface ReconstitutionStatus {
 }
 
 export function getReconstitutionStatus(reconstitutionDate?: number | string): ReconstitutionStatus {
-  if (!reconstitutionDate) return { status: "not-reconstituted", daysRemaining: 28 };
-  const daysSince = Math.floor((Date.now() - toMs(reconstitutionDate)) / (1000 * 60 * 60 * 24));
-  const daysRemaining = 28 - daysSince;
-  const status: ReconstitutionStatus["status"] =
-    daysSince >= 28 ? "expired" : daysSince >= 21 ? "expiring-soon" : "fresh";
-  return { status, daysRemaining };
+  if (!reconstitutionDate) return { status: "not-reconstituted", daysRemaining: 0 };
+  // A reconstitution date alone cannot establish a product's shelf life.
+  // Expiry is handled only from the user's separately recorded expiry date.
+  return { status: "fresh", daysRemaining: 0 };
 }
 
 export function getLowStockAlerts(items: InventoryItem[], _usages?: DoseUsage[]): InventoryAlert[] {
@@ -85,7 +83,8 @@ export function checkInventoryAlerts(items: InventoryItem[]): InventoryAlert[] {
 
   for (const item of items) {
     const remainingMg = item.remainingMg ?? 0;
-    if (remainingMg <= 10) {
+    const remainingRatio = item.vialSizeMg > 0 ? remainingMg / item.vialSizeMg : 0;
+    if (remainingMg > 0 && remainingRatio <= 0.2) {
       const msg = `${item.peptideName} has ${remainingMg.toFixed(1)}mg remaining`;
       alerts.push({
         id: `low-${item.id}`,
@@ -99,7 +98,9 @@ export function checkInventoryAlerts(items: InventoryItem[]): InventoryAlert[] {
       });
     }
 
-    const daysUntilExpiry = (toMs(item.expirationDate) - now) / (1000 * 60 * 60 * 24);
+    const expiryMs = toMs(item.expirationDate);
+    if (!Number.isFinite(expiryMs) || expiryMs <= 0) continue;
+    const daysUntilExpiry = (expiryMs - now) / (1000 * 60 * 60 * 24);
     if (daysUntilExpiry <= 0) {
       const msg = `${item.peptideName} vial has expired`;
       alerts.push({
@@ -129,4 +130,3 @@ export function checkInventoryAlerts(items: InventoryItem[]): InventoryAlert[] {
 
   return alerts;
 }
-

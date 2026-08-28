@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { EditStackModal, StackItem } from '@/components/modals/EditStackModal';
-import { getActiveStack, saveActiveStack, getUserProfile, getCycles, updateCycle, saveCycle, Cycle } from '@/services/storage';
+import { getActiveStack, saveActiveStack, getUserProfile, type Cycle } from '@/services/storage';
 import { toast } from '@/hooks/use-toast';
 import { toast as sonnerToast } from 'sonner';
 import { recordStackChange, popLastChange, canUndo as canUndoStack } from '@/services/stackHistory';
@@ -26,6 +26,7 @@ import { AnimatePresence } from 'framer-motion';
 import { useDailyDoses, type DailyDoseEntry } from '@/hooks/useDailyDoses';
 import { getCycleProgress as computeCycleProgress, cycleStatusLabel, validateBackdate } from '@/lib/cycleProgress';
 import { WidgetHint } from '@/components/onboarding/WidgetHint';
+import { useTrackingPeriods } from '@/hooks/useTrackingPeriods';
 
 // --- Stack Item Card ---
 interface StackItemProps {
@@ -324,7 +325,13 @@ export function MyStackScreen() {
   const [activeStack, setActiveStack] = useState<StackItem[]>([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [profile, setProfile] = useState(userProfile);
-  const [cycles, setCycles] = useState<Cycle[]>([]);
+  const {
+    periods: cycles,
+    isSyncing: periodsSyncing,
+    error: periodsSyncError,
+    createPeriod,
+    updatePeriod,
+  } = useTrackingPeriods();
   const [editingCycleId, setEditingCycleId] = useState<string | null>(null);
   const { doses } = useDailyDoses();
 
@@ -338,7 +345,6 @@ export function MyStackScreen() {
   const refreshFromStorage = () => {
     setActiveStack(getActiveStack());
     setProfile(getUserProfile());
-    setCycles(getCycles());
   };
 
   useEffect(() => {
@@ -417,9 +423,8 @@ export function MyStackScreen() {
     setStartCycleDialogOpen(true);
   };
 
-  const handleStartCycle = (peptideId: string, peptideName: string, dose: string, frequency: string, cycleDuration: number, breakDuration: number, startDateOverride?: string) => {
-    const newCycle: Cycle = {
-      id: `cycle-${Date.now()}`,
+  const handleStartCycle = async (peptideId: string, peptideName: string, dose: string, frequency: string, cycleDuration: number, breakDuration: number, startDateOverride?: string) => {
+    const newCycle: Omit<Cycle, 'id' | 'updatedAt'> = {
       peptideId,
       peptideName,
       dose,
@@ -429,15 +434,14 @@ export function MyStackScreen() {
       breakDuration,
       status: 'active',
     };
-    saveCycle(newCycle);
-    setCycles(getCycles());
+    await createPeriod(newCycle);
     toast({
       title: 'Tracking period started',
-      description: `${peptideName} — recorded from ${newCycle.startDate} for ${cycleDuration} days.`,
+      description: `${peptideName} — recorded from ${newCycle.startDate} for ${cycleDuration} days and synced across your account.`,
     });
   };
 
-  const confirmStartCycle = () => {
+  const confirmStartCycle = async () => {
     if (!pendingCycle) return;
     const duration = Number.parseInt(pendingDuration, 10);
     const breakDuration = pendingBreakDuration ? Number.parseInt(pendingBreakDuration, 10) : 0;
@@ -445,18 +449,21 @@ export function MyStackScreen() {
       toast({ title: 'Enter your recorded plan length', description: 'Use values from your existing plan. The app does not provide them.', variant: 'destructive' });
       return;
     }
-    handleStartCycle(pendingCycle.peptideId, pendingCycle.peptideName, pendingCycle.dose, pendingCycle.frequency, duration, breakDuration, pendingStartDate);
-    setStartCycleDialogOpen(false);
-    setPendingCycle(null);
+    try {
+      await handleStartCycle(pendingCycle.peptideId, pendingCycle.peptideName, pendingCycle.dose, pendingCycle.frequency, duration, breakDuration, pendingStartDate);
+      setStartCycleDialogOpen(false);
+      setPendingCycle(null);
+    } catch {
+      toast({ title: 'Tracking period saved on this device', description: 'Cloud sync will retry when your connection is available.', variant: 'destructive' });
+    }
   };
 
   const handleEndCycle = (cycle: Cycle) => {
     const updated: Cycle = { ...cycle, status: 'completed' };
-    updateCycle(updated);
-    setCycles(getCycles());
-    toast({
-      title: 'Tracking period ended',
-      description: `${cycle.peptideName} has been moved to your history.`,
+    void updatePeriod(updated).then(() => {
+      toast({ title: 'Tracking period ended', description: `${cycle.peptideName} has been moved to your history.` });
+    }).catch(() => {
+      toast({ title: 'Saved on this device', description: 'Cloud sync will retry when available.', variant: 'destructive' });
     });
   };
 
@@ -469,12 +476,11 @@ export function MyStackScreen() {
   };
 
   const handleSavePauseEdit = (updated: Cycle) => {
-    updateCycle(updated);
-    setCycles(getCycles());
     setEditingCycleId(null);
-    toast({
-      title: 'Tracking period paused',
-      description: `${updated.peptideName} is paused in your records.`,
+    void updatePeriod(updated).then(() => {
+      toast({ title: 'Tracking period paused', description: `${updated.peptideName} is paused in your records.` });
+    }).catch(() => {
+      toast({ title: 'Saved on this device', description: 'Cloud sync will retry when available.', variant: 'destructive' });
     });
   };
 
@@ -486,11 +492,10 @@ export function MyStackScreen() {
       resumedAt: today,
       pauseReason: undefined,
     };
-    updateCycle(updated);
-    setCycles(getCycles());
-    toast({
-      title: 'Tracking period resumed',
-      description: `${cycle.peptideName} is active in your records again.`,
+    void updatePeriod(updated).then(() => {
+      toast({ title: 'Tracking period resumed', description: `${cycle.peptideName} is active in your records again.` });
+    }).catch(() => {
+      toast({ title: 'Saved on this device', description: 'Cloud sync will retry when available.', variant: 'destructive' });
     });
   };
 
@@ -506,6 +511,12 @@ export function MyStackScreen() {
           'Start, pause or end a tracking period when your real-world record changes.',
         ]}
       />
+
+      {(periodsSyncing || periodsSyncError) && (
+        <div className={cn('rounded-xl border px-3 py-2 text-xs', periodsSyncError ? 'border-amber-500/30 bg-amber-500/10 text-amber-200' : 'border-primary/20 bg-primary/5 text-muted-foreground')}>
+          {periodsSyncError ? 'Tracking periods are saved locally and will sync when the account connection recovers.' : 'Syncing tracking periods across your devices…'}
+        </div>
+      )}
 
       {/* User Profile Header */}
 
@@ -838,7 +849,7 @@ export function MyStackScreen() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setStartCycleDialogOpen(false)}>Cancel</Button>
-            <Button onClick={confirmStartCycle} className="gap-2">
+            <Button onClick={() => { void confirmStartCycle(); }} className="gap-2" disabled={periodsSyncing}>
               <Play size={14} /> Start tracking period
             </Button>
           </DialogFooter>

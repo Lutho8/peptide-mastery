@@ -15,11 +15,13 @@ import { SafetyDisclaimer } from '@/components/home/SafetyDisclaimer';
 import { JourneyDashboard } from '@/components/home/JourneyDashboard';
 import { OrderJourneyCard } from '@/components/home/OrderJourneyCard';
 import { WorkspaceMomentumCard } from '@/components/home/WorkspaceMomentumCard';
+import { TrackerReadinessCard } from '@/components/home/TrackerReadinessCard';
 import { PullToRefresh } from '@/components/ui/PullToRefresh';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCustomerJourney } from '@/hooks/useCustomerJourney';
+import { useInventory } from '@/hooks/useInventory';
 
 interface HomeScreenProps {
   onOpenBodyComposition: () => void;
@@ -69,7 +71,8 @@ export function HomeScreen({
   onNavigateResearch
 }: HomeScreenProps) {
   const { reminders, refreshReminders } = useDoseReminders();
-  const { refreshDoses } = useDailyDoses();
+  const { doses, refreshDoses } = useDailyDoses();
+  const { items: inventoryItems } = useInventory();
   const { user } = useAuth();
   const journey = useCustomerJourney();
   const navigate = useNavigate();
@@ -145,6 +148,20 @@ export function HomeScreen({
 
       {showAdvancedDashboard ? (
         <>
+          {journey.snapshot && (
+            <motion.div variants={itemVariants}>
+              <TrackerReadinessCard
+                recordedItems={journey.snapshot.workspace.stack_items}
+                entryCount={doses.length}
+                enabledReminders={reminders.filter((reminder) => reminder.enabled).length}
+                inventoryItems={inventoryItems.length}
+                onWorkspace={onNavigateStack}
+                onDailyLog={onOpenDoseTracker}
+                onReminders={() => navigate('/reminders/today')}
+                onInventory={onOpenInventory}
+              />
+            </motion.div>
+          )}
           {journey.snapshot && (
             <motion.div variants={itemVariants}>
               <WorkspaceMomentumCard
