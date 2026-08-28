@@ -4,11 +4,18 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: { from: vi.fn() },
 }));
 
-import { migrateLegacyLocalData, scanForLegacyData } from '@/services/migration';
+import { migrateLegacyLocalData, recoveredDoseId, scanForLegacyData } from '@/services/migration';
 import { STORAGE_KEYS } from '@/services/storage';
 
 describe('local tracker history recovery', () => {
   beforeEach(() => localStorage.clear());
+
+  it('creates stable account-scoped IDs for recovered dose rows', () => {
+    const first = recoveredDoseId('account-a', 'legacy-row');
+    expect(first).toBe(recoveredDoseId('account-a', 'legacy-row'));
+    expect(first).not.toBe(recoveredDoseId('account-b', 'legacy-row'));
+    expect(first).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-a[0-9a-f]{3}-[0-9a-f]{12}$/);
+  });
 
   it('detects signed-out and unscoped daily entries', () => {
     localStorage.setItem(`${STORAGE_KEYS.DAILY_DOSES}::guest`, JSON.stringify([{ id: 'guest-entry' }]));

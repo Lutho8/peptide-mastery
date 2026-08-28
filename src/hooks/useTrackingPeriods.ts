@@ -160,15 +160,17 @@ export function useTrackingPeriods() {
   useEffect(() => {
     if (!userId) return;
     const channel = supabase
-      .channel(`tracking-periods:${userId}`)
+      .channel(`tracking-periods:${userId}:${crypto.randomUUID()}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'tracker',
         table: 'tracking_periods',
         filter: `user_id=eq.${userId}`,
       }, () => { void refresh(); })
-      .subscribe();
-    return () => { void supabase.removeChannel(channel); };
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') console.warn(`[Tracking periods] Realtime ${status.toLowerCase()}`);
+      });
+    return () => { void supabase.removeChannel(channel).catch(() => undefined); };
   }, [refresh, userId]);
 
   const createPeriod = useCallback(async (period: Omit<Cycle, 'id' | 'updatedAt'>) => {

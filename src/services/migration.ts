@@ -34,6 +34,26 @@ export interface MigrationSummary {
 
 const ALL_STORAGE_BASE_KEYS = Object.values(STORAGE_KEYS);
 
+/** Stable UUID for a recovered row. Scoping the original ID to the current
+ * account avoids colliding with a row retained under a legacy Auth UUID while
+ * keeping retries idempotent. */
+export function recoveredDoseId(currentUserId: string, originalId: string): string {
+  const input = `${currentUserId}:${originalId}`;
+  let a = 0x811c9dc5;
+  let b = 0x9e3779b9;
+  let c = 0x85ebca6b;
+  let d = 0xc2b2ae35;
+  for (let i = 0; i < input.length; i += 1) {
+    const code = input.charCodeAt(i);
+    a = Math.imul(a ^ code, 0x01000193);
+    b = Math.imul(b ^ code, 0x85ebca6b);
+    c = Math.imul(c ^ code, 0xc2b2ae35);
+    d = Math.imul(d ^ code, 0x27d4eb2f);
+  }
+  const hex = [a, b, c, d].map((value) => (value >>> 0).toString(16).padStart(8, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+}
+
 function hasMeaningfulStoredValue(baseKey: string, raw: string | null): boolean {
   if (raw === null) return false;
   try {
@@ -255,8 +275,13 @@ export async function backfillToCloud(currentUserId: string): Promise<{ success:
     // 3. Active Stack
     const stack = read(STORAGE_KEYS.ACTIVE_STACK);
     if (Array.isArray(stack) && stack.length > 0) {
+      const uniqueStack = Array.from(new Map(
+        stack
+          .filter((item: Record<string, unknown>) => String(item.peptideId ?? '').trim())
+          .map((item: Record<string, unknown>) => [String(item.peptideId), item]),
+      ).values());
       const { error } = await supabase.from('user_stacks').upsert(
-        stack.map((item: Record<string, unknown>) => ({
+        uniqueStack.map((item: Record<string, unknown>) => ({
           user_id: currentUserId,
           peptide_id: String(item.peptideId ?? ''),
           dose: String(item.dose ?? ''),
@@ -308,9 +333,24 @@ export async function backfillToCloud(currentUserId: string): Promise<{ success:
       ));
 
       if (validRows.length > 0) {
+        const { data: ownedRows, error: ownedRowsError } = await supabase
+          .from('daily_doses').select('id').eq('user_id', currentUserId);
+        if (ownedRowsError) errors.push(`Daily entries check: ${ownedRowsError.message}`);
+        const ownedIds = new Set((ownedRows || []).map((row: { id: string }) => row.id));
+        const recoveredRows = validRows
+          .map((entry: Record<string, unknown>) => {
+            const originalId = String(entry.id);
+            const mappedId = recoveredDoseId(currentUserId, originalId);
+            if (ownedIds.has(originalId)) return null;
+            if (ownedIds.has(mappedId)) return null;
+            return { entry, id: mappedId };
+          })
+          .filter((row): row is { entry: Record<string, unknown>; id: string } => row !== null);
+
+        if (recoveredRows.length > 0) {
         const { error } = await supabase.from('daily_doses').upsert(
-          validRows.map((entry: Record<string, unknown>) => ({
-            id: String(entry.id),
+          recoveredRows.map(({ entry, id }) => ({
+            id,
             user_id: currentUserId,
             date: String(entry.date),
             peptide_id: String(entry.peptide_id),
@@ -323,6 +363,7 @@ export async function backfillToCloud(currentUserId: string): Promise<{ success:
           { onConflict: 'id' },
         );
         if (error) errors.push(`Daily entries: ${error.message}`);
+        }
       }
     }
 

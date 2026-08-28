@@ -133,7 +133,7 @@ export function useInventory(): {
   useEffect(() => {
     if (!userId) return;
     const channel = supabase
-      .channel(`inventory-items:${userId}`)
+      .channel(`inventory-items:${userId}:${crypto.randomUUID()}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'tracker',
@@ -150,8 +150,10 @@ export function useInventory(): {
           setSyncedToCloud(true);
         }
       })
-      .subscribe();
-    return () => { void supabase.removeChannel(channel); };
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') console.warn(`[Inventory] Realtime ${status.toLowerCase()}`);
+      });
+    return () => { void supabase.removeChannel(channel).catch(() => undefined); };
   }, [userId]);
 
   const alerts = useMemo(() => checkInventoryAlerts(items), [items]);

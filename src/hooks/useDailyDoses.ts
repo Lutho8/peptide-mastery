@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { getStoredData, setStoredData, STORAGE_KEYS } from '@/services/storage';
 import { enqueue as enqueueOffline } from '@/services/offlineQueue';
+import { recoveredDoseId } from '@/services/migration';
 
 export interface DailyDoseEntry {
   id: string;
@@ -28,6 +29,7 @@ function saveLocalDoses(doses: DailyDoseEntry[]) {
 
 export function useDailyDoses() {
   const { user } = useAuth();
+  const userId = user?.id;
   const { toast } = useToast();
   const [doses, setDoses] = useState<DailyDoseEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,7 +66,10 @@ export function useDailyDoses() {
         // was unavailable. Push only IDs not already present in the owner-scoped
         // cloud result, then keep one merged copy on this device.
         const cloudIds = new Set(mappedDoses.map((dose) => dose.id));
-        const localOnly = localBeforeCloud.filter((dose) => !cloudIds.has(dose.id));
+        const localOnly = localBeforeCloud
+          .filter((dose) => !cloudIds.has(dose.id))
+          .map((dose) => ({ ...dose, id: recoveredDoseId(user.id, dose.id) }))
+          .filter((dose) => !cloudIds.has(dose.id));
         if (localOnly.length > 0) {
           setIsSyncing(true);
           try {
@@ -123,18 +128,22 @@ export function useDailyDoses() {
 
   // Cross-device changes appear without a manual refresh.
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
     const channel = supabase
-      .channel(`daily-doses:${user.id}`)
+      .channel(`daily-doses:${userId}:${crypto.randomUUID()}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'tracker',
         table: 'daily_doses',
-        filter: `user_id=eq.${user.id}`,
+        filter: `user_id=eq.${userId}`,
       }, () => { void loadDoses(); })
-      .subscribe();
-    return () => { void supabase.removeChannel(channel); };
-  }, [loadDoses, user]);
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn(`[Daily doses] Realtime ${status.toLowerCase()}; cloud refresh remains available.`);
+        }
+      });
+    return () => { void supabase.removeChannel(channel).catch(() => undefined); };
+  }, [loadDoses, userId]);
 
   const addDose = useCallback(async (dose: Omit<DailyDoseEntry, 'id' | 'user_id'>) => {
     const newDose: DailyDoseEntry = {
