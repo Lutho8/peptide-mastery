@@ -68,6 +68,20 @@ export function useInjectionRecordsCloud() {
     return () => { cancelled = true; };
   }, [userId, refresh]);
 
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel(`injection-records:${userId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'tracker',
+        table: 'injection_records',
+        filter: `user_id=eq.${userId}`,
+      }, () => { void refresh(); })
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [refresh, userId]);
+
   const logRecord = useCallback(async (params: {
     siteId: string;
     peptideId: string;
@@ -77,6 +91,7 @@ export function useInjectionRecordsCloud() {
     painScore?: number;
     swellingScore?: number;
     notes?: string;
+    injectedAt?: string;
   }) => {
     if (!userId) return { error: "Sign in to log injections" } as const;
     const { error } = await supabase.from("injection_records").insert({
@@ -89,6 +104,7 @@ export function useInjectionRecordsCloud() {
       pain_score: params.painScore ?? null,
       swelling_score: params.swellingScore ?? null,
       notes: params.notes ?? null,
+      injected_at: params.injectedAt ?? new Date().toISOString(),
     });
     if (error) return { error: error.message } as const;
     await refresh();

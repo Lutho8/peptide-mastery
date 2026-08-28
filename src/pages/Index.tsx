@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { format } from 'date-fns';
+import { parseRecordedDose } from '@/lib/recordedDose';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { useStorageInit } from '@/hooks/useStorageInit';
@@ -17,6 +18,7 @@ import { InstallBanner } from '@/components/pwa/InstallBanner';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 // Lazy load screens for code splitting
 const HomeScreen = lazy(() => import('@/screens/HomeScreen').then(m => ({ default: m.HomeScreen })));
@@ -31,8 +33,6 @@ const LandingPage = lazy(() => import('@/components/landing/LandingPage').then(m
 
 // Lazy load modals
 const BodyCompositionModal = lazy(() => import('@/components/modals/BodyCompositionModal').then(m => ({ default: m.BodyCompositionModal })));
-const DoseTrackerModal = lazy(() => import('@/components/modals/DoseTrackerModal').then(m => ({ default: m.DoseTrackerModal })));
-const InventoryModal = lazy(() => import('@/components/modals/InventoryModal').then(m => ({ default: m.InventoryModal })));
 const NotificationActionModal = lazy(() => import('@/components/modals/NotificationActionModal').then(m => ({ default: m.NotificationActionModal })));
 const InstallAppStep = lazy(() => import('@/components/onboarding/InstallAppStep').then(m => ({ default: m.InstallAppStep })));
 
@@ -88,8 +88,6 @@ const Index = ({ dashboardRoute = false }: IndexProps) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showResearch, setShowResearch] = useState(false);
   const [bodyCompositionOpen, setBodyCompositionOpen] = useState(false);
-  const [doseTrackerOpen, setDoseTrackerOpen] = useState(false);
-  const [inventoryOpen, setInventoryOpen] = useState(false);
   const [installStepOpen, setInstallStepOpen] = useState(false);
 
   // Mark install_completed when user opens app from home screen (standalone)
@@ -126,18 +124,25 @@ const Index = ({ dashboardRoute = false }: IndexProps) => {
   }, [user]);
 
   const handleMarkDoseAsTaken = useCallback((peptideName: string, dose: string, time: string) => {
-    const doseMatch = dose.match(/^([\d.]+)(\w+)$/);
-    const doseValue = doseMatch ? parseFloat(doseMatch[1]) : 0;
-    const unit = (doseMatch ? doseMatch[2] : 'mg') as 'mg' | 'IU' | 'units';
+    const recordedDose = parseRecordedDose(dose);
+    if (!recordedDose) {
+      toast.error('Open Daily Log to confirm the amount and unit before saving this entry.');
+      setActiveTab('daily-log');
+      return;
+    }
     
-    addDose({
+    void addDose({
       date: format(new Date(), 'yyyy-MM-dd'),
       peptide_id: peptideName.toLowerCase().replace(/\s+/g, '-'),
       peptide_name: peptideName,
-      dose: doseValue,
-      unit: unit,
+      dose: recordedDose.dose,
+      unit: recordedDose.unit,
       time: time,
-      notes: 'Logged from notification',
+      notes: recordedDose.originalUnit === 'mcg'
+        ? `Logged from reminder (${recordedDose.originalAmount} mcg)`
+        : 'Logged from reminder',
+    }).then(() => toast.success('Entry saved to your account history')).catch(() => {
+      toast.error('Entry could not be saved. Open Daily Log to retry.');
     });
   }, [addDose]);
 
@@ -205,10 +210,10 @@ const Index = ({ dashboardRoute = false }: IndexProps) => {
           {activeTab === 'home' && (
             <HomeScreen
               onOpenBodyComposition={() => setBodyCompositionOpen(true)}
-              onOpenDoseTracker={() => setDoseTrackerOpen(true)}
+              onOpenDoseTracker={() => setActiveTab('daily-log')}
               onOpenCycles={() => setActiveTab('stack')}
               onOpenBloodwork={() => navigate('/bloodwork')}
-              onOpenInventory={() => setInventoryOpen(true)}
+              onOpenInventory={() => navigate('/inventory')}
               onNavigatePeptides={() => setShowResearch(true)}
               onNavigateStack={() => setActiveTab('stack')}
               onOpenSettings={() => setShowSettings(true)}
@@ -279,8 +284,6 @@ const Index = ({ dashboardRoute = false }: IndexProps) => {
       {/* Modals - lazy loaded */}
       <Suspense fallback={null}>
         {bodyCompositionOpen && <BodyCompositionModal open={bodyCompositionOpen} onOpenChange={setBodyCompositionOpen} />}
-        {doseTrackerOpen && <DoseTrackerModal open={doseTrackerOpen} onOpenChange={setDoseTrackerOpen} />}
-        {inventoryOpen && <InventoryModal open={inventoryOpen} onOpenChange={setInventoryOpen} />}
         <NotificationActionModal onMarkAsTaken={handleMarkDoseAsTaken} />
         {installStepOpen && (
           <InstallAppStep open={installStepOpen} onClose={() => setInstallStepOpen(false)} />

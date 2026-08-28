@@ -13,7 +13,10 @@ import {
   X,
   Cloud,
   CloudOff,
+  ArrowLeft,
+  Loader2,
 } from "lucide-react";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +33,7 @@ import {
 import { useInventory } from "@/hooks/useInventory";
 import { InventoryItem } from "@/types";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
@@ -39,16 +43,19 @@ const pageVariants = {
 
 // ===== Helpers =====
 function formatDate(ts: number | string | undefined): string {
-  if (ts == null) return "—";
-  return new Date(ts).toLocaleDateString("en-US", {
+  if (ts == null || ts === "") return "Not recorded";
+  const date = new Date(ts);
+  if (Number.isNaN(date.getTime())) return "Not recorded";
+  return date.toLocaleDateString("en-ZA", {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
 }
 
-function daysUntil(ts: number | string): number {
+function daysUntil(ts: number | string): number | null {
   const t = typeof ts === "number" ? ts : new Date(ts).getTime();
+  if (!Number.isFinite(t) || t <= 0) return null;
   return Math.ceil((t - Date.now()) / (1000 * 60 * 60 * 24));
 }
 
@@ -62,77 +69,19 @@ function getStockColor(percent: number): string {
   return "bg-red-500";
 }
 
-// ===== Demo Data (seed if empty) =====
-const SEED_ITEMS: InventoryItem[] = [
-  {
-    id: "vial-1",
-    peptideId: "bpc-157",
-    peptideName: "BPC-157",
-    vialSizeMg: 5,
-    remainingMg: 3.5,
-    concentrationMgMl: 5,
-    volumeMl: 1,
-    openedDate: Date.now() - 30 * 24 * 3600 * 1000,
-    expirationDate: Date.now() + 60 * 24 * 3600 * 1000,
-    batchNumber: "BPC-2024-001",
-    supplier: "Peptide Sciences",
-  },
-  {
-    id: "vial-2",
-    peptideId: "tb-500",
-    peptideName: "TB-500",
-    vialSizeMg: 10,
-    remainingMg: 8.0,
-    concentrationMgMl: 10,
-    volumeMl: 1,
-    openedDate: Date.now() - 14 * 24 * 3600 * 1000,
-    expirationDate: Date.now() + 90 * 24 * 3600 * 1000,
-    batchNumber: "TB5-2024-003",
-    supplier: "Cosmic Nootropic",
-  },
-  {
-    id: "vial-3",
-    peptideId: "cjc-1295",
-    peptideName: "CJC-1295 (No DAC)",
-    vialSizeMg: 2,
-    remainingMg: 0.8,
-    concentrationMgMl: 2,
-    volumeMl: 1,
-    openedDate: Date.now() - 45 * 24 * 3600 * 1000,
-    expirationDate: Date.now() + 15 * 24 * 3600 * 1000,
-    batchNumber: "CJC-2024-002",
-    supplier: "Peptide Sciences",
-  },
-  {
-    id: "vial-4",
-    peptideId: "ipamorelin",
-    peptideName: "Ipamorelin",
-    vialSizeMg: 5,
-    remainingMg: 4.5,
-    concentrationMgMl: 5,
-    volumeMl: 1,
-    openedDate: Date.now() - 7 * 24 * 3600 * 1000,
-    expirationDate: Date.now() + 120 * 24 * 3600 * 1000,
-    batchNumber: "IPA-2024-001",
-    supplier: "Limitless Life",
-  },
-];
-
 // ===== Vial Card Component =====
 function VialCard({
   item,
   onDelete,
-  onRecordDose,
+  onOpenDailyLog,
 }: {
   item: InventoryItem;
   onDelete: (id: string) => void;
-  onRecordDose: (id: string, amount: number) => void;
+  onOpenDailyLog: () => void;
 }) {
   const stockPercent = getStockPercent(item);
   const expiryDays = daysUntil(item.expirationDate);
   const stockColor = getStockColor(stockPercent);
-
-  const [doseAmount, setDoseAmount] = useState("0.25");
 
   return (
     <motion.div
@@ -183,7 +132,9 @@ function VialCard({
               <Badge variant="outline" className="text-xs">
                 {stockPercent}% left
               </Badge>
-              {expiryDays <= 30 ? (
+              {expiryDays === null ? (
+                <Badge variant="outline" className="text-xs">Expiry not recorded</Badge>
+              ) : expiryDays <= 30 ? (
                 <Badge variant="destructive" className="text-xs">
                   <Clock className="h-3 w-3 mr-1" />
                   {expiryDays <= 0 ? "Expired" : `${expiryDays}d left`}
@@ -201,29 +152,15 @@ function VialCard({
           <div className="text-xs text-muted-foreground space-y-1 mb-4">
             {item.batchNumber && <p>Batch: {item.batchNumber}</p>}
             {item.supplier && <p>Supplier: {item.supplier}</p>}
-            <p>Opened: {formatDate(item.openedDate)}</p>
+            <p>Reconstituted: {formatDate(item.openedDate)}</p>
             <p>Expires: {formatDate(item.expirationDate)}</p>
           </div>
 
-          {/* Quick Dose */}
-          <div className="flex items-center gap-2 pt-3 border-t">
-            <Input
-              type="number"
-              value={doseAmount}
-              onChange={(e) => setDoseAmount(e.target.value)}
-              min={0.01}
-              max={item.remainingMg}
-              step={0.01}
-              className="h-8 text-sm"
-            />
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => onRecordDose(item.id, parseFloat(doseAmount) || 0)}
-              disabled={parseFloat(doseAmount) > item.remainingMg}
-            >
-              Log Dose
+          <div className="pt-3 border-t">
+            <Button size="sm" variant="secondary" className="w-full" onClick={onOpenDailyLog}>
+              Open Daily Log
             </Button>
+            <p className="mt-2 text-[10px] text-muted-foreground">Entries are logged once in Daily Log, then synced to history and inventory.</p>
           </div>
         </CardContent>
       </Card>
@@ -233,11 +170,11 @@ function VialCard({
 
 // ===== Main Component =====
 export default function InventoryPage() {
-  const { items, alerts, addItem, removeItem, recordDose, syncedToCloud } = useInventory();
+  const { user, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const { items, alerts, addItem, removeItem, syncedToCloud } = useInventory();
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  // Seed demo data if empty
-  const displayItems = items.length > 0 ? items : SEED_ITEMS;
+  const displayItems = items;
 
   const [newVial, setNewVial] = useState<Partial<InventoryItem>>({
     peptideName: "",
@@ -245,12 +182,14 @@ export default function InventoryPage() {
     remainingMg: 5,
     concentrationMgMl: 5,
     volumeMl: 1,
+    reconstitutionDate: undefined,
+    expirationDate: "",
     batchNumber: "",
     supplier: "",
   });
 
   const handleAddVial = () => {
-    if (!newVial.peptideName) return;
+    if (!newVial.peptideName || !newVial.expirationDate) return;
     const vial: InventoryItem = {
       id: `vial-${Date.now()}`,
       peptideId: newVial.peptideName!.toLowerCase().replace(/\s+/g, "-"),
@@ -259,8 +198,9 @@ export default function InventoryPage() {
       remainingMg: newVial.remainingMg ?? 5,
       concentrationMgMl: newVial.concentrationMgMl ?? 5,
       volumeMl: newVial.volumeMl ?? 1,
-      openedDate: Date.now(),
-      expirationDate: Date.now() + 90 * 24 * 3600 * 1000,
+      openedDate: newVial.reconstitutionDate ? new Date(newVial.reconstitutionDate).getTime() : undefined,
+      reconstitutionDate: newVial.reconstitutionDate,
+      expirationDate: newVial.expirationDate,
       batchNumber: newVial.batchNumber,
       supplier: newVial.supplier,
     };
@@ -272,6 +212,8 @@ export default function InventoryPage() {
       remainingMg: 5,
       concentrationMgMl: 5,
       volumeMl: 1,
+      reconstitutionDate: undefined,
+      expirationDate: "",
       batchNumber: "",
       supplier: "",
     });
@@ -279,6 +221,12 @@ export default function InventoryPage() {
 
   const criticalAlerts = alerts.filter((a) => a.severity === "danger" || a.type === "expired");
   const warningAlerts = alerts.filter((a) => a.severity === "warning" && a.type !== "expired");
+
+  if (authLoading) {
+    return <div className="flex min-h-screen items-center justify-center bg-background"><Loader2 className="h-7 w-7 animate-spin text-primary" /></div>;
+  }
+
+  if (!user) return <Navigate to="/dashboard" replace />;
 
   return (
     <motion.div
@@ -297,12 +245,15 @@ export default function InventoryPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <div className="flex items-center gap-4">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate('/?screen=home')} aria-label="Back to dashboard">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
               <div className="p-3 rounded-xl bg-primary/10">
                 <Package className="h-8 w-8 text-primary" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">Vial Inventory</h1>
+                <h1 className="text-xl font-bold tracking-tight sm:text-3xl">Vial Inventory</h1>
                 <p className="text-muted-foreground mt-1">
                   Track stock levels, expiration dates, and usage
                 </p>
@@ -357,6 +308,25 @@ export default function InventoryPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
+                      <label className="text-sm font-medium">Reconstituted date (optional)</label>
+                      <Input
+                        type="date"
+                        value={typeof newVial.reconstitutionDate === 'string' ? newVial.reconstitutionDate : ''}
+                        onChange={(e) => setNewVial((prev) => ({ ...prev, reconstitutionDate: e.target.value || undefined }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Recorded expiry date *</label>
+                      <Input
+                        type="date"
+                        value={typeof newVial.expirationDate === 'string' ? newVial.expirationDate : ''}
+                        onChange={(e) => setNewVial((prev) => ({ ...prev, expirationDate: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Copy the expiry from the vial, COA or qualified instruction. The app does not invent a shelf-life date.</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
                       <label className="text-sm font-medium">Concentration (mg/mL)</label>
                       <Input
                         type="number"
@@ -394,7 +364,7 @@ export default function InventoryPage() {
                     />
                   </div>
                 </div>
-                <Button className="w-full" onClick={handleAddVial}>
+                <Button className="w-full" onClick={handleAddVial} disabled={!newVial.peptideName || !newVial.expirationDate}>
                   Add Vial to Inventory
                 </Button>
               </DialogContent>
@@ -467,7 +437,7 @@ export default function InventoryPage() {
                 key={item.id}
                 item={item}
                 onDelete={removeItem}
-                onRecordDose={recordDose}
+                onOpenDailyLog={() => navigate('/?screen=daily-log')}
               />
             ))}
           </AnimatePresence>

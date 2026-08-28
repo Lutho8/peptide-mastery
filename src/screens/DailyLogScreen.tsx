@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Plus, Syringe, Trash2, Calendar, Cloud, CloudOff, Loader2, BarChart3, Pencil, ArrowUpDown, FlaskConical } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Plus, Syringe, Trash2, Calendar, Cloud, CloudOff, Loader2, BarChart3, Pencil, ArrowUpDown, FlaskConical, MapPin, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
@@ -26,6 +26,7 @@ import { z } from 'zod';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { track } from '@/lib/analytics';
+import { useInjectionRecordsCloud } from '@/hooks/useInjectionRecordsCloud';
 
 const doseEntrySchema = z.object({
   peptideId: z.string().min(1, 'Please select a peptide'),
@@ -45,6 +46,7 @@ export function DailyLogScreen({ onOpenMeasurement }: DailyLogScreenProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const { doses, isLoading, isSyncing, isCloudEnabled, addDose, updateDose, deleteDose, getDosesForDate } = useDailyDoses();
+  const { sites, records: administrationRecords, logRecord: logAdministrationRecord } = useInjectionRecordsCloud();
   
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -62,6 +64,11 @@ export function DailyLogScreen({ onOpenMeasurement }: DailyLogScreenProps) {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [highlightedDoseId, setHighlightedDoseId] = useState<string | null>(null);
+  const [showAdministrationDetails, setShowAdministrationDetails] = useState(false);
+  const [administrationSiteId, setAdministrationSiteId] = useState('');
+  const [administrationRoute, setAdministrationRoute] = useState('subcutaneous');
+  const [painScore, setPainScore] = useState('');
+  const [swellingScore, setSwellingScore] = useState('');
   const highlightTimerRef = useRef<number | null>(null);
   const viewTrackedRef = useRef<string | null>(null);
 
@@ -144,6 +151,12 @@ export function DailyLogScreen({ onOpenMeasurement }: DailyLogScreenProps) {
 
   const handleAddDose = async () => {
     setFormErrors({});
+
+    const localResponseScores = [painScore, swellingScore].filter((value) => value !== '');
+    if (localResponseScores.some((value) => !Number.isInteger(Number(value)) || Number(value) < 0 || Number(value) > 10)) {
+      toast({ title: 'Check administration details', description: 'Pain and swelling must be whole numbers from 0 to 10.', variant: 'destructive' });
+      return;
+    }
     
     const peptide = findPeptideOrBlend(formData.peptideId);
     const doseNumber = parseFloat(formData.dose);
@@ -178,6 +191,29 @@ export function DailyLogScreen({ onOpenMeasurement }: DailyLogScreenProps) {
         notes: formData.notes || undefined,
       });
 
+      if (administrationSiteId) {
+        const administrationResult = await logAdministrationRecord({
+          siteId: administrationSiteId,
+          peptideId: formData.peptideId,
+          peptideName: peptide?.shortName || formData.peptideId,
+          doseMg: formData.unit === 'mg' ? doseNumber : undefined,
+          route: administrationRoute,
+          painScore: painScore === '' ? undefined : Number(painScore),
+          swellingScore: swellingScore === '' ? undefined : Number(swellingScore),
+          notes: formData.notes || undefined,
+          injectedAt: new Date(`${format(selectedDate, 'yyyy-MM-dd')}T${formData.time}:00`).toISOString(),
+        });
+        if (administrationResult.error) {
+          toast({
+            title: 'Entry saved; administration details need retrying',
+            description: 'Your main history is safe. The optional site details were not saved.',
+            variant: 'destructive',
+          });
+        } else {
+          track('administration_details_recorded', { route: administrationRoute, has_local_response: painScore !== '' || swellingScore !== '' });
+        }
+      }
+
       void logAudit({
         action: 'dose.create',
         entityType: 'daily_dose',
@@ -211,6 +247,11 @@ export function DailyLogScreen({ onOpenMeasurement }: DailyLogScreenProps) {
         time: format(new Date(), 'HH:mm'),
         notes: '',
       });
+      setShowAdministrationDetails(false);
+      setAdministrationSiteId('');
+      setAdministrationRoute('subcutaneous');
+      setPainScore('');
+      setSwellingScore('');
     } catch (error) {
       toast({
         title: 'Error',
@@ -526,6 +567,35 @@ export function DailyLogScreen({ onOpenMeasurement }: DailyLogScreenProps) {
         </>
       )}
 
+      {administrationRecords.length > 0 && (
+        <GradientCard className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-primary" />
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">Recent administration records</h2>
+                <p className="text-xs text-muted-foreground">Your recorded site history—no site is selected or recommended by the app.</p>
+              </div>
+            </div>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {administrationRecords.slice(0, 3).map((record) => {
+              const site = sites.find((item) => item.id === record.site_id);
+              return (
+                <div key={record.id} className="rounded-xl border border-border bg-background/70 p-3">
+                  <p className="truncate text-sm font-semibold text-foreground">{record.peptide_name || record.peptide_id}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{site?.display_name || record.site_id}</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">{new Date(record.injected_at).toLocaleString()}</p>
+                  {(record.pain_score !== null || record.swelling_score !== null) && (
+                    <p className="mt-2 text-[10px] text-muted-foreground">Pain {record.pain_score ?? '—'}/10 · Swelling {record.swelling_score ?? '—'}/10</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </GradientCard>
+      )}
+
       {/* Add Dose Modal */}
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
         <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
@@ -621,6 +691,63 @@ export function DailyLogScreen({ onOpenMeasurement }: DailyLogScreenProps) {
                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                 maxLength={200}
               />
+            </div>
+
+            <div className="rounded-xl border border-border bg-muted/30">
+              <button
+                type="button"
+                className="flex min-h-12 w-full items-center justify-between gap-3 px-3 py-2 text-left"
+                onClick={() => setShowAdministrationDetails((current) => !current)}
+                aria-expanded={showAdministrationDetails}
+              >
+                <span className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  <span>
+                    <span className="block text-sm font-semibold text-foreground">Administration details (optional)</span>
+                    <span className="block text-xs text-muted-foreground">Record a site and local response.</span>
+                  </span>
+                </span>
+                {showAdministrationDetails ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              </button>
+
+              {showAdministrationDetails && (
+                <div className="space-y-3 border-t border-border px-3 py-3">
+                  <div className="space-y-2">
+                    <Label>Site used</Label>
+                    <Select value={administrationSiteId || undefined} onValueChange={setAdministrationSiteId}>
+                      <SelectTrigger><SelectValue placeholder="Choose the site you actually used" /></SelectTrigger>
+                      <SelectContent>
+                        {sites.map((site) => <SelectItem key={site.id} value={site.id}>{site.display_name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Route recorded</Label>
+                    <Select value={administrationRoute} onValueChange={setAdministrationRoute}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="subcutaneous">Subcutaneous</SelectItem>
+                        <SelectItem value="intramuscular">Intramuscular</SelectItem>
+                        <SelectItem value="other">Other / not listed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="pain-score">Local pain (0–10)</Label>
+                      <Input id="pain-score" type="number" inputMode="numeric" min="0" max="10" value={painScore} onChange={(event) => setPainScore(event.target.value)} placeholder="Optional" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="swelling-score">Swelling (0–10)</Label>
+                      <Input id="swelling-score" type="number" inputMode="numeric" min="0" max="10" value={swellingScore} onChange={(event) => setSwellingScore(event.target.value)} placeholder="Optional" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 rounded-lg bg-background/70 p-2 text-xs leading-relaxed text-muted-foreground">
+                    <Activity className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    These fields record what happened. They do not determine route, site suitability or your next site.
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="rounded-xl border border-border bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">

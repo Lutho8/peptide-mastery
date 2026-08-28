@@ -40,9 +40,7 @@ function rowToItem(row: {
     openedDate: row.reconstituted_at ? new Date(row.reconstituted_at).getTime() : undefined,
     reconstitutionDate: row.reconstituted_at ?? undefined,
     reconstitutionVolumeMl: row.bac_water_ml ?? undefined,
-    expirationDate: row.expires_at
-      ? new Date(row.expires_at).getTime()
-      : Date.now() + 90 * 24 * 3600 * 1000,
+    expirationDate: row.expires_at ? new Date(row.expires_at).getTime() : "",
     batchNumber: row.lot_number ?? undefined,
     supplier: row.vendor ?? undefined,
   };
@@ -82,7 +80,6 @@ export function useInventory(): {
   addItem: (item: InventoryItem) => void;
   removeItem: (itemId: string) => void;
   updateItem: (item: InventoryItem) => void;
-  recordDose: (itemId: string, amountMg: number) => void;
   totalPeptides: number;
   totalVials: number;
   syncedToCloud: boolean;
@@ -133,6 +130,30 @@ export function useInventory(): {
     return () => { cancelled = true; };
   }, [userId]);
 
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel(`inventory-items:${userId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'tracker',
+        table: 'inventory_items',
+        filter: `user_id=eq.${userId}`,
+      }, async () => {
+        const { data, error } = await supabase
+          .from('inventory_items')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: true });
+        if (!error && data) {
+          setItems(data.map(rowToItem));
+          setSyncedToCloud(true);
+        }
+      })
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [userId]);
+
   const alerts = useMemo(() => checkInventoryAlerts(items), [items]);
 
   const addItem = useCallback((item: InventoryItem) => {
@@ -163,33 +184,11 @@ export function useInventory(): {
     }
   }, [userId]);
 
-  const recordDose = useCallback((itemId: string, amountMg: number) => {
-    setItems((prev) => prev.map((i) => {
-      if (i.id !== itemId) return i;
-      return { ...i, remainingMg: Math.max(0, (i.remainingMg ?? i.vialSizeMg) - amountMg) };
-    }));
-    if (userId) {
-      // Server-side trigger handles auto-decrement when a dose is inserted in
-      // daily_doses. For manual recordDose calls (not via daily_doses), update
-      // remaining_mg directly here.
-      const target = items.find((i) => i.id === itemId);
-      if (target) {
-        const newRemaining = Math.max(0, (target.remainingMg ?? target.vialSizeMg) - amountMg);
-        supabase.from("inventory_items").update({
-          remaining_mg: newRemaining,
-          status: newRemaining <= 0 ? "finished" : "active",
-        }).eq("id", itemId).eq("user_id", userId).then(({ error }) => {
-          if (error) console.error("[inventory] dose update failed", error);
-        });
-      }
-    }
-  }, [items, userId]);
-
   const totalPeptides = useMemo(
     () => new Set(items.map((i) => i.peptideId)).size,
     [items]
   );
   const totalVials = items.length;
 
-  return { items, alerts, addItem, removeItem, updateItem, recordDose, totalPeptides, totalVials, syncedToCloud };
+  return { items, alerts, addItem, removeItem, updateItem, totalPeptides, totalVials, syncedToCloud };
 }
