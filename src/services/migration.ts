@@ -33,6 +33,29 @@ export interface MigrationSummary {
 }
 
 const ALL_STORAGE_BASE_KEYS = Object.values(STORAGE_KEYS);
+const LEGACY_UNSCOPED_ALIASES: Record<string, readonly string[]> = {
+  [STORAGE_KEYS.SCHEDULED_REMINDERS]: ['peptide-dose-reminders'],
+};
+
+/** Stable UUID for a recovered row. Scoping the original ID to the current
+ * account avoids colliding with a row retained under a legacy Auth UUID while
+ * keeping retries idempotent. */
+export function recoveredRecordId(currentUserId: string, originalId: string): string {
+  const input = `${currentUserId}:${originalId}`;
+  let a = 0x811c9dc5;
+  let b = 0x9e3779b9;
+  let c = 0x85ebca6b;
+  let d = 0xc2b2ae35;
+  for (let i = 0; i < input.length; i += 1) {
+    const code = input.charCodeAt(i);
+    a = Math.imul(a ^ code, 0x01000193);
+    b = Math.imul(b ^ code, 0x85ebca6b);
+    c = Math.imul(c ^ code, 0xc2b2ae35);
+    d = Math.imul(d ^ code, 0x27d4eb2f);
+  }
+  const hex = [a, b, c, d].map((value) => (value >>> 0).toString(16).padStart(8, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+}
 
 function hasMeaningfulStoredValue(baseKey: string, raw: string | null): boolean {
   if (raw === null) return false;
@@ -90,6 +113,15 @@ export function scanForLegacyData(currentUserId: string | null): MigrationSummar
     namespaces.get('__legacy_unscoped__')!.add(baseKey);
   }
 
+  // The reminder hook used a separate bare key before storage was namespaced.
+  // Treat it as recoverable legacy data, but never load it directly into an
+  // arbitrary signed-in user's workspace.
+  for (const [baseKey, aliases] of Object.entries(LEGACY_UNSCOPED_ALIASES)) {
+    if (!aliases.some((alias) => hasMeaningfulStoredValue(baseKey, localStorage.getItem(alias)))) continue;
+    if (!namespaces.has('__legacy_unscoped__')) namespaces.set('__legacy_unscoped__', new Set());
+    namespaces.get('__legacy_unscoped__')!.add(baseKey);
+  }
+
   const results: LegacyNamespace[] = [];
   namespaces.forEach((keys, userId) => {
     const isGuest = userId === 'guest';
@@ -137,41 +169,44 @@ export function migrateLegacyLocalData(currentUserId: string): MigrationResult {
   try {
     for (const ns of summary.namespaces) {
       for (const baseKey of ALL_STORAGE_BASE_KEYS) {
-        const legacyKey = ns.storageSuffix === null ? baseKey : `${baseKey}::${ns.storageSuffix}`;
         const newKey = `${baseKey}::${currentUserId}`;
+        const candidateKeys = ns.storageSuffix === null
+          ? [baseKey, ...(LEGACY_UNSCOPED_ALIASES[baseKey] ?? [])]
+          : [`${baseKey}::${ns.storageSuffix}`];
 
-        const raw = localStorage.getItem(legacyKey);
-        if (raw === null) continue;
+        for (const legacyKey of candidateKeys) {
+          const raw = localStorage.getItem(legacyKey);
+          if (raw === null) continue;
 
-        // Don't overwrite if current user already has data for this key
-        const existing = localStorage.getItem(newKey);
-        if (existing !== null) {
-          // Merge arrays (stacks, cycles, reminders, body comp, dose logs, schedules, presets, daily doses)
-          try {
-            const legacyData = JSON.parse(raw);
-            const currentData = JSON.parse(existing);
-            if (Array.isArray(legacyData) && Array.isArray(currentData)) {
-              // Simple dedupe by JSON string — not perfect but safe
-              const mergedMap = new Map<string, unknown>();
-              [...currentData, ...legacyData].forEach(item => {
-                const id = (item as Record<string, unknown>)?.id ?? JSON.stringify(item);
-                mergedMap.set(String(id), item);
-              });
-              localStorage.setItem(newKey, JSON.stringify(Array.from(mergedMap.values())));
-              migratedCount++;
+          // Don't overwrite if current user already has data for this key.
+          const existing = localStorage.getItem(newKey);
+          if (existing !== null) {
+            // Merge arrays (stacks, cycles, reminders, body comp, dose logs, schedules, presets, daily doses).
+            try {
+              const legacyData = JSON.parse(raw);
+              const currentData = JSON.parse(existing);
+              if (Array.isArray(legacyData) && Array.isArray(currentData)) {
+                const mergedMap = new Map<string, unknown>();
+                [...currentData, ...legacyData].forEach(item => {
+                  const id = (item as Record<string, unknown>)?.id ?? JSON.stringify(item);
+                  mergedMap.set(String(id), item);
+                });
+                localStorage.setItem(newKey, JSON.stringify(Array.from(mergedMap.values())));
+                migratedCount++;
+              }
+              // For objects (settings, profile), prefer the current value.
+              continue;
+            } catch {
+              // Not JSON arrays — skip to avoid corruption.
               continue;
             }
-            // For objects (settings, profile) — prefer current, skip legacy
-            continue;
-          } catch {
-            // Not JSON arrays — skip to avoid corruption
-            continue;
           }
-        }
 
-        // No existing data — safe to copy
-        localStorage.setItem(newKey, raw);
-        migratedCount++;
+          // No existing data — safe to copy. The source remains as a rollback
+          // copy until the user has verified the recovered workspace.
+          localStorage.setItem(newKey, raw);
+          migratedCount++;
+        }
       }
     }
 
@@ -255,8 +290,13 @@ export async function backfillToCloud(currentUserId: string): Promise<{ success:
     // 3. Active Stack
     const stack = read(STORAGE_KEYS.ACTIVE_STACK);
     if (Array.isArray(stack) && stack.length > 0) {
+      const uniqueStack = Array.from(new Map(
+        stack
+          .filter((item: Record<string, unknown>) => String(item.peptideId ?? '').trim())
+          .map((item: Record<string, unknown>) => [String(item.peptideId), item]),
+      ).values());
       const { error } = await supabase.from('user_stacks').upsert(
-        stack.map((item: Record<string, unknown>) => ({
+        uniqueStack.map((item: Record<string, unknown>) => ({
           user_id: currentUserId,
           peptide_id: String(item.peptideId ?? ''),
           dose: String(item.dose ?? ''),
@@ -270,17 +310,58 @@ export async function backfillToCloud(currentUserId: string): Promise<{ success:
     // 4. Dose Reminders
     const reminders = read(STORAGE_KEYS.SCHEDULED_REMINDERS);
     if (Array.isArray(reminders) && reminders.length > 0) {
-      const { error } = await supabase.from('dose_reminders').insert(
-        reminders.map((r: Record<string, unknown>) => ({
+      const { data: ownedReminders, error: ownedRemindersError } = await supabase
+        .from('dose_reminders').select('id').eq('user_id', currentUserId);
+      if (ownedRemindersError) errors.push(`Reminders check: ${ownedRemindersError.message}`);
+      const ownedReminderIds = new Set((ownedReminders || []).map((row: { id: string }) => row.id));
+      const normalisedReminders = reminders.flatMap((record: Record<string, unknown>, index: number) => {
+        const peptideId = String(record.peptide_id ?? record.peptideId ?? '').trim();
+        const peptideName = String(record.peptide_name ?? record.peptideName ?? '').trim();
+        const dose = String(record.dose ?? '').trim();
+        const time = String(record.time ?? '').slice(0, 5);
+        if (!peptideId || !peptideName || !dose || !/^\d{2}:\d{2}$/.test(time)) return [];
+        const originalId = typeof record.id === 'string'
+          ? record.id
+          : `${peptideId}:${time}:${index}`;
+        return [{
+          originalId,
+          peptideId,
+          peptideName,
+          dose,
+          time,
+          days: Array.isArray(record.days) ? record.days.filter((day): day is string => typeof day === 'string') : [],
+          enabled: (record.enabled as boolean | undefined) ?? true,
+          emailNotificationEnabled: (record.email_notification_enabled as boolean | undefined) ?? false,
+        }];
+      });
+      const recoveredReminders = Array.from(
+        new Map(normalisedReminders.map((reminder) => [reminder.originalId, reminder])).values(),
+      )
+        .map((reminder) => {
+          const { originalId } = reminder;
+          if (ownedReminderIds.has(originalId)) return null;
+          const id = recoveredRecordId(currentUserId, originalId);
+          if (ownedReminderIds.has(id)) return null;
+          return { ...reminder, id };
+        })
+        .filter((row): row is NonNullable<typeof row> => row !== null);
+
+      const { error } = recoveredReminders.length > 0
+        ? await supabase.from('dose_reminders').upsert(
+        recoveredReminders.map((reminder) => ({
+          id: reminder.id,
           user_id: currentUserId,
-          peptide_id: String(r.peptideId ?? ''),
-          peptide_name: String(r.peptideName ?? ''),
-          dose: String(r.dose ?? ''),
-          time: String(r.time ?? ''),
-          days: Array.isArray(r.days) ? (r.days as string[]) : [],
-          enabled: (r.enabled as boolean | undefined) ?? true,
-        }))
-      );
+          peptide_id: reminder.peptideId,
+          peptide_name: reminder.peptideName,
+          dose: reminder.dose,
+          time: reminder.time,
+          days: reminder.days,
+          enabled: reminder.enabled,
+          email_notification_enabled: reminder.emailNotificationEnabled,
+        })),
+        { onConflict: 'id' },
+      )
+        : { error: null };
       if (error) errors.push(`Reminders: ${error.message}`);
     }
 
@@ -308,9 +389,24 @@ export async function backfillToCloud(currentUserId: string): Promise<{ success:
       ));
 
       if (validRows.length > 0) {
+        const { data: ownedRows, error: ownedRowsError } = await supabase
+          .from('daily_doses').select('id').eq('user_id', currentUserId);
+        if (ownedRowsError) errors.push(`Daily entries check: ${ownedRowsError.message}`);
+        const ownedIds = new Set((ownedRows || []).map((row: { id: string }) => row.id));
+        const recoveredRows = validRows
+          .map((entry: Record<string, unknown>) => {
+            const originalId = String(entry.id);
+            const mappedId = recoveredRecordId(currentUserId, originalId);
+            if (ownedIds.has(originalId)) return null;
+            if (ownedIds.has(mappedId)) return null;
+            return { entry, id: mappedId };
+          })
+          .filter((row): row is { entry: Record<string, unknown>; id: string } => row !== null);
+
+        if (recoveredRows.length > 0) {
         const { error } = await supabase.from('daily_doses').upsert(
-          validRows.map((entry: Record<string, unknown>) => ({
-            id: String(entry.id),
+          recoveredRows.map(({ entry, id }) => ({
+            id,
             user_id: currentUserId,
             date: String(entry.date),
             peptide_id: String(entry.peptide_id),
@@ -323,6 +419,7 @@ export async function backfillToCloud(currentUserId: string): Promise<{ success:
           { onConflict: 'id' },
         );
         if (error) errors.push(`Daily entries: ${error.message}`);
+        }
       }
     }
 

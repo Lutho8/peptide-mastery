@@ -1,4 +1,4 @@
-import { getNotificationSettings, saveNotificationSettings } from './storage';
+import { getNotificationSettings, getStoredData, saveNotificationSettings, STORAGE_KEYS } from './storage';
 
 // Check if notifications are supported
 export function isNotificationSupported(): boolean {
@@ -201,19 +201,17 @@ export function scheduleAllTodaysDoses(): void {
     return;
   }
 
-  // Try to load from localStorage (the useDoseReminders hook keeps this synced)
+  // Read only the active account's reminder namespace. The old global key
+  // could schedule another user's reminder on a shared device.
   try {
-    const stored = localStorage.getItem('peptide-dose-reminders');
-    if (!stored) return;
-    
-    const reminders = JSON.parse(stored) as Array<{
+    const reminders = getStoredData<Array<{
       id: string;
       peptide_name: string;
       dose: string;
       time: string;
       days: string[];
       enabled: boolean;
-    }>;
+    }>>(STORAGE_KEYS.SCHEDULED_REMINDERS, []);
     
     const today = new Date();
     const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];

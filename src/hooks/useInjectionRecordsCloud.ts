@@ -71,15 +71,17 @@ export function useInjectionRecordsCloud() {
   useEffect(() => {
     if (!userId) return;
     const channel = supabase
-      .channel(`injection-records:${userId}`)
+      .channel(`injection-records:${userId}:${crypto.randomUUID()}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'tracker',
         table: 'injection_records',
         filter: `user_id=eq.${userId}`,
       }, () => { void refresh(); })
-      .subscribe();
-    return () => { void supabase.removeChannel(channel); };
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') console.warn(`[Injection records] Realtime ${status.toLowerCase()}`);
+      });
+    return () => { void supabase.removeChannel(channel).catch(() => undefined); };
   }, [refresh, userId]);
 
   const logRecord = useCallback(async (params: {

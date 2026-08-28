@@ -8,9 +8,9 @@ import {
   getNotificationPermission,
   isNotificationSupported 
 } from '@/services/notifications';
-import { getNotificationSettings } from '@/services/storage';
-import { 
-  bulkSaveReminders, 
+import { getNotificationSettings, getStoredData, setStoredData, STORAGE_KEYS } from '@/services/storage';
+import {
+  replaceWeeklyRemindersInIndexedDB,
   deleteReminderFromIndexedDB,
   saveReminderToIndexedDB,
   forceSyncAndCheck,
@@ -31,19 +31,12 @@ export interface DoseReminder {
   email_notification_enabled?: boolean;
 }
 
-const LOCAL_STORAGE_KEY = 'peptide-dose-reminders';
-
 function loadLocalReminders(): DoseReminder[] {
-  try {
-    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
+  return getStoredData<DoseReminder[]>(STORAGE_KEYS.SCHEDULED_REMINDERS, []);
 }
 
 function saveLocalReminders(reminders: DoseReminder[]) {
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(reminders));
+  setStoredData(STORAGE_KEYS.SCHEDULED_REMINDERS, reminders);
   
   // Also sync to IndexedDB for service worker
   syncToIndexedDB(reminders);
@@ -62,7 +55,7 @@ async function syncToIndexedDB(reminders: DoseReminder[]) {
       enabled: r.enabled,
     }));
     
-    await bulkSaveReminders(scheduledReminders);
+    await replaceWeeklyRemindersInIndexedDB(scheduledReminders);
   } catch (error) {
     console.error('Error syncing to IndexedDB:', error);
   }
@@ -257,7 +250,7 @@ export function useDoseReminders() {
       console.error('Error bulk adding reminders:', error);
       throw error;
     }
-  }, [user, reminders]);
+  }, [user, reminders, ensureNotificationsReady]);
 
   const updateReminder = useCallback(async (id: string, updates: Partial<DoseReminder>) => {
     try {
