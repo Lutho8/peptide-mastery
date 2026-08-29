@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Calendar, Mail, Shield, GraduationCap, Tag, Upload, Search, ScrollText, Truck, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, Mail, Shield, GraduationCap, Tag, Upload, Search, ScrollText, Truck, BarChart3, MessageCircleHeart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,7 @@ import COAUploadManager from '@/components/admin/COAUploadManager';
 import AuditLogViewer from '@/components/admin/AuditLogViewer';
 import FulfilmentQueue from '@/components/admin/FulfilmentQueue';
 import CustomerValueFunnel from '@/components/admin/CustomerValueFunnel';
+import ConfessionsModeration from '@/components/admin/ConfessionsModeration';
 import { logAudit } from '@/lib/auditLog';
 
 interface UserRow {
@@ -177,6 +178,10 @@ export default function AdminDashboard() {
               <ScrollText className="h-4 w-4" />
               Audit Log
             </TabsTrigger>
+            <TabsTrigger value="confessions" className="gap-1.5">
+              <MessageCircleHeart className="h-4 w-4" />
+              Confessions
+            </TabsTrigger>
             <TabsTrigger value="seo" className="gap-1.5" asChild>
               <Link to="/admin/seo">
                 <Search className="h-4 w-4" />
@@ -278,6 +283,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="audit">
             <AuditLogViewer />
+          </TabsContent>
+
+          <TabsContent value="confessions">
+            <ConfessionsModeration />
           </TabsContent>
         </Tabs>
       </div>

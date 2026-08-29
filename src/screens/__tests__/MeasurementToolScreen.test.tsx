@@ -44,10 +44,13 @@ vi.mock('@/services/storage', () => ({
 describe('MeasurementToolScreen', () => {
   beforeEach(() => localStorage.clear());
 
-  it('restores a guided plan workflow and keeps user modes separate from the maths', () => {
+  it('restores a guided plan workflow and keeps user modes separate from the maths', async () => {
     render(<MeasurementToolScreen />);
 
-    expect(screen.getByText('Measurement & Schedule')).toBeInTheDocument();
+    expect(screen.getByText('Measurement & Evidence')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ask AI' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Journal' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Confessions' })).toBeInTheDocument();
     expect(screen.getByText('Select a compound or recorded plan')).toBeInTheDocument();
     expect(screen.getByText('Record the schedule')).toBeInTheDocument();
     expect(screen.getByText('Match the physical syringe')).toBeInTheDocument();
@@ -64,5 +67,9 @@ describe('MeasurementToolScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: /Athlete/i }));
     expect(screen.getAllByText('8 units').length).toBeGreaterThan(0);
     expect(screen.getByText('Performance goals never alter the amount or syringe position.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ask AI' }));
+    expect(await screen.findByText('Answers with the papers.')).toBeInTheDocument();
+    expect(screen.getByText(/not a recommendation for you/i)).toBeInTheDocument();
   });
 });
