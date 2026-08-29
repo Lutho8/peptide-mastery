@@ -14,6 +14,27 @@ type GeneratedDatabase = {
   }
   public: {
     Tables: {
+      ai_request_usage: {
+        Row: {
+          created_at: string
+          id: number
+          peptide_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          peptide_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          peptide_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -265,6 +286,54 @@ type GeneratedDatabase = {
           primary_goal?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      community_confessions: {
+        Row: {
+          author_id: string
+          body: string
+          category: string
+          created_at: string
+          display_alias: string
+          id: string
+          is_anonymous: boolean
+          moderation_note: string | null
+          moderation_status: string
+          peptide_ids: string[]
+          published_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          category: string
+          created_at?: string
+          display_alias?: string
+          id?: string
+          is_anonymous?: boolean
+          moderation_note?: string | null
+          moderation_status?: string
+          peptide_ids?: string[]
+          published_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          category?: string
+          created_at?: string
+          display_alias?: string
+          id?: string
+          is_anonymous?: boolean
+          moderation_note?: string | null
+          moderation_status?: string
+          peptide_ids?: string[]
+          published_at?: string | null
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1053,6 +1122,42 @@ type GeneratedDatabase = {
           whatsapp_consent?: boolean
           whatsapp_country_code?: string | null
           whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
+      research_journal_entries: {
+        Row: {
+          body: string
+          created_at: string
+          entry_date: string
+          entry_type: string
+          id: string
+          peptide_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          entry_date?: string
+          entry_type?: string
+          id?: string
+          peptide_id?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          entry_date?: string
+          entry_type?: string
+          id?: string
+          peptide_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

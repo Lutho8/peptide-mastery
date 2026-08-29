@@ -30,6 +30,7 @@ const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const InstallPage = lazy(() => import("./pages/InstallPage"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
+const ConfessionsPage = lazy(() => import("./pages/ConfessionsPage"));
 
 // NEW: Premium feature pages
 const Analytics = lazy(() => import("./pages/AnalyticsPage"));
@@ -96,6 +97,7 @@ const App = () => {
                     <Route path="/blog" element={<Navigate to="/" replace />} />
                     <Route path="/blog/:slug" element={<Navigate to="/" replace />} />
                     <Route path="/faq" element={<FAQPage />} />
+                    <Route path="/confessions" element={<ConfessionsPage />} />
                     <Route path="/install" element={<InstallPage />} />
                     {/* Goal-based SEO landing pages */}
                     <Route path="/weight-loss-peptides-south-africa" element={<Navigate to="/" replace />} />

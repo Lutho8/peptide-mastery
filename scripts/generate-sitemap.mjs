@@ -13,6 +13,7 @@ const staticEntries = [
   { path: '/cycles', changefreq: 'monthly', priority: '0.6' },
   { path: '/blog', changefreq: 'daily', priority: '0.9' },
   { path: '/faq', changefreq: 'monthly', priority: '0.9' },
+  { path: '/confessions', changefreq: 'daily', priority: '0.7' },
   { path: '/privacy', changefreq: 'yearly', priority: '0.3' },
   { path: '/terms', changefreq: 'yearly', priority: '0.3' },
   { path: '/disclaimer', changefreq: 'yearly', priority: '0.3' },

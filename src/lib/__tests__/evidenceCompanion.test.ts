@@ -1,0 +1,35 @@
+import { describe, expect, it } from 'vitest';
+import {
+  buildEvidencePacket,
+  isSafeEvidenceUrl,
+  questionRequestsMeasurementExplanation,
+  questionRequestsPersonalDose,
+} from '@/lib/evidenceCompanion';
+
+describe('evidence companion boundaries', () => {
+  it('detects personal-dose requests without blocking study-protocol questions', () => {
+    expect(questionRequestsPersonalDose('What dose should I take for recovery?')).toBe(true);
+    expect(questionRequestsPersonalDose('Recommend a starting protocol for me')).toBe(true);
+    expect(questionRequestsPersonalDose('What dose and population were studied in the paper?')).toBe(false);
+  });
+
+  it('shares calculator context only for an explicit measurement question', () => {
+    expect(questionRequestsMeasurementExplanation('Explain my recorded syringe units')).toBe(true);
+    expect(questionRequestsMeasurementExplanation('What does the strongest human evidence show?')).toBe(false);
+  });
+
+  it('only accepts source hosts used by the curated evidence library', () => {
+    expect(isSafeEvidenceUrl('https://pubmed.ncbi.nlm.nih.gov/33567185/')).toBe(true);
+    expect(isSafeEvidenceUrl('https://www.nejm.org/doi/full/10.1056/NEJMoa2301972')).toBe(true);
+    expect(isSafeEvidenceUrl('https://example.com/invented-study')).toBe(false);
+    expect(isSafeEvidenceUrl('javascript:alert(1)')).toBe(false);
+  });
+
+  it('builds a source-linked packet without exposing catalogue dose tiers', () => {
+    const packet = buildEvidencePacket('semaglutide');
+    expect(packet).not.toBeNull();
+    expect(packet?.sources.length).toBeGreaterThan(0);
+    expect(packet?.sources.every((source) => isSafeEvidenceUrl(source.url))).toBe(true);
+    expect(JSON.stringify(packet)).not.toMatch(/beginner|intermediate|athlete/i);
+  });
+});

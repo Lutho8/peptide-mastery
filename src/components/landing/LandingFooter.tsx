@@ -29,6 +29,7 @@ const footerLinks: Record<string, FooterLink[]> = {
     { label: 'Contact', href: 'mailto:contact@peptide-south-africa.com' },
   ],
   Network: [
+    { label: 'Peptide Confessions', href: '/confessions', isRoute: true },
     { label: 'PSA Research Peptides', href: getStoreCategoryHref('all', 'landing_footer'), external: true },
     { label: 'Cape Town Peptide Club', href: 'https://capetownpeptideclub.co.za' },
     { label: 'WhatsApp Us', href: 'https://wa.me/27641344646?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20Peptide%20South%20Africa' },

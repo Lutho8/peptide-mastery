@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   AlertTriangle,
   Calculator,
@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { MeasurementSyringeDiagram } from '@/components/dosage/MeasurementSyringeDiagram';
+import { CompanionNav, type CompanionSection } from '@/components/companion/CompanionNav';
 import { cn } from '@/lib/utils';
 import {
   calculateMeasurement,
@@ -56,6 +57,17 @@ import { track } from '@/lib/analytics';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { findPeptideOrBlend, getAllSelectablePeptides } from '@/data/blendAdapters';
+import { createJournalEntry, recordCompanionEvent } from '@/services/researchCompanion';
+
+const EvidenceAskPanel = lazy(() => import('@/components/companion/EvidenceAskPanel').then((module) => ({ default: module.EvidenceAskPanel })));
+const ResearchJournalPanel = lazy(() => import('@/components/companion/ResearchJournalPanel').then((module) => ({ default: module.ResearchJournalPanel })));
+const ConfessionsPanel = lazy(() => import('@/components/companion/ConfessionsPanel').then((module) => ({ default: module.ConfessionsPanel })));
+
+function initialCompanionSection(): CompanionSection {
+  if (typeof window === 'undefined') return 'measure';
+  const section = new URLSearchParams(window.location.search).get('tool');
+  return section === 'ask' || section === 'journal' || section === 'confessions' ? section : 'measure';
+}
 
 function parsePositive(value: string): number {
   const parsed = Number(value);
@@ -105,6 +117,7 @@ export function MeasurementToolScreen() {
   const [recordedItems, setRecordedItems] = useState<ActiveStackItem[]>(() => getActiveStack());
   const [presets, setPresets] = useState<DosagePreset[]>(() => getDosagePresets());
   const [presetName, setPresetName] = useState('');
+  const [companionSection, setCompanionSection] = useState<CompanionSection>(initialCompanionSection);
   const trackedForUser = useRef<string | null>(null);
 
   const recordedPlans = useMemo(() => recordedItems.flatMap((item, index) => {
@@ -271,9 +284,47 @@ export function MeasurementToolScreen() {
     toast.info(`Removed ${preset.name}`);
   };
 
+  const saveMeasurementToJournal = async () => {
+    if (!user || !result || !syringeType) return;
+    const compoundName = selectedCompound?.name || 'Custom measurement';
+    const equation = `${formatNumber(result.targetAmountMg)} mg ÷ ${formatNumber(result.concentrationMgPerMl)} mg/mL = ${formatNumber(result.volumeMl)} mL × ${result.syringeUnitsPerMl} units/mL = ${formatNumber(result.syringeUnits, 2)} units`;
+    try {
+      await createJournalEntry({
+        user_id: user.id,
+        entry_type: 'measurement',
+        peptide_id: selectedCompoundId || null,
+        title: `${compoundName} measurement`,
+        body: `${equation}\n\nRecorded schedule: ${scheduleLabel}\nPhysical syringe: ${syringeType} · ${barrelCapacityMl} mL\n\nSaved from deterministic calculator values; this is not a dosing recommendation.`,
+      });
+      void recordCompanionEvent(user.id, 'journal_entry_created', { entry_type: 'measurement' });
+      toast.success('Measurement saved to your private journal.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Measurement could not be saved.');
+    }
+  };
+
   const guidance = MEASUREMENT_GUIDANCE.find((option) => option.id === guidanceMode)!;
   const usesPerVial = result ? Math.floor(parsePositive(vialAmount) / result.targetAmountMg) : 0;
   const scheduleLabel = formatMeasurementSchedule(scheduleMode, scheduleDetails);
+  const measurementAskContext = useMemo(() => ({
+    vialAmountMg: parsePositive(vialAmount) || undefined,
+    diluentMl: parsePositive(diluentVolume) || undefined,
+    recordedAmount: enteredAmount ? `${enteredAmount} ${enteredUnit}` : undefined,
+    schedule: scheduleLabel === 'Schedule not recorded' ? undefined : scheduleLabel,
+    syringe: syringeType && barrelCapacityMl ? `${syringeType} · ${barrelCapacityMl} mL` : syringeType || undefined,
+    calculatedUnits: result?.syringeUnits,
+    calculatedVolumeMl: result?.volumeMl,
+  }), [barrelCapacityMl, diluentVolume, enteredAmount, enteredUnit, result, scheduleLabel, syringeType, vialAmount]);
+
+  const changeCompanionSection = (section: CompanionSection) => {
+    setCompanionSection(section);
+    try {
+      const url = new URL(window.location.href);
+      if (section === 'measure') url.searchParams.delete('tool');
+      else url.searchParams.set('tool', section);
+      window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+    } catch { /* Deep-link persistence is optional. */ }
+  };
 
   return (
     <div className="space-y-5 pb-24">
@@ -281,13 +332,16 @@ export function MeasurementToolScreen() {
         <div>
           <div className="flex items-center gap-2">
             <Calculator className="h-7 w-7 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">Measurement & Schedule</h1>
+            <h1 className="text-2xl font-bold text-foreground">Measurement & Evidence</h1>
           </div>
-          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">Turn a recorded plan and vial label into an exact syringe-barrel position you can verify.</p>
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">Measure a recorded plan, ask the evidence, keep a private journal and learn from moderated community experiences.</p>
         </div>
-        <Button type="button" variant="outline" size="sm" onClick={clearMeasurement}><Eraser className="mr-2 h-4 w-4" />Clear measurement</Button>
+        {companionSection === 'measure' && <Button type="button" variant="outline" size="sm" onClick={clearMeasurement}><Eraser className="mr-2 h-4 w-4" />Clear measurement</Button>}
       </header>
 
+      <CompanionNav active={companionSection} onChange={changeCompanionSection} />
+
+      {companionSection === 'measure' ? <>
       <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-background to-background p-4 sm:p-5">
         <div className="flex gap-3">
           <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
@@ -405,7 +459,7 @@ export function MeasurementToolScreen() {
                   <MeasurementSyringeDiagram syringeType={syringeType} barrelCapacityMl={parsePositive(barrelCapacityMl)} units={result.syringeUnits} volumeMl={result.volumeMl} amountLabel={`${enteredAmount} ${enteredUnit}`} fitsSelectedBarrel={result.fitsSelectedBarrel} />
                   <div className="rounded-xl border border-border bg-muted/30 p-3 text-sm"><p className="font-semibold text-foreground">Check the arithmetic</p><p className="mt-1 leading-relaxed text-muted-foreground">{formatNumber(result.targetAmountMg)} mg ÷ {formatNumber(result.concentrationMgPerMl)} mg/mL = {formatNumber(result.volumeMl)} mL × {result.syringeUnitsPerMl} units/mL = <strong className="text-foreground">{formatNumber(result.syringeUnits, 2)} units</strong>.</p></div>
                   {!result.fitsSelectedBarrel && <div className="flex gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-foreground"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" /><p>The result exceeds the selected barrel. Re-check the label, diluent, recorded amount, printed scale and capacity. The app will not choose a replacement.</p></div>}
-                  <div className="space-y-2 border-t border-border pt-4"><Label htmlFor="preset-name">Save this verified setup</Label><div className="flex gap-2"><Input id="preset-name" placeholder={`${selectedCompound?.shortName || 'Custom'} setup`} value={presetName} onChange={(event) => setPresetName(event.target.value)} /><Button type="button" onClick={savePreset}><Save className="mr-2 h-4 w-4" />Save</Button></div></div>
+                  <div className="space-y-3 border-t border-border pt-4"><Label htmlFor="preset-name">Save this verified setup</Label><div className="flex gap-2"><Input id="preset-name" placeholder={`${selectedCompound?.shortName || 'Custom'} setup`} value={presetName} onChange={(event) => setPresetName(event.target.value)} /><Button type="button" onClick={savePreset}><Save className="mr-2 h-4 w-4" />Save</Button></div><Button type="button" variant="outline" className="w-full" onClick={() => void saveMeasurementToJournal()}><Save className="mr-2 h-4 w-4" />Save measurement to private journal</Button></div>
                 </div>
               )}
             </div>
@@ -423,6 +477,25 @@ export function MeasurementToolScreen() {
           <div className="flex gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" /><p><strong>Measurement boundary:</strong> this app does not diagnose, prescribe, choose a treatment, or recommend amounts for entry-level, intermediate or athlete users. It explains and checks values supplied by the user or an established professional plan.</p></div>
         </div>
       </div>
+      </> : companionSection === 'ask' ? (
+        <Suspense fallback={<CompanionLoading />}>
+          <EvidenceAskPanel
+            compounds={selectableCompounds}
+            selectedCompoundId={selectedCompoundId}
+            onSelectCompound={setSelectedCompoundId}
+            measurementContext={measurementAskContext}
+            onOpenMeasure={() => changeCompanionSection('measure')}
+          />
+        </Suspense>
+      ) : companionSection === 'journal' ? (
+        <Suspense fallback={<CompanionLoading />}>
+          <ResearchJournalPanel compounds={selectableCompounds} selectedCompoundId={selectedCompoundId} />
+        </Suspense>
+      ) : (
+        <Suspense fallback={<CompanionLoading />}>
+          <ConfessionsPanel compounds={selectableCompounds} selectedCompoundId={selectedCompoundId} />
+        </Suspense>
+      )}
     </div>
   );
 }
@@ -446,4 +519,8 @@ function ChecklistItem({ children }: { children: ReactNode }) {
 function ModeIcon({ mode }: { mode: MeasurementGuidanceMode }) {
   const Icon = modeIcon(mode);
   return <Icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />;
+}
+
+function CompanionLoading() {
+  return <Card className="flex min-h-64 items-center justify-center text-sm text-muted-foreground">Loading companion…</Card>;
 }
