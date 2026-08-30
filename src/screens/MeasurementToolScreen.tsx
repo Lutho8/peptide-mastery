@@ -97,7 +97,12 @@ function modeIcon(mode: MeasurementGuidanceMode) {
   return ShieldCheck;
 }
 
-export function MeasurementToolScreen() {
+interface MeasurementToolScreenProps {
+  initialSection?: CompanionSection;
+  onSectionChange?: (section: CompanionSection) => void;
+}
+
+export function MeasurementToolScreen({ initialSection, onSectionChange }: MeasurementToolScreenProps = {}) {
   const { user } = useAuth();
   const saved = useMemo(() => getCalculatorSettings(), []);
   const selectableCompounds = useMemo(() => getAllSelectablePeptides(), []);
@@ -117,8 +122,12 @@ export function MeasurementToolScreen() {
   const [recordedItems, setRecordedItems] = useState<ActiveStackItem[]>(() => getActiveStack());
   const [presets, setPresets] = useState<DosagePreset[]>(() => getDosagePresets());
   const [presetName, setPresetName] = useState('');
-  const [companionSection, setCompanionSection] = useState<CompanionSection>(initialCompanionSection);
+  const [companionSection, setCompanionSection] = useState<CompanionSection>(initialSection ?? initialCompanionSection);
   const trackedForUser = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (initialSection) setCompanionSection(initialSection);
+  }, [initialSection]);
 
   const recordedPlans = useMemo(() => recordedItems.flatMap((item, index) => {
     const parsed = parseRecordedMeasurementAmount(item.dose);
@@ -318,6 +327,7 @@ export function MeasurementToolScreen() {
 
   const changeCompanionSection = (section: CompanionSection) => {
     setCompanionSection(section);
+    onSectionChange?.(section);
     try {
       const url = new URL(window.location.href);
       if (section === 'measure') url.searchParams.delete('tool');

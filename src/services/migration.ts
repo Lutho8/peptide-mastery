@@ -10,8 +10,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { STORAGE_KEYS } from './storage';
 
-// Module-level flag so we only prompt once per session
-let migrationPrompted = false;
+const MIGRATION_RESOLUTION_KEY = 'rtd-tracker-history-recovery-resolved';
+
+// Keep the prompt quiet after it has been shown in this page lifecycle. Store
+// the fingerprint rather than a boolean so genuinely new legacy data can still
+// be offered for recovery.
+const promptedFingerprints = new Map<string, string>();
 
 export interface LegacyNamespace {
   userId: string;
@@ -36,6 +40,72 @@ const ALL_STORAGE_BASE_KEYS = Object.values(STORAGE_KEYS);
 const LEGACY_UNSCOPED_ALIASES: Record<string, readonly string[]> = {
   [STORAGE_KEYS.SCHEDULED_REMINDERS]: ['peptide-dose-reminders'],
 };
+
+function fingerprintText(value: string): string {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = Math.imul(hash ^ value.charCodeAt(index), 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
+/**
+ * Fingerprint only the device-local legacy records that are eligible for this
+ * account. Source copies are intentionally retained after recovery, so a
+ * durable fingerprint is what prevents the same prompt returning next login.
+ */
+export function legacyDataFingerprint(currentUserId: string | null): string | null {
+  if (!currentUserId) return null;
+  const entries: string[] = [];
+
+  try {
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (!key) continue;
+
+      const baseKey = ALL_STORAGE_BASE_KEYS.find((base) => key.startsWith(`${base}::`));
+      if (!baseKey) continue;
+      const suffix = key.slice(baseKey.length + 2);
+      if (!suffix || suffix === currentUserId) continue;
+
+      const raw = localStorage.getItem(key);
+      if (hasMeaningfulStoredValue(baseKey, raw)) entries.push(`${key}:${raw}`);
+    }
+
+    for (const baseKey of ALL_STORAGE_BASE_KEYS) {
+      const raw = localStorage.getItem(baseKey);
+      if (hasMeaningfulStoredValue(baseKey, raw)) entries.push(`${baseKey}:${raw}`);
+    }
+
+    for (const [baseKey, aliases] of Object.entries(LEGACY_UNSCOPED_ALIASES)) {
+      for (const alias of aliases) {
+        const raw = localStorage.getItem(alias);
+        if (hasMeaningfulStoredValue(baseKey, raw)) entries.push(`${alias}:${raw}`);
+      }
+    }
+  } catch (error) {
+    console.warn('[Migration] Could not fingerprint local tracker history:', error);
+    return null;
+  }
+
+  if (entries.length === 0) return null;
+  return fingerprintText(entries.sort().join('|'));
+}
+
+function resolutionStorageKey(userId: string): string {
+  return `${MIGRATION_RESOLUTION_KEY}:${userId}`;
+}
+
+function getResolvedFingerprint(userId: string): string | null {
+  try {
+    const raw = localStorage.getItem(resolutionStorageKey(userId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { fingerprint?: unknown };
+    return typeof parsed.fingerprint === 'string' ? parsed.fingerprint : null;
+  } catch {
+    return null;
+  }
+}
 
 /** Stable UUID for a recovered row. Scoping the original ID to the current
  * account avoids colliding with a row retained under a legacy Auth UUID while
@@ -142,20 +212,46 @@ export function scanForLegacyData(currentUserId: string | null): MigrationSummar
 }
 
 /**
- * Returns true if there is legacy data from a previous user account
- * and we haven't already prompted this session.
+ * Returns true if there is legacy data from a previous user account and this
+ * account has not already resolved this exact device-local recovery set.
  */
 export function shouldPromptForMigration(currentUserId: string | null): boolean {
-  if (migrationPrompted) return false;
+  if (!currentUserId) return false;
   const summary = scanForLegacyData(currentUserId);
-  return summary.totalLegacyKeys > 0;
+  if (summary.totalLegacyKeys === 0) return false;
+
+  const fingerprint = legacyDataFingerprint(currentUserId);
+  if (!fingerprint) return false;
+  if (promptedFingerprints.get(currentUserId) === fingerprint) return false;
+  return getResolvedFingerprint(currentUserId) !== fingerprint;
 }
 
 /**
- * Mark that we've already prompted so we don't spam the user.
+ * Mark that this exact recovery set has already been shown in this page
+ * lifecycle. This does not record a durable user decision.
  */
-export function markMigrationPrompted(): void {
-  migrationPrompted = true;
+export function markMigrationPrompted(userId: string): void {
+  const fingerprint = legacyDataFingerprint(userId);
+  if (fingerprint) promptedFingerprints.set(userId, fingerprint);
+}
+
+/**
+ * Persist the account's completed/dismissed recovery decision on this device.
+ * A new prompt is allowed only if the underlying legacy data changes.
+ */
+export function markMigrationResolved(userId: string): void {
+  const fingerprint = legacyDataFingerprint(userId);
+  if (!fingerprint) return;
+
+  promptedFingerprints.set(userId, fingerprint);
+  try {
+    localStorage.setItem(resolutionStorageKey(userId), JSON.stringify({
+      fingerprint,
+      resolvedAt: new Date().toISOString(),
+    }));
+  } catch (error) {
+    console.warn('[Migration] Could not persist tracker recovery decision:', error);
+  }
 }
 
 /**

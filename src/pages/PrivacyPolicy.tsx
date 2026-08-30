@@ -73,7 +73,7 @@ export default function PrivacyPolicy() {
               <li><strong>Encryption:</strong> All data is encrypted in transit using HTTPS</li>
               <li><strong>Secure Authentication:</strong> Industry-standard authentication protocols</li>
               <li><strong>No Data Sharing:</strong> We never sell or share your personal health data</li>
-              <li><strong>AI minimisation:</strong> Our database stores the selected compound and request time for rate limiting, not the raw AI question. Calculator values are sent only when your question asks to explain that measurement.</li>
+              <li><strong>Ask PepSA minimisation:</strong> Our database stores the selected compound and request time for rate limiting, not the raw question. Calculator values are sent only when your question asks to explain that measurement.</li>
               <li><strong>Community control:</strong> Confessions remain private to you and moderators until approved. Approved posts display the alias/anonymity choice and content you submitted.</li>
             </ul>
           </section>
@@ -83,7 +83,7 @@ export default function PrivacyPolicy() {
             <p className="text-muted-foreground mb-4">We use the following third-party services:</p>
             <ul className="list-disc pl-6 text-muted-foreground space-y-1">
               <li><strong>Supabase:</strong> Secure database and authentication infrastructure</li>
-              <li><strong>Evidence companion:</strong> Questions are processed inside our authenticated Supabase function from the selected source packet. Raw questions and calculator values are not sent to an external AI provider.</li>
+              <li><strong>Ask PepSA:</strong> Questions are processed inside our authenticated Supabase function from the selected source packet. Raw questions and calculator values are not sent to an external AI provider.</li>
             </ul>
           </section>
 

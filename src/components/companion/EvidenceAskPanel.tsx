@@ -116,7 +116,7 @@ export function EvidenceAskPanel({
         personal_recommendation_declined: data.personalRecommendationDeclined ?? false,
       });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'The evidence companion is temporarily unavailable.');
+      toast.error(error instanceof Error ? error.message : 'Ask PepSA is temporarily unavailable.');
     } finally {
       setLoading(false);
     }
@@ -131,7 +131,7 @@ export function EvidenceAskPanel({
         user_id: user.id,
         entry_type: 'ask',
         peptide_id: packet.peptideId,
-        title: `Ask: ${packet.peptideName}`,
+        title: `Ask PepSA: ${packet.peptideName}`,
         body: `Question\n${question.trim()}\n\nAnswer\n${answer.answer}\n\nSources\n${citations || 'No verified primary source linked.'}`,
       });
       void recordCompanionEvent(user.id, 'ai_answer_saved', {
@@ -154,7 +154,7 @@ export function EvidenceAskPanel({
             <div className="flex items-start gap-3">
               <div className="rounded-2xl bg-primary p-3 text-primary-foreground shadow-sm"><Sparkles className="h-5 w-5" /></div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Ask the evidence</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Ask PepSA</p>
                 <h2 className="mt-1 text-2xl font-bold text-foreground">Answers with the papers.</h2>
                 <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">Plain-English research answers, linked sources and exact study context. Your recorded calculator values can be explained, never silently changed.</p>
               </div>
@@ -188,7 +188,7 @@ export function EvidenceAskPanel({
             )}
 
             <Button type="button" className="min-h-12 w-full" onClick={() => void submit()} disabled={loading || !packet || question.trim().length < 4}>
-              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Reading the evidence…</> : <><Sparkles className="mr-2 h-4 w-4" />Ask a question</>}
+              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Reading the evidence…</> : <><Sparkles className="mr-2 h-4 w-4" />Ask PepSA</>}
             </Button>
           </div>
         </Card>
@@ -231,7 +231,7 @@ export function EvidenceAskPanel({
         </Card>
 
         <Card className="p-4 sm:p-5">
-          <div className="flex items-start gap-3"><CheckCircle2 className="mt-0.5 h-5 w-5 text-primary" /><div><h3 className="font-semibold text-foreground">Measurement hand-off</h3><p className="mt-1 text-sm text-muted-foreground">Use AI to understand evidence; use deterministic arithmetic to verify an amount already recorded for you.</p></div></div>
+          <div className="flex items-start gap-3"><CheckCircle2 className="mt-0.5 h-5 w-5 text-primary" /><div><h3 className="font-semibold text-foreground">Measurement hand-off</h3><p className="mt-1 text-sm text-muted-foreground">Use PepSA to understand evidence; use deterministic arithmetic to verify an amount already recorded for you.</p></div></div>
           <Button type="button" variant="outline" className="mt-4 w-full" onClick={onOpenMeasure}>Open measurement</Button>
         </Card>
       </div>

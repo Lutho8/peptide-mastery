@@ -6,7 +6,16 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: { from: supabaseFrom },
 }));
 
-import { backfillToCloud, migrateLegacyLocalData, recoveredRecordId, scanForLegacyData } from '@/services/migration';
+import {
+  backfillToCloud,
+  legacyDataFingerprint,
+  markMigrationPrompted,
+  markMigrationResolved,
+  migrateLegacyLocalData,
+  recoveredRecordId,
+  scanForLegacyData,
+  shouldPromptForMigration,
+} from '@/services/migration';
 import { STORAGE_KEYS } from '@/services/storage';
 
 describe('local tracker history recovery', () => {
@@ -30,6 +39,39 @@ describe('local tracker history recovery', () => {
 
     expect(summary.namespaces.map((item) => item.displayLabel)).toContain('Signed-out tracker data');
     expect(summary.namespaces.map((item) => item.displayLabel)).toContain('Earlier tracker data');
+  });
+
+  it('persists a completed recovery decision for the same account and records', () => {
+    localStorage.setItem(`${STORAGE_KEYS.DAILY_DOSES}::guest`, JSON.stringify([{ id: 'guest-entry' }]));
+
+    expect(legacyDataFingerprint('account-persisted')).toMatch(/^[0-9a-f]{8}$/);
+    expect(shouldPromptForMigration('account-persisted')).toBe(true);
+
+    markMigrationResolved('account-persisted');
+
+    expect(shouldPromptForMigration('account-persisted')).toBe(false);
+    expect(shouldPromptForMigration('different-account')).toBe(true);
+  });
+
+  it('does not treat merely showing the prompt as a durable recovery decision', () => {
+    localStorage.setItem(`${STORAGE_KEYS.DAILY_DOSES}::guest`, JSON.stringify([{ id: 'session-entry' }]));
+
+    expect(shouldPromptForMigration('account-session')).toBe(true);
+    markMigrationPrompted('account-session');
+    expect(shouldPromptForMigration('account-session')).toBe(false);
+
+    const storedKeys = Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index));
+    expect(storedKeys.some((key) => key?.includes('rtd-tracker-history-recovery-resolved:account-session'))).toBe(false);
+  });
+
+  it('allows a new prompt when the underlying legacy records change', () => {
+    const key = `${STORAGE_KEYS.DAILY_DOSES}::guest`;
+    localStorage.setItem(key, JSON.stringify([{ id: 'first-entry' }]));
+    markMigrationResolved('account-changed');
+    expect(shouldPromptForMigration('account-changed')).toBe(false);
+
+    localStorage.setItem(key, JSON.stringify([{ id: 'first-entry' }, { id: 'new-entry' }]));
+    expect(shouldPromptForMigration('account-changed')).toBe(true);
   });
 
   it('detects and scopes reminders saved by the older reminder hook', () => {

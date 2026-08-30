@@ -8,6 +8,7 @@ import {
   migrateLegacyLocalData,
   backfillToCloud,
   markMigrationPrompted,
+  markMigrationResolved,
   MigrationSummary,
 } from '@/services/migration';
 
@@ -27,7 +28,7 @@ export function DataMigrationModal({ userId, open, onClose }: DataMigrationModal
     if (open && userId) {
       const s = scanForLegacyData(userId);
       setSummary(s);
-      markMigrationPrompted();
+      markMigrationPrompted(userId);
     }
   }, [open, userId]);
 
@@ -57,13 +58,14 @@ export function DataMigrationModal({ userId, open, onClose }: DataMigrationModal
       return;
     }
 
+    markMigrationResolved(userId);
     setPhase('done');
     try { window.dispatchEvent(new CustomEvent('rtd:local-history-recovered')); } catch { /* noop */ }
     toast.success('Tracker history recovered and synced to cloud');
   };
 
   const handleSkip = () => {
-    markMigrationPrompted();
+    markMigrationResolved(userId);
     onClose();
   };
 
@@ -157,7 +159,7 @@ export function DataMigrationModal({ userId, open, onClose }: DataMigrationModal
               <Button onClick={handleMigrate} variant="outline" className="w-full">
                 Retry Migration
               </Button>
-              <Button onClick={onClose} variant="ghost" className="w-full text-muted-foreground">
+              <Button onClick={handleSkip} variant="ghost" className="w-full text-muted-foreground">
                 Continue without migrating
               </Button>
             </>

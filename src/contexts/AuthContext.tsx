@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [showMigrationModal, setShowMigrationModal] = React.useState(false);
   const prevUserIdRef = React.useRef<string | null>(null);
   const initializedRef = React.useRef(false);
-  const migrationCheckedRef = React.useRef(false);
+  const migrationCheckedForUserRef = React.useRef<string | null>(null);
 
   React.useEffect(() => {
     const handleAuth = (currentSession: Session | null) => {
@@ -76,8 +76,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Check on both a fresh sign-in and a restored browser session. This
         // recovers entries recorded while sign-in was unavailable.
-        if (newId && !migrationCheckedRef.current && shouldPromptForMigration(newId)) {
-          setShowMigrationModal(true);
+        if (newId && migrationCheckedForUserRef.current !== newId) {
+          migrationCheckedForUserRef.current = newId;
+          setShowMigrationModal(shouldPromptForMigration(newId));
+        } else if (!newId) {
+          migrationCheckedForUserRef.current = null;
+          setShowMigrationModal(false);
         }
 
         prevUserIdRef.current = newId;
@@ -212,7 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           open={showMigrationModal}
           onClose={() => {
             setShowMigrationModal(false);
-            migrationCheckedRef.current = true;
+            migrationCheckedForUserRef.current = user.id;
           }}
         />
       )}

@@ -19,6 +19,7 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import type { CompanionSection } from '@/components/companion/CompanionNav';
 
 // Lazy load screens for code splitting
 const HomeScreen = lazy(() => import('@/screens/HomeScreen').then(m => ({ default: m.HomeScreen })));
@@ -61,6 +62,7 @@ const Index = ({ dashboardRoute = false }: IndexProps) => {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<TabId>('home');
+  const [measurementSection, setMeasurementSection] = useState<CompanionSection>('measure');
 
   // Sync `?screen=` query param → activeTab so deep links from elsewhere in
   // the app (e.g. "Open in Daily Log" from the backdate conflict list) land
@@ -77,6 +79,12 @@ const Index = ({ dashboardRoute = false }: IndexProps) => {
         }
         if (['home', 'stack', 'daily-log', 'transformation', 'measurement'].includes(screen)) {
           setShowSettings(false);
+          if (screen === 'measurement') {
+            const tool = params.get('tool');
+            setMeasurementSection(
+              tool === 'ask' || tool === 'journal' || tool === 'confessions' ? tool : 'measure',
+            );
+          }
           setActiveTab(screen as TabId);
         }
       } catch { /* noop */ }
@@ -152,6 +160,32 @@ const Index = ({ dashboardRoute = false }: IndexProps) => {
     setActiveTab('home');
   };
 
+  const openDashboardTab = useCallback((tab: TabId) => {
+    setShowResearch(false);
+    setActiveTab(tab);
+    if (tab !== 'measurement') setMeasurementSection('measure');
+    try {
+      const url = new URL(window.location.href);
+      if (tab === 'home') url.searchParams.delete('screen');
+      else url.searchParams.set('screen', tab);
+      url.searchParams.delete('tool');
+      window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+    } catch { /* URL state is an optional enhancement. */ }
+  }, []);
+
+  const openMeasurementSection = useCallback((section: CompanionSection) => {
+    setShowResearch(false);
+    setMeasurementSection(section);
+    setActiveTab('measurement');
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('screen', 'measurement');
+      if (section === 'measure') url.searchParams.delete('tool');
+      else url.searchParams.set('tool', section);
+      window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+    } catch { /* URL state is an optional enhancement. */ }
+  }, []);
+
   const screenKey = showSettings ? 'settings' : showResearch ? 'research' : activeTab;
   const direction = getDirection(screenKey);
   const variants = getTransitionVariants(direction);
@@ -221,9 +255,14 @@ const Index = ({ dashboardRoute = false }: IndexProps) => {
             />
           )}
           {activeTab === 'stack' && <MyStackScreen />}
-          {activeTab === 'daily-log' && <DailyLogScreen onOpenMeasurement={() => setActiveTab('measurement')} />}
+          {activeTab === 'daily-log' && <DailyLogScreen onOpenMeasurement={() => openMeasurementSection('measure')} />}
           {activeTab === 'transformation' && <TransformationScreen />}
-          {activeTab === 'measurement' && <MeasurementToolScreen />}
+          {activeTab === 'measurement' && (
+            <MeasurementToolScreen
+              initialSection={measurementSection}
+              onSectionChange={setMeasurementSection}
+            />
+          )}
         </Suspense>
       </ErrorBoundary>
     );
@@ -276,7 +315,12 @@ const Index = ({ dashboardRoute = false }: IndexProps) => {
       </main>
 
       {!showSettings && !showResearch && (
-        <BottomNav activeTab={activeTab} onTabChange={(tab) => { setShowResearch(false); setActiveTab(tab); }} />
+        <BottomNav
+          activeTab={activeTab}
+          activeMeasurementSection={measurementSection}
+          onTabChange={openDashboardTab}
+          onAskPepSA={() => openMeasurementSection('ask')}
+        />
       )}
 
       <InstallBanner />
