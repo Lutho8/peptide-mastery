@@ -48,7 +48,7 @@ describe('MeasurementToolScreen', () => {
     render(<MeasurementToolScreen />);
 
     expect(screen.getByText('Measurement & Evidence')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Ask AI' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ask PepSA' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Journal' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Confessions' })).toBeInTheDocument();
     expect(screen.getByText('Select a compound or recorded plan')).toBeInTheDocument();
@@ -68,7 +68,8 @@ describe('MeasurementToolScreen', () => {
     expect(screen.getAllByText('8 units').length).toBeGreaterThan(0);
     expect(screen.getByText('Performance goals never alter the amount or syringe position.')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Ask AI' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Ask PepSA' }));
+    expect(await screen.findByText('Ask PepSA')).toBeInTheDocument();
     expect(await screen.findByText('Answers with the papers.')).toBeInTheDocument();
     expect(screen.getByText(/not a recommendation for you/i)).toBeInTheDocument();
   });
