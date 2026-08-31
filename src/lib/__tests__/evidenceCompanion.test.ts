@@ -30,6 +30,16 @@ describe('evidence companion boundaries', () => {
     expect(packet).not.toBeNull();
     expect(packet?.sources.length).toBeGreaterThan(0);
     expect(packet?.sources.every((source) => isSafeEvidenceUrl(source.url))).toBe(true);
-    expect(JSON.stringify(packet)).not.toMatch(/beginner|intermediate|athlete/i);
+    expect(packet).not.toHaveProperty('dosing');
+    expect(JSON.stringify(packet)).not.toMatch(/"intermediate"|"advanced"|"athlete"/i);
+  });
+
+  it('gives every compound a beginner context and grounds Eloralintide in its phase 2 source', () => {
+    const packet = buildEvidencePacket('eloralintide');
+    expect(packet?.beginner.simpleExplanation).toMatch(/full|amylin/i);
+    expect(packet?.beginner.status).toMatch(/phase 2/i);
+    expect(packet?.beginner.safetyFlags.join(' ')).toMatch(/nausea|fatigue/i);
+    expect(packet?.sources[0]?.url).toBe('https://pubmed.ncbi.nlm.nih.gov/41207310/');
+    expect(packet?.sources[0]?.studiedProtocol).toMatch(/1, 3, 6 or 9 mg/i);
   });
 });

@@ -32,6 +32,7 @@ import {
   type EvidenceAnswer,
   type MeasurementAskContext,
 } from '@/lib/evidenceCompanion';
+import { buildBeginnerAskPepAnswer } from '@/lib/beginnerAskPep';
 import {
   createJournalEntry,
   recordCompanionEvent,
@@ -46,10 +47,12 @@ interface EvidenceAskPanelProps {
 }
 
 const prompts = [
-  'What does the strongest human evidence actually show?',
-  'What dose, route and population were studied in the linked papers?',
-  'What are the biggest evidence gaps and safety uncertainties?',
-  'Explain my recorded measurement without changing it.',
+  'What is this, in really simple terms?',
+  'What results did people get in human trials?',
+  'What side effects should I look out for?',
+  'What doses were studied — not a dose for me?',
+  'Could tiredness, feeling cold or low appetite be a warning sign?',
+  'What do we know about stopping or stacking it?',
 ];
 
 export function EvidenceAskPanel({
@@ -103,17 +106,26 @@ export function EvidenceAskPanel({
       });
       if (error) throw error;
       if (!data?.success || !data.answer) throw new Error(data?.error || 'No answer was returned.');
+      const personalRecommendationDeclined = data.personalRecommendationDeclined ?? false;
+      const beginnerAnswer = data.provider === 'private-beginner-evidence-engine'
+        ? data.answer
+        : buildBeginnerAskPepAnswer(
+          cleanQuestion,
+          packet,
+          personalRecommendationDeclined,
+          questionRequestsMeasurementExplanation(cleanQuestion) ? measurementContext : undefined,
+        );
       setAnswer({
-        answer: data.answer,
+        answer: beginnerAnswer,
         citations: data.citations ?? packet.sources,
-        personalRecommendationDeclined: data.personalRecommendationDeclined ?? false,
+        personalRecommendationDeclined,
         remainingToday: data.remainingToday,
         provider: data.provider,
       });
       if (user) void recordCompanionEvent(user.id, 'ai_question_asked', {
         peptide_id: packet.peptideId,
         evidence_sources: packet.sources.length,
-        personal_recommendation_declined: data.personalRecommendationDeclined ?? false,
+        personal_recommendation_declined: personalRecommendationDeclined,
       });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Ask PepSA is temporarily unavailable.');
@@ -155,8 +167,8 @@ export function EvidenceAskPanel({
               <div className="rounded-2xl bg-primary p-3 text-primary-foreground shadow-sm"><Sparkles className="h-5 w-5" /></div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Ask PepSA</p>
-                <h2 className="mt-1 text-2xl font-bold text-foreground">Answers with the papers.</h2>
-                <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">Plain-English research answers, linked sources and exact study context. Your recorded calculator values can be explained, never silently changed.</p>
+                <h2 className="mt-1 text-2xl font-bold text-foreground">Straight answers. No science degree needed.</h2>
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">Ask the basic question you would ask a knowledgeable person. PepSA starts with the simple answer, then separates human evidence, community concerns and unknowns.</p>
               </div>
             </div>
           </div>
@@ -174,8 +186,8 @@ export function EvidenceAskPanel({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="evidence-question">Ask a question</Label>
-              <Textarea id="evidence-question" value={question} onChange={(event) => setQuestion(event.target.value.slice(0, 1200))} rows={5} placeholder="Example: What dose and population were studied, and how strong is the human evidence?" />
+              <Label htmlFor="evidence-question">What do you want to know?</Label>
+              <Textarea id="evidence-question" value={question} onChange={(event) => setQuestion(event.target.value.slice(0, 1200))} rows={5} placeholder="Ask it normally — for example: What does this actually do, and what should a beginner know?" />
               <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground"><span>Avoid names, contact details and identifiable health information.</span><span>{question.length}/1200</span></div>
               <p className="text-xs leading-relaxed text-muted-foreground">Your question is processed inside PSA’s authenticated evidence function. PSA stores only a timestamp and selected compound for the usage allowance—not the raw question. Calculator values are included only when you ask to explain them.</p>
             </div>
@@ -188,7 +200,7 @@ export function EvidenceAskPanel({
             )}
 
             <Button type="button" className="min-h-12 w-full" onClick={() => void submit()} disabled={loading || !packet || question.trim().length < 4}>
-              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Reading the evidence…</> : <><Sparkles className="mr-2 h-4 w-4" />Ask PepSA</>}
+              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Putting it simply…</> : <><Sparkles className="mr-2 h-4 w-4" />Ask PepSA</>}
             </Button>
           </div>
         </Card>
@@ -196,7 +208,7 @@ export function EvidenceAskPanel({
         {answer && (
           <Card className="overflow-hidden" aria-live="polite">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/30 px-4 py-3 sm:px-5">
-              <div><p className="text-xs font-semibold uppercase tracking-wider text-primary">Evidence answer</p><p className="mt-0.5 text-sm text-muted-foreground">{packet?.peptideName}</p></div>
+              <div><p className="text-xs font-semibold uppercase tracking-wider text-primary">Plain-English answer</p><p className="mt-0.5 text-sm text-muted-foreground">{packet?.peptideName}</p></div>
               <Button type="button" variant="outline" size="sm" onClick={() => void saveToJournal()} disabled={saving}><Save className="mr-2 h-4 w-4" />{saving ? 'Saving…' : 'Save to journal'}</Button>
             </div>
             <div className="prose prose-sm max-w-none p-4 text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-p:text-foreground/90 dark:prose-invert sm:p-5">
@@ -210,6 +222,16 @@ export function EvidenceAskPanel({
       </div>
 
       <div className="space-y-4">
+        <Card className="border-primary/20 bg-primary/5 p-4 sm:p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-primary">The 30-second version</p>
+          <h3 className="mt-1 font-bold text-foreground">{packet?.peptideName || 'Choose a compound'}</h3>
+          <p className="mt-3 text-sm leading-relaxed text-foreground/90">{packet?.beginner.simpleExplanation || 'Select a compound and PepSA will explain it without assuming prior knowledge.'}</p>
+          {packet && <>
+            <p className="mt-3 rounded-lg border border-border bg-background/70 p-2 text-xs font-medium text-muted-foreground">{packet.beginner.status}</p>
+            {packet.beginner.safetyFlags.length > 0 && <div className="mt-4"><p className="text-xs font-semibold text-foreground">Main safety flags</p><ul className="mt-2 space-y-1.5 text-xs leading-relaxed text-muted-foreground">{packet.beginner.safetyFlags.slice(0, 3).map((flag) => <li key={flag}>• {flag}</li>)}</ul></div>}
+          </>}
+        </Card>
+
         <Card className="p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Evidence floor</p><h3 className="mt-1 font-bold text-foreground">{packet?.evidenceLabel || 'Select a compound'}</h3></div><ShieldCheck className="h-5 w-5 text-primary" /></div>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{packet?.evidenceNote || 'The app will only answer from its linked evidence packet.'}</p>

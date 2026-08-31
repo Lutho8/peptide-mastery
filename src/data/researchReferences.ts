@@ -19,6 +19,26 @@ export interface ResearchReference {
 }
 
 export const researchReferences: ResearchReference[] = [
+  {
+    id: 'ref-eloralintide-phase2-2025',
+    verificationStatus: 'primary-verified',
+    pmid: '41207310',
+    doi: '10.1016/S0140-6736(25)02155-5',
+    title: 'Eloralintide, a selective amylin receptor agonist for the treatment of obesity: a 48-week phase 2, multicentre, double-blind, randomised, placebo-controlled trial',
+    authors: 'Billings LK, Hsia S, Bays H, et al.',
+    journal: 'The Lancet',
+    year: 2025,
+    peptideIds: ['eloralintide'],
+    keyFindings: [
+      'Randomized 263 adults with obesity or overweight and a weight-related comorbidity, without type 2 diabetes',
+      'Mean weight change at 48 weeks ranged from -9% at 1 mg to -20% in the 9 mg maintenance arms, versus -0.4% with placebo (efficacy estimand)',
+      'Nausea and fatigue were the most common adverse events and were generally mild to moderate',
+      'Gastrointestinal adverse events and fatigue appeared dose-related and were less frequent with staged 3/6/9 mg escalation',
+      'Eloralintide remains investigational; phase 2 findings do not establish an approved dose or individual outcome',
+    ],
+    dosageInfo: 'Study arms: 1, 3, 6 or 9 mg subcutaneous once weekly; staged 6→9 mg and 3→6→9 mg arms were also studied over 48 weeks',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/41207310/',
+  },
   // SS-31 references
   {
     id: 'ref-ss31-cardiolipin',

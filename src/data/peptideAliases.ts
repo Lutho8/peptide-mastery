@@ -15,6 +15,7 @@ export const aliasMap: Record<string, string[]> = {
   'tirzepatide': ['tirz', 'mounjaro', 'zepbound'],
   'retatrutide': ['reta', 'ly3437943'],
   'cagrilintide': ['cagri', 'cagrilin'],
+  'eloralintide': ['elora', 'ly3841136', 'ly 3841136', 'amylin agonist'],
   'ghk-cu': ['ghk', 'ghkcu', 'copper peptide'],
   'mots-c': ['mots', 'motsc', 'mots c'],
   'pt-141': ['pt141', 'bremelanotide'],

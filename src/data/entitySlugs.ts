@@ -1,4 +1,4 @@
-// Top 15 peptides that get dedicated public pages
+// Curated peptides that get dedicated public pages
 // Maps slug → peptide ID from the main database
 export const topPeptidesSlugs: Record<string, string> = {
   'bpc-157': 'bpc157',
@@ -16,6 +16,7 @@ export const topPeptidesSlugs: Record<string, string> = {
   'pt-141': 'pt141',
   'dsip': 'dsip',
   'semaglutide': 'semaglutide',
+  'eloralintide': 'eloralintide',
 };
 
 // Category slug → PeptideCategory mapping
@@ -41,8 +42,8 @@ export const categoryMeta: Record<string, { title: string; description: string; 
   },
   'weight-loss': {
     title: 'Metabolic & Weight-Management Peptide Research',
-    description: 'Study profiles for GLP-1 and multi-agonist compounds, including semaglutide, tirzepatide and investigational retatrutide.',
-    intro: 'This category describes GLP-1 and multi-agonist mechanisms studied in metabolic and weight-management research. Product suitability and treatment decisions require an appropriate clinical pathway.'
+    description: 'Study profiles for GLP-1, amylin and multi-agonist compounds, including semaglutide, tirzepatide, retatrutide and eloralintide.',
+    intro: 'This category describes GLP-1, amylin and multi-agonist mechanisms studied in metabolic and weight-management research. Product suitability and treatment decisions require an appropriate clinical pathway.'
   },
   'longevity': {
     title: 'Longevity Peptides – Epitalon, SS-31 & Anti-Aging Research',
