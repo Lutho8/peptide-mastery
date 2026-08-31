@@ -18,9 +18,47 @@ interface NewPeptideSeed {
   frequency: string;
   vialSizesMg: number[];
   longevityScore?: number;
+  administration?: string;
+  expectedResults?: Peptide['expectedResults'];
+  warnings?: string[];
+  clinicalStatus?: Peptide['clinicalStatus'];
+  fdaApproved?: boolean;
 }
 
 const seeds: NewPeptideSeed[] = [
+  { id: 'eloralintide', name: 'Eloralintide (LY3841136)', shortName: 'Eloralintide', category: 'weight-loss',
+    mechanism: 'A long-acting, selective amylin-receptor agonist being studied for obesity. In everyday terms, it is designed to strengthen the body\'s “I am full” signal so a person may feel satisfied with less food.',
+    benefits: [
+      'Investigational once-weekly obesity medicine',
+      'Phase 2 trial reported dose-dependent weight reduction over 48 weeks',
+      'Mean weight change ranged from about 9% at 1 mg to 20% in the 9 mg maintenance arms',
+      'Higher-dose arms also showed reductions in waist circumference and improvements in several metabolic markers',
+    ],
+    risks: [
+      'Nausea and fatigue were the most common adverse events in the phase 2 trial',
+      'Constipation, diarrhoea, vomiting, decreased appetite and headache were also reported',
+      'Blood pressure and pulse fell in treated groups; dizziness, fainting or unusually slow pulse need medical review',
+      'Long-term safety is not established because eloralintide remains investigational',
+    ],
+    dose: 'No approved dose. Phase 2 studied 1, 3, 6 and 9 mg once weekly, plus staged 6→9 mg and 3→6→9 mg arms.',
+    frequency: 'Once weekly in the phase 2 trial',
+    vialSizesMg: [],
+    longevityScore: 7,
+    administration: 'Subcutaneous injection in clinical trials',
+    expectedResults: {
+      week1_2: 'No reliable personal result can be predicted from the published phase 2 data.',
+      week3_4: 'The trial measured change over months; early individual response varied.',
+      week5_8: 'The published result does not establish a guaranteed short-term timeline for an individual.',
+      longTerm: 'At week 48, mean weight change ranged from about -9% at 1 mg to -20% in the 9 mg maintenance arms versus -0.4% with placebo (efficacy estimand).',
+    },
+    warnings: [
+      'Investigational: not an approved medicine or a self-treatment protocol',
+      'Trial doses describe research arms, not a personal recommendation',
+      'The pivotal phase 2 trial excluded people with type 2 diabetes, pancreatitis history, certain cardiovascular conditions and bradyarrhythmias',
+    ],
+    clinicalStatus: 'phase2',
+    fdaApproved: false },
+
   { id: 'gonadorelin', name: 'Gonadorelin', shortName: 'Gonadorelin', category: 'hormonal',
     mechanism: 'Synthetic GnRH decapeptide that stimulates pituitary release of LH and FSH.',
     benefits: ['Stimulates LH/FSH release', 'Supports testicular function on TRT', 'Restores HPG signaling'],
@@ -227,8 +265,8 @@ function expand(seed: NewPeptideSeed): Peptide {
     risks: seed.risks ?? ['Injection site reactions', 'Limited long-term human data — research use only'],
     dosing: { beginner: dose, intermediate: dose, advanced: dose, athlete: dose },
     frequency: seed.frequency,
-    administration: 'Subcutaneous injection (research use)',
-    expectedResults: {
+    administration: seed.administration ?? 'Subcutaneous injection (research use)',
+    expectedResults: seed.expectedResults ?? {
       week1_2: 'Initial adaptation phase',
       week3_4: 'Early protocol effects emerging',
       week5_8: 'Full protocol effects, where applicable',
@@ -244,7 +282,9 @@ function expand(seed: NewPeptideSeed): Peptide {
       restartAdvice: 'Allow a 2–4 week break before restarting.',
       breakAdvice: ['Monitor labs and subjective markers', 'Maintain lifestyle and recovery practices'],
     },
-    warnings: ['Research-use only. Not FDA approved. Consult a qualified physician.'],
+    warnings: seed.warnings ?? ['Research-use only. Not FDA approved. Consult a qualified physician.'],
+    clinicalStatus: seed.clinicalStatus,
+    fdaApproved: seed.fdaApproved,
   };
 }
 

@@ -22,6 +22,15 @@ type EvidencePacket = {
   evidenceNote?: string;
   lastReviewed?: string;
   sources?: EvidenceSource[];
+  beginner?: BeginnerContext;
+};
+
+type BeginnerContext = {
+  simpleExplanation?: string;
+  discussedFor?: string[];
+  safetyFlags?: string[];
+  status?: string;
+  administration?: string;
 };
 
 type MeasurementContext = {
@@ -103,6 +112,20 @@ function sanitizeSources(sources: unknown): EvidenceSource[] {
   });
 }
 
+function sanitizeBeginnerContext(value: unknown): Required<BeginnerContext> {
+  const context = value && typeof value === "object" ? value as BeginnerContext : {};
+  const cleanList = (items: unknown, limit: number) => Array.isArray(items)
+    ? items.map((item) => cleanText(item, 280)).filter(Boolean).slice(0, limit)
+    : [];
+  return {
+    simpleExplanation: cleanText(context.simpleExplanation, 700),
+    discussedFor: cleanList(context.discussedFor, 5),
+    safetyFlags: cleanList(context.safetyFlags, 8),
+    status: cleanText(context.status, 220),
+    administration: cleanText(context.administration, 160),
+  };
+}
+
 function requestsPersonalDose(question: string): boolean {
   const normalized = question.toLowerCase();
   return [
@@ -147,6 +170,31 @@ function sourceSummary(sources: EvidenceSource[]): string {
   }).join("\n\n");
 }
 
+function bullets(items: string[], empty: string): string {
+  return items.length ? items.map((item) => `- ${item}`).join("\n") : empty;
+}
+
+function studyDoseSummary(sources: EvidenceSource[]): string {
+  const withProtocols = sources.filter((source) => source.studiedProtocol);
+  if (!withProtocols.length) {
+    return "The app does not have a verified human study dose linked for this compound. That means I should not turn catalogue text or community posts into a dosing instruction.";
+  }
+  return withProtocols.map((source) => {
+    const index = sources.indexOf(source) + 1;
+    return `- **[S${index}] reported:** ${source.studiedProtocol}`;
+  }).join("\n");
+}
+
+function sourceResultSummary(sources: EvidenceSource[]): string {
+  if (!sources.length) {
+    return "There is no app-verified human source linked yet, so there is no honest percentage, timeline or guaranteed result I can give you.";
+  }
+  return sources.map((source, index) => {
+    const findings = (source.findings ?? []).slice(0, 4);
+    return `**[S${index + 1}] ${source.title}**\n${bullets(findings, "- No plain-language result has been recorded from this source yet.")}`;
+  }).join("\n\n");
+}
+
 function localEvidenceAnswer(
   question: string,
   peptideName: string,
@@ -154,11 +202,18 @@ function localEvidenceAnswer(
   evidenceNote: string,
   sources: EvidenceSource[],
   declined: boolean,
+  beginner: Required<BeginnerContext>,
   context?: MeasurementContext,
 ): string {
   const normalized = question.toLowerCase();
-  const asksProtocol = /\b(dose|dosage|route|population|protocol|studied|paper|trial)\b/.test(normalized);
-  const asksGaps = /\b(gap|limitation|uncertain|safety|risk|weak|quality)\b/.test(normalized);
+  const asksWhat = /\b(what is|what does|how does|function|work|simple|beginner)\b/.test(normalized);
+  const asksProtocol = /\b(dose|dosage|route|how often|frequency|titration|protocol|studied dose)\b/.test(normalized);
+  const asksResults = /\b(results?|expect|timeline|weight|fat loss|benefit|effective|work|notice|how long)\b/.test(normalized);
+  const asksSideEffects = /\b(side effects?|risk|safe|safety|nausea|vomit|constipation|diarrh|headache|adverse)\b/.test(normalized);
+  const asksGaps = /\b(gap|limitation|uncertain|weak|quality|evidence)\b/.test(normalized);
+  const asksStacking = /\b(stack|stacking|combine|combination|pair|mix|switch|together)\b/.test(normalized);
+  const asksStopping = /\b(stop|stopping|come off|regain|rebound|withdraw)\b/.test(normalized);
+  const asksLivedConcern = /\b(tired|fatigue|cold|emotion|joy|depress|libido|sex|appetite|eat enough|weak|muscle loss|skin hurts)\b/.test(normalized);
   const asksMeasurement = requestsMeasurementExplanation(question);
   const sections: string[] = [];
 
@@ -166,21 +221,46 @@ function localEvidenceAnswer(
     sections.push("I can’t choose or recommend a personal dose, schedule, cycle, route, syringe, stack, or treatment. I can show what named sources studied and explain an already-recorded calculation without changing it.");
   }
 
-  sections.push(`## ${peptideName}\n\n**Evidence floor:** ${evidenceLabel}. ${evidenceNote}`);
+  const simple = beginner.simpleExplanation || `${peptideName} is listed for research education, but its beginner summary is still being reviewed.`;
+  sections.push(`**Short answer:** ${simple}\n\n**Where it stands:** ${beginner.status || evidenceLabel}.`);
 
-  if (asksMeasurement) {
-    sections.push(`### Your recorded calculator context\n${measurementSummary(context)}\n\nThese are the values already supplied to the deterministic calculator. They are not a new amount or protocol recommendation.`);
+  if (asksWhat || (!asksProtocol && !asksResults && !asksSideEffects && !asksStacking && !asksStopping && !asksLivedConcern && !asksMeasurement)) {
+    sections.push(`### What people usually discuss it for\n${bullets(beginner.discussedFor, "The app has not yet verified a clear human use for this compound.")}\n\nThese are discussion or catalogue points, not proof that it works for every person.`);
   }
 
-  if (asksProtocol || !asksMeasurement || declined) {
-    sections.push(`### What the linked sources report\n${sourceSummary(sources)}\n\nA reported study protocol describes that study and population; it is not a recommendation for you.`);
+  if (asksMeasurement) {
+    sections.push(`### Your recorded calculation, in plain terms\n${measurementSummary(context)}\n\nThose values came from the calculator information already entered. I have not changed the amount or created a new protocol.`);
+  }
+
+  if (asksProtocol || declined) {
+    sections.push(`### Doses researchers studied\n${studyDoseSummary(sources)}\n\nThat answers “what did the trial use?”, not “what should I take?”. Study participants were screened and monitored, and an investigational trial dose is not an approved dose.`);
+  }
+
+  if (asksResults || (!asksWhat && !asksProtocol && !asksSideEffects && !asksStacking && !asksStopping && !asksLivedConcern && !asksMeasurement)) {
+    sections.push(`### What results were actually reported\n${sourceResultSummary(sources)}\n\nA group average is not a promise. Results can differ, and early changes are not always reported even when a study has a later endpoint.`);
+  }
+
+  if (asksSideEffects || asksLivedConcern || (!asksWhat && !asksProtocol && !asksResults && !asksStacking && !asksStopping && !asksMeasurement)) {
+    sections.push(`### Side effects and warning signs\n${bullets(beginner.safetyFlags, "The app does not yet have a verified safety summary for this compound. Unknown does not mean safe.")}\n\nFeeling exhausted, unusually cold, emotionally flat, weak, dizzy, unable to eat or drink enough, or noticeably losing strength is **not something to chase as proof it is working**. Pause the guesswork and contact a qualified clinician. Seek urgent care for fainting, severe or persistent abdominal pain, repeated vomiting, dehydration, chest pain, breathing difficulty, confusion, or thoughts of self-harm.`);
+  }
+
+  if (asksStacking) {
+    sections.push("### About stacking or switching\nCombining compounds can change side effects, appetite, hydration, blood sugar, heart rate and how clearly you can identify the cause of a problem. Unless a linked source studied the exact combination, the evidence for each ingredient does **not** prove that the stack is effective or safe. I won’t invent a crossover schedule.");
+  }
+
+  if (asksStopping) {
+    sections.push("### About stopping\nA trial’s on-treatment result does not tell us exactly what will happen to one person after stopping. Appetite and weight can change again when the drug effect ends, while side effects may take time to settle. The safest next step is a clinician-led plan that considers nutrition, hydration, mood, other medicines and the reason for stopping.");
   }
 
   if (asksGaps || sources.length === 0) {
-    sections.push("### Evidence gaps\nTreat unrecorded details as unknown. Check whether each source is human or preclinical, whether its population matches the question, how outcomes were measured, and whether safety follow-up was long enough. The app will not infer missing facts.");
+    sections.push(`### The honest limitation\n**${evidenceLabel}.** ${evidenceNote}\n\nCommunity stories can reveal useful questions—such as low mood, fatigue, food aversion, muscle loss or rebound—but they cannot tell us how common a problem is or prove what caused it.`);
   }
 
-  sections.push("For a personal decision, take the linked sources and your recorded plan to a qualified healthcare professional.");
+  if (!asksProtocol && sources.length > 0) {
+    sections.push(`### Evidence used\n${sourceSummary(sources)}`);
+  }
+
+  sections.push("If this is about what is happening to you now, share the compound, timing, symptoms, medicines and relevant medical history with a qualified healthcare professional. You do not need to wait for symptoms to become severe before asking for help.");
   return sections.join("\n\n").slice(0, 6000);
 }
 
@@ -228,11 +308,12 @@ async function answerEvidenceQuestion(
   if (usageError) return json({ success: false, error: "Question could not be recorded" }, 503);
 
   const sources = sanitizeSources(body.evidence?.sources);
+  const beginner = sanitizeBeginnerContext(body.evidence?.beginner);
   const evidenceLabel = cleanText(body.evidence?.evidenceLabel, 140) || "Evidence classification unavailable";
   const evidenceNote = cleanText(body.evidence?.evidenceNote, 600) || "No app-verified evidence summary is available.";
   const declined = requestsPersonalDose(question);
   const calculatorContext = requestsMeasurementExplanation(question) ? body.measurementContext : undefined;
-  let answer = localEvidenceAnswer(question, peptideName, evidenceLabel, evidenceNote, sources, declined, calculatorContext);
+  let answer = localEvidenceAnswer(question, peptideName, evidenceLabel, evidenceNote, sources, declined, beginner, calculatorContext);
   answer = answer.replace(/\[S(\d+)\]/g, (marker, value) => {
     const index = Number(value);
     return index >= 1 && index <= sources.length ? marker : "";
@@ -247,7 +328,7 @@ async function answerEvidenceQuestion(
     citations: sources,
     personalRecommendationDeclined: declined,
     remainingToday: Math.max(0, 19 - (count ?? 0)),
-    provider: "private-source-grounded-engine",
+    provider: "private-beginner-evidence-engine",
     timestamp: new Date().toISOString(),
   });
 }

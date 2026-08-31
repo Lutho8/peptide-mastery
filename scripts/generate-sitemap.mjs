@@ -30,6 +30,7 @@ const peptides = [
   'bpc-157', 'tb-500', 'retatrutide', 'tirzepatide', 'ipamorelin', 'cjc-1295',
   'ghk-cu', 'epitalon', 'ss-31', 'semax', 'selank', 'thymosin-alpha-1',
   'pt-141', 'dsip', 'semaglutide',
+  'eloralintide',
 ];
 const categories = ['healing', 'weight-loss', 'longevity', 'cognitive', 'immune', 'growth-hormone', 'skin-hair', 'hormonal', 'metabolic'];
 const guides = ['reconstitution', 'injection', 'bloodwork'];

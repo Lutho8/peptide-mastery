@@ -2,7 +2,7 @@ import type { Peptide } from './peptides';
 import type { PeptideBlend } from './peptideBlends';
 import { researchReferences } from './researchReferences';
 
-export const RESEARCH_LAST_REVIEWED = '2026-08-23';
+export const RESEARCH_LAST_REVIEWED = '2026-08-31';
 
 export type EvidenceLevel =
   | 'regulatory-approval'
@@ -64,6 +64,13 @@ const VERIFIED: Record<string, Omit<EvidenceSummary, 'lastReviewed'>> = {
     note: 'Randomized phase 2 results are published while phase 3 development continues. This is not approval or a self-treatment protocol.',
     sourceUrl: 'https://www.nejm.org/doi/full/10.1056/NEJMoa2301972',
     sourceLabel: 'NEJM · 2023',
+  },
+  eloralintide: {
+    level: 'phase-2',
+    label: 'Investigational · phase 2 published',
+    note: 'A 48-week randomized phase 2 obesity trial reported dose-dependent weight loss. Eloralintide is not approved, and the trial arms are study context rather than a personal dosing protocol.',
+    sourceUrl: 'https://pubmed.ncbi.nlm.nih.gov/41207310/',
+    sourceLabel: 'The Lancet · 2025',
   },
   bpc157: {
     level: 'human-pilot',

@@ -70,7 +70,7 @@ describe('MeasurementToolScreen', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Ask PepSA' }));
     expect(await screen.findByText('Ask PepSA')).toBeInTheDocument();
-    expect(await screen.findByText('Answers with the papers.')).toBeInTheDocument();
+    expect(await screen.findByText('Straight answers. No science degree needed.')).toBeInTheDocument();
     expect(screen.getByText(/not a recommendation for you/i)).toBeInTheDocument();
   });
 });

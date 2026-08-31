@@ -19,6 +19,15 @@ export interface EvidencePacket {
   evidenceNote: string;
   lastReviewed: string;
   sources: EvidenceSource[];
+  beginner: BeginnerCompoundContext;
+}
+
+export interface BeginnerCompoundContext {
+  simpleExplanation: string;
+  discussedFor: string[];
+  safetyFlags: string[];
+  status: string;
+  administration?: string;
 }
 
 export interface MeasurementAskContext {
@@ -48,6 +57,46 @@ const SAFE_SOURCE_HOSTS = new Set([
   'www.nature.com',
   'nature.com',
 ]);
+
+const CURATED_BEGINNER_EXPLANATIONS: Record<string, string> = {
+  semaglutide: 'It copies a natural GLP-1 signal that helps you feel full, slows how quickly food leaves the stomach and helps the body manage blood sugar.',
+  tirzepatide: 'It turns on two gut-hormone signals, GIP and GLP-1, which can reduce hunger and improve blood-sugar control.',
+  retatrutide: 'It is an experimental medicine that activates three metabolic signals—GIP, GLP-1 and glucagon—to affect hunger, blood sugar and energy use.',
+  eloralintide: 'It is an experimental amylin medicine designed to strengthen the body’s “I’m full” signal so a person may feel satisfied with less food.',
+  cagrilintide: 'It is an experimental long-acting version of amylin, a hormone involved in fullness after eating.',
+  bpc157: 'It is an experimental peptide discussed for tissue and gut repair, but convincing human evidence is still extremely limited.',
+  tb500: 'It is a lab-made fragment related to thymosin beta-4 and is discussed for tissue repair; most claims are not supported by strong human trials.',
+  mk677: 'It is not a peptide. It is an oral ghrelin-receptor drug that can raise growth hormone and IGF-1, and can also increase hunger and worsen blood-sugar control.',
+  ipamorelin: 'It is a growth-hormone secretagogue, meaning it signals the pituitary gland to release more growth hormone.',
+  cjc1295: 'It is a lab-made version of a growth-hormone-releasing signal that tells the pituitary gland to release more growth hormone.',
+  tesamorelin: 'It is a prescription growth-hormone-releasing medicine approved for a narrow use: reducing excess abdominal fat in certain adults with HIV.',
+  ghkcu: 'It is a copper-carrying peptide found naturally in the body and is mostly discussed for skin, hair and wound-repair research.',
+  motsc: 'It is a small signal made from mitochondrial genetic material and is being studied for metabolism and how cells respond to energy stress.',
+  ss31: 'Also called elamipretide, it targets mitochondria. Its approval is limited to Barth syndrome and does not prove general anti-ageing benefits.',
+  aod9604: 'It is a fragment related to human growth hormone that was studied for fat loss, but it has not become an approved obesity medicine.',
+};
+
+function beginnerStatus(peptide: NonNullable<ReturnType<typeof findPeptideOrBlend>>): string {
+  if (peptide.fdaApproved) return 'Approved medicine — only for its authorised product, indication and patient group';
+  if (peptide.clinicalStatus === 'phase3') return 'Investigational — phase 3 evidence or development';
+  if (peptide.clinicalStatus === 'phase2') return 'Investigational — phase 2 evidence or development';
+  if (peptide.clinicalStatus === 'phase1') return 'Early investigational — phase 1';
+  if (peptide.clinicalStatus === 'preclinical') return 'Preclinical — mainly laboratory or animal research';
+  return 'Research or catalogue compound — approval and human evidence not established here';
+}
+
+function fallbackBeginnerExplanation(peptide: NonNullable<ReturnType<typeof findPeptideOrBlend>>): string {
+  const firstSentence = peptide.mechanism.split(/(?<=[.!?])\s+/)[0]?.trim();
+  if (!firstSentence) return `${peptide.name} is listed in the app for research education, but a plain-language evidence review is still pending.`;
+  return firstSentence
+    .replace(/\bagonist\b/gi, 'signal activator')
+    .replace(/\bantagonist\b/gi, 'signal blocker')
+    .replace(/\bsubcutaneous\b/gi, 'under-the-skin')
+    .replace(/\blipolysis\b/gi, 'fat breakdown')
+    .replace(/\banxiolytic\b/gi, 'anxiety-reducing effect')
+    .replace(/\bneuroprotective\b/gi, 'nerve-cell protection')
+    .replace(/\bimmunomodulat(?:e|es|ing)\b/gi, 'changes immune activity');
+}
 
 export function isSafeEvidenceUrl(url: string): boolean {
   try {
@@ -94,6 +143,15 @@ export function buildEvidencePacket(peptideId: string): EvidencePacket | null {
     evidenceNote: evidence.note,
     lastReviewed: evidence.lastReviewed,
     sources,
+    beginner: {
+      simpleExplanation: CURATED_BEGINNER_EXPLANATIONS[peptideId] ?? fallbackBeginnerExplanation(peptide),
+      discussedFor: peptide.benefits.slice(0, 4),
+      safetyFlags: [...peptide.risks, ...(peptide.warnings ?? [])]
+        .filter((value, index, values) => values.indexOf(value) === index)
+        .slice(0, 6),
+      status: beginnerStatus(peptide),
+      administration: peptide.administration,
+    },
   };
 }
 
