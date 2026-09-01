@@ -14,21 +14,21 @@ export type MeasurementScheduleMode =
 export const MEASUREMENT_GUIDANCE = [
   {
     id: 'beginner' as const,
-    label: 'Entry-level guidance',
-    shortLabel: 'Entry',
-    description: 'Explains every input and adds a final label-and-syringe checklist.',
+    label: 'Beginner walkthrough',
+    shortLabel: 'Beginner',
+    description: 'Explains every term, input and safety check in plain language.',
   },
   {
     id: 'intermediate' as const,
-    label: 'Intermediate guidance',
-    shortLabel: 'Intermediate',
-    description: 'Keeps the workflow compact while preserving the verification maths.',
+    label: 'Advanced calculator',
+    shortLabel: 'Advanced',
+    description: 'Keeps the workflow compact while showing the full concentration maths.',
   },
   {
     id: 'athlete' as const,
-    label: 'Athlete tracking',
-    shortLabel: 'Athlete',
-    description: 'Emphasises repeatable setup, schedule consistency and record keeping.',
+    label: 'Advanced biohacker tracking',
+    shortLabel: 'Biohacker',
+    description: 'Adds repeatable setup, schedule context and careful record keeping.',
   },
 ] as const;
 
