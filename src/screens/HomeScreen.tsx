@@ -16,6 +16,7 @@ import { JourneyDashboard } from '@/components/home/JourneyDashboard';
 import { OrderJourneyCard } from '@/components/home/OrderJourneyCard';
 import { WorkspaceMomentumCard } from '@/components/home/WorkspaceMomentumCard';
 import { TrackerReadinessCard } from '@/components/home/TrackerReadinessCard';
+import { DoseCalculatorLaunchCard } from '@/components/home/DoseCalculatorLaunchCard';
 import { PullToRefresh } from '@/components/ui/PullToRefresh';
 import { useDoseReminders } from '@/hooks/useDoseReminders';
 import { useDailyDoses } from '@/hooks/useDailyDoses';
@@ -33,6 +34,8 @@ interface HomeScreenProps {
   onNavigateStack: () => void;
   onOpenSettings: () => void;
   onNavigateResearch?: () => void;
+  onOpenCalculator: () => void;
+  onAskPepSA: () => void;
 }
 
 const containerVariants = {
@@ -68,7 +71,9 @@ export function HomeScreen({
   onNavigatePeptides,
   onNavigateStack,
   onOpenSettings,
-  onNavigateResearch
+  onNavigateResearch,
+  onOpenCalculator,
+  onAskPepSA,
 }: HomeScreenProps) {
   const { reminders, refreshReminders } = useDoseReminders();
   const { doses, refreshDoses } = useDailyDoses();
@@ -120,6 +125,13 @@ export function HomeScreen({
         >
           {initials}
         </motion.div>
+      </motion.div>
+
+      <motion.div variants={itemVariants} data-tour="dose-calculator">
+        <DoseCalculatorLaunchCard
+          onOpenCalculator={onOpenCalculator}
+          onAskPepSA={onAskPepSA}
+        />
       </motion.div>
 
       <motion.div variants={itemVariants}>
