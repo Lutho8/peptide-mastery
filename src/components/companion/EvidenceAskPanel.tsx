@@ -26,10 +26,14 @@ import type { SelectablePeptide } from '@/data/blendAdapters';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
+  buildGeneralHealthEvidencePacket,
   buildEvidencePacket,
+  GENERAL_HEALTH_TOPIC_ID,
+  questionIsThyroidTopic,
   questionRequestsMeasurementExplanation,
   questionRequestsPersonalDose,
   type EvidenceAnswer,
+  type EvidencePacket,
   type MeasurementAskContext,
 } from '@/lib/evidenceCompanion';
 import { buildBeginnerAskPepAnswer } from '@/lib/beginnerAskPep';
@@ -47,6 +51,7 @@ interface EvidenceAskPanelProps {
 }
 
 const prompts = [
+  'Is there a peptide for thyroid issues? I have Hashimoto’s.',
   'What is this, in really simple terms?',
   'What results did people get in human trials?',
   'What side effects should I look out for?',
@@ -65,18 +70,22 @@ export function EvidenceAskPanel({
   const { user } = useAuth();
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState<EvidenceAnswer | null>(null);
+  const [answerPacket, setAnswerPacket] = useState<EvidencePacket | null>(null);
+  const [generalTopicSelected, setGeneralTopicSelected] = useState(!selectedCompoundId);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const packet = useMemo(
-    () => selectedCompoundId ? buildEvidencePacket(selectedCompoundId) : null,
-    [selectedCompoundId],
+    () => generalTopicSelected
+      ? buildGeneralHealthEvidencePacket()
+      : selectedCompoundId ? buildEvidencePacket(selectedCompoundId) : null,
+    [generalTopicSelected, selectedCompoundId],
   );
   const asksForPersonalDose = questionRequestsPersonalDose(question);
 
   const submit = async () => {
     if (!packet) {
-      toast.error('Select a compound first.');
+      toast.error('Choose a compound or health topic first.');
       return;
     }
     const cleanQuestion = question.trim();
@@ -85,8 +94,13 @@ export function EvidenceAskPanel({
       return;
     }
 
+    const packetForQuestion = questionIsThyroidTopic(cleanQuestion)
+      ? buildGeneralHealthEvidencePacket()
+      : packet;
+
     setLoading(true);
     setAnswer(null);
+    setAnswerPacket(packetForQuestion);
     try {
       const { data, error } = await supabase.functions.invoke<{
         success: boolean;
@@ -100,31 +114,31 @@ export function EvidenceAskPanel({
         body: {
           type: 'evidence_question',
           question: cleanQuestion,
-          evidence: packet,
+          evidence: packetForQuestion,
           measurementContext: questionRequestsMeasurementExplanation(cleanQuestion) ? measurementContext : undefined,
         },
       });
       if (error) throw error;
       if (!data?.success || !data.answer) throw new Error(data?.error || 'No answer was returned.');
       const personalRecommendationDeclined = data.personalRecommendationDeclined ?? false;
-      const beginnerAnswer = data.provider === 'private-beginner-evidence-engine'
-        ? data.answer
-        : buildBeginnerAskPepAnswer(
+      const beginnerAnswer = questionIsThyroidTopic(cleanQuestion) || data.provider !== 'private-beginner-evidence-engine'
+        ? buildBeginnerAskPepAnswer(
           cleanQuestion,
-          packet,
+          packetForQuestion,
           personalRecommendationDeclined,
           questionRequestsMeasurementExplanation(cleanQuestion) ? measurementContext : undefined,
-        );
+        )
+        : data.answer;
       setAnswer({
         answer: beginnerAnswer,
-        citations: data.citations ?? packet.sources,
+        citations: data.citations?.length ? data.citations : packetForQuestion.sources,
         personalRecommendationDeclined,
         remainingToday: data.remainingToday,
         provider: data.provider,
       });
       if (user) void recordCompanionEvent(user.id, 'ai_question_asked', {
-        peptide_id: packet.peptideId,
-        evidence_sources: packet.sources.length,
+        peptide_id: packetForQuestion.peptideId,
+        evidence_sources: packetForQuestion.sources.length,
         personal_recommendation_declined: personalRecommendationDeclined,
       });
     } catch (error) {
@@ -135,19 +149,20 @@ export function EvidenceAskPanel({
   };
 
   const saveToJournal = async () => {
-    if (!user || !packet || !answer) return;
+    const savedPacket = answerPacket ?? packet;
+    if (!user || !savedPacket || !answer) return;
     setSaving(true);
     try {
       const citations = answer.citations.map((source, index) => `[S${index + 1}] ${source.label}: ${source.url}`).join('\n');
       await createJournalEntry({
         user_id: user.id,
         entry_type: 'ask',
-        peptide_id: packet.peptideId,
-        title: `Ask PepSA: ${packet.peptideName}`,
+        peptide_id: savedPacket.peptideId,
+        title: `Ask PepSA: ${savedPacket.peptideName}`,
         body: `Question\n${question.trim()}\n\nAnswer\n${answer.answer}\n\nSources\n${citations || 'No verified primary source linked.'}`,
       });
       void recordCompanionEvent(user.id, 'ai_answer_saved', {
-        peptide_id: packet.peptideId,
+        peptide_id: savedPacket.peptideId,
         source_count: answer.citations.length,
       });
       toast.success('Answer saved to your private journal.');
@@ -174,10 +189,22 @@ export function EvidenceAskPanel({
           </div>
           <div className="space-y-5 p-4 sm:p-5">
             <div className="space-y-2">
-              <Label>Compound</Label>
-              <Select value={selectedCompoundId} onValueChange={(value) => { onSelectCompound(value); setAnswer(null); }}>
-                <SelectTrigger aria-label="Ask about compound"><SelectValue placeholder="Choose a compound" /></SelectTrigger>
-                <SelectContent>{compounds.map((compound) => <SelectItem key={compound.id} value={compound.id}>{compound.name}</SelectItem>)}</SelectContent>
+              <Label>Compound or health topic</Label>
+              <Select
+                value={generalTopicSelected ? GENERAL_HEALTH_TOPIC_ID : selectedCompoundId}
+                onValueChange={(value) => {
+                  const isGeneralTopic = value === GENERAL_HEALTH_TOPIC_ID;
+                  setGeneralTopicSelected(isGeneralTopic);
+                  if (!isGeneralTopic) onSelectCompound(value);
+                  setAnswer(null);
+                  setAnswerPacket(null);
+                }}
+              >
+                <SelectTrigger aria-label="Ask about compound or health topic"><SelectValue placeholder="Choose a compound or topic" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={GENERAL_HEALTH_TOPIC_ID}>Health topic — Hashimoto’s / thyroid</SelectItem>
+                  {compounds.map((compound) => <SelectItem key={compound.id} value={compound.id}>{compound.name}</SelectItem>)}
+                </SelectContent>
               </Select>
             </div>
 
@@ -189,7 +216,7 @@ export function EvidenceAskPanel({
               <Label htmlFor="evidence-question">What do you want to know?</Label>
               <Textarea id="evidence-question" value={question} onChange={(event) => setQuestion(event.target.value.slice(0, 1200))} rows={5} placeholder="Ask it normally — for example: What does this actually do, and what should a beginner know?" />
               <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground"><span>Avoid names, contact details and identifiable health information.</span><span>{question.length}/1200</span></div>
-              <p className="text-xs leading-relaxed text-muted-foreground">Your question is processed inside PSA’s authenticated evidence function. PSA stores only a timestamp and selected compound for the usage allowance—not the raw question. Calculator values are included only when you ask to explain them.</p>
+              <p className="text-xs leading-relaxed text-muted-foreground">Your question is processed inside PSA’s authenticated evidence function. PSA stores only a timestamp and selected compound or topic for the usage allowance—not the raw question. Calculator values are included only when you ask to explain them.</p>
             </div>
 
             {asksForPersonalDose && (
@@ -208,7 +235,7 @@ export function EvidenceAskPanel({
         {answer && (
           <Card className="overflow-hidden" aria-live="polite">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/30 px-4 py-3 sm:px-5">
-              <div><p className="text-xs font-semibold uppercase tracking-wider text-primary">Plain-English answer</p><p className="mt-0.5 text-sm text-muted-foreground">{packet?.peptideName}</p></div>
+              <div><p className="text-xs font-semibold uppercase tracking-wider text-primary">Plain-English answer</p><p className="mt-0.5 text-sm text-muted-foreground">{(answerPacket ?? packet)?.peptideName}</p></div>
               <Button type="button" variant="outline" size="sm" onClick={() => void saveToJournal()} disabled={saving}><Save className="mr-2 h-4 w-4" />{saving ? 'Saving…' : 'Save to journal'}</Button>
             </div>
             <div className="prose prose-sm max-w-none p-4 text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-p:text-foreground/90 dark:prose-invert sm:p-5">
