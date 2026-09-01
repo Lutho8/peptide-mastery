@@ -131,7 +131,9 @@ export function EvidenceAskPanel({
         : data.answer;
       setAnswer({
         answer: beginnerAnswer,
-        citations: data.citations?.length ? data.citations : packetForQuestion.sources,
+        citations: questionIsThyroidTopic(cleanQuestion)
+          ? packetForQuestion.sources
+          : data.citations?.length ? data.citations : packetForQuestion.sources,
         personalRecommendationDeclined,
         remainingToday: data.remainingToday,
         provider: data.provider,
