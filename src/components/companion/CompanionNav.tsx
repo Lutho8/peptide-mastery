@@ -9,7 +9,7 @@ interface CompanionNavProps {
 }
 
 const sections = [
-  { id: 'measure' as const, label: 'Measure', icon: Calculator },
+  { id: 'measure' as const, label: 'Dose Calculator', icon: Calculator },
   { id: 'ask' as const, label: 'Ask PepSA', icon: Sparkles },
   { id: 'journal' as const, label: 'Journal', icon: BookLock },
   { id: 'confessions' as const, label: 'Confessions', icon: MessageCircleHeart },
