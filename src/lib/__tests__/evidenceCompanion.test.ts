@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildGeneralHealthEvidencePacket,
   buildEvidencePacket,
   isSafeEvidenceUrl,
+  questionIsThyroidTopic,
   questionRequestsMeasurementExplanation,
   questionRequestsPersonalDose,
 } from '@/lib/evidenceCompanion';
@@ -21,8 +23,25 @@ describe('evidence companion boundaries', () => {
   it('only accepts source hosts used by the curated evidence library', () => {
     expect(isSafeEvidenceUrl('https://pubmed.ncbi.nlm.nih.gov/33567185/')).toBe(true);
     expect(isSafeEvidenceUrl('https://www.nejm.org/doi/full/10.1056/NEJMoa2301972')).toBe(true);
+    expect(isSafeEvidenceUrl('https://www.niddk.nih.gov/health-information/endocrine-diseases/hashimotos-disease')).toBe(true);
+    expect(isSafeEvidenceUrl('https://www.thyroid.org/hashimotos-thyroiditis/')).toBe(true);
     expect(isSafeEvidenceUrl('https://example.com/invented-study')).toBe(false);
     expect(isSafeEvidenceUrl('javascript:alert(1)')).toBe(false);
+  });
+
+  it('recognises common Hashimoto and thyroid questions', () => {
+    expect(questionIsThyroidTopic('Is there a peptide for thyroid issues? Have hashimotos.')).toBe(true);
+    expect(questionIsThyroidTopic('Can this lower my TPO antibodies?')).toBe(true);
+    expect(questionIsThyroidTopic('What results did people get in obesity trials?')).toBe(false);
+  });
+
+  it('builds a condition-level Hashimoto packet from clinical guidance and primary research', () => {
+    const packet = buildGeneralHealthEvidencePacket();
+    expect(packet.peptideId).toBe('general-health-question');
+    expect(packet.peptideName).toMatch(/Hashimoto.*thyroid/i);
+    expect(packet.sources).toHaveLength(3);
+    expect(packet.sources.every((source) => isSafeEvidenceUrl(source.url))).toBe(true);
+    expect(packet.sources.map((source) => source.url).join(' ')).toMatch(/niddk.*thyroid\.org.*42278864/i);
   });
 
   it('builds a source-linked packet without exposing catalogue dose tiers', () => {
