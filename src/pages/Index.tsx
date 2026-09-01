@@ -252,6 +252,8 @@ const Index = ({ dashboardRoute = false }: IndexProps) => {
               onNavigateStack={() => setActiveTab('stack')}
               onOpenSettings={() => setShowSettings(true)}
               onNavigateResearch={() => setShowResearch(true)}
+              onOpenCalculator={() => openMeasurementSection('measure')}
+              onAskPepSA={() => openMeasurementSection('ask')}
             />
           )}
           {activeTab === 'stack' && <MyStackScreen />}

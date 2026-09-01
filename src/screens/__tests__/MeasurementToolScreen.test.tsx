@@ -47,16 +47,19 @@ describe('MeasurementToolScreen', () => {
   it('restores a guided plan workflow and keeps user modes separate from the maths', async () => {
     render(<MeasurementToolScreen />);
 
-    expect(screen.getByText('Measurement & Evidence')).toBeInTheDocument();
+    expect(screen.getByText('Dose & Reconstitution Calculator')).toBeInTheDocument();
+    expect(screen.getByText('New to reconstitution? Start here.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Dose Calculator' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ask PepSA' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Journal' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Confessions' })).toBeInTheDocument();
     expect(screen.getByText('Select a compound or recorded plan')).toBeInTheDocument();
+    expect(screen.getByText('Enter vial, diluent and dose values')).toBeInTheDocument();
     expect(screen.getByText('Record the schedule')).toBeInTheDocument();
     expect(screen.getByText('Match the physical syringe')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Entry/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Intermediate/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Athlete/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Beginner/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Advanced/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Biohacker/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Verified BPC setup' }));
 
@@ -64,7 +67,7 @@ describe('MeasurementToolScreen', () => {
     expect(screen.getByText(/1 mg ÷ 5 mg\/mL = 0.2 mL × 40 units\/mL/)).toBeInTheDocument();
     expect(screen.getByText(/Mon & Thu/)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Athlete/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Biohacker/i }));
     expect(screen.getAllByText('8 units').length).toBeGreaterThan(0);
     expect(screen.getByText('Performance goals never alter the amount or syringe position.')).toBeInTheDocument();
 
@@ -72,5 +75,14 @@ describe('MeasurementToolScreen', () => {
     expect(await screen.findByText('Ask PepSA')).toBeInTheDocument();
     expect(await screen.findByText('Straight answers. No science degree needed.')).toBeInTheDocument();
     expect(screen.getByText(/not a recommendation for you/i)).toBeInTheDocument();
+  });
+
+  it('warns when mg and mcg may have been mixed up', () => {
+    render(<MeasurementToolScreen />);
+
+    fireEvent.change(screen.getByLabelText('Total amount shown on vial or COA'), { target: { value: '5' } });
+    fireEvent.change(screen.getByLabelText('Prescribed or recorded dose'), { target: { value: '10' } });
+
+    expect(screen.getAllByText(/larger than the total amount in the vial/i).length).toBeGreaterThan(0);
   });
 });
