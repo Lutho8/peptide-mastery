@@ -1,4 +1,4 @@
-import type { EvidencePacket, MeasurementAskContext } from '@/lib/evidenceCompanion';
+import { questionIsThyroidTopic, type EvidencePacket, type MeasurementAskContext } from '@/lib/evidenceCompanion';
 
 function list(items: string[], fallback: string): string {
   return items.length ? items.map((item) => `- ${item}`).join('\n') : fallback;
@@ -30,6 +30,17 @@ function measurement(context?: MeasurementAskContext): string {
   ].filter(Boolean).join('\n') || 'No completed calculator context was supplied.';
 }
 
+function thyroidAnswer(): string {
+  return [
+    '**Short answer:** There is no peptide I can honestly recommend as a proven treatment for Hashimoto’s. Current thyroid guidance does not list thymosin alpha-1, KPV, BPC-157, MOTS-c, TB-500, retatrutide—or a combination of them—as an established Hashimoto’s treatment. [S1] [S2]',
+    '### About the antibody-drop story\nA 30% antibody reduction is a real lab change and it is reasonable to feel encouraged by it. But because several compounds and a nicotine patch were added across a few weeks, that result cannot show which item caused the change—or whether the change came from the stack at all. Antibody levels, weight, thyroid medication, illness, supplements, timing and normal test variation can all move during the same period. A second similar confession makes this a useful question to study; it still does not make the protocol proven or safe to copy.',
+    '### What we can say about those compounds\n- **Thymosin alpha-1:** it changes immune signalling, but I could not verify a reliable controlled human trial showing that it treats Hashimoto’s or improves thyroid function.\n- **KPV, BPC-157 and TB-500:** evidence for Hashimoto’s treatment is absent or preclinical; community use is not clinical proof.\n- **MOTS-c:** a 2026 cross-sectional study found an association between Hashimoto’s and lower circulating MOTS-c. Researchers did **not** give people MOTS-c, so the study does not show that taking it lowers antibodies or treats Hashimoto’s. [S3]\n- **Retatrutide:** an investigational obesity medicine, not a Hashimoto’s treatment. Weight and metabolic changes can happen alongside thyroid-lab changes without proving a direct thyroid effect.\n- **Nicotine patch:** not a peptide and not an established thyroid treatment; it has its own cardiovascular, sleep and dependence risks.',
+    '### What matters more than chasing the antibody number\nFor someone already diagnosed, the American Thyroid Association says repeating thyroid-antibody levels is generally not needed; **TSH and free T4**, symptoms and medication needs are more useful for follow-up. If hypothyroidism is present, levothyroxine is the standard replacement treatment. [S1] [S2]',
+    '### A sensible next step\nTake the full timeline to an endocrinologist: baseline and follow-up TSH, free T4, antibody values, symptoms, weight change, thyroid-medication dose, supplements and when each compound started. Ask: “Did my thyroid function improve, or did only the antibody number move?” Do not stop or alter prescribed thyroid medicine from a confession or app answer. Seek prompt medical advice for a new neck swelling, trouble swallowing, marked palpitations, fainting, severe weakness, or if pregnant or trying to conceive.',
+    'The confession is valuable as a **signal for a research question**, not as a dosing template. PepSA can help you organise the timeline and questions, but it should not turn this stack into a recommendation.',
+  ].join('\n\n');
+}
+
 /**
  * Release-resilient local renderer. The authenticated edge function still
  * enforces privacy and rate limits; this keeps the beginner voice available
@@ -41,6 +52,8 @@ export function buildBeginnerAskPepAnswer(
   personalDoseDeclined: boolean,
   measurementContext?: MeasurementAskContext,
 ): string {
+  if (questionIsThyroidTopic(question)) return thyroidAnswer().slice(0, 6000);
+
   const q = question.toLowerCase();
   const asksDose = /\b(dose|dosage|how much|how often|frequency|titration|protocol)\b/.test(q);
   const asksResults = /\b(results?|expect|timeline|weight|fat loss|benefit|effective|work|notice|how long)\b/.test(q);

@@ -74,6 +74,8 @@ describe('MeasurementToolScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Ask PepSA' }));
     expect(await screen.findByText('Ask PepSA')).toBeInTheDocument();
     expect(await screen.findByText('Straight answers. No science degree needed.')).toBeInTheDocument();
+    expect(screen.getByText('Compound or health topic')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Is there a peptide for thyroid issues? I have Hashimoto’s.' })).toBeInTheDocument();
     expect(screen.getByText(/not a recommendation for you/i)).toBeInTheDocument();
   });
 
