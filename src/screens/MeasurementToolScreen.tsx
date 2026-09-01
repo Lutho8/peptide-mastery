@@ -6,6 +6,7 @@ import {
   ClipboardCheck,
   Dumbbell,
   Eraser,
+  ExternalLink,
   Info,
   Ruler,
   Save,
@@ -315,6 +316,10 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
   const guidance = MEASUREMENT_GUIDANCE.find((option) => option.id === guidanceMode)!;
   const usesPerVial = result ? Math.floor(parsePositive(vialAmount) / result.targetAmountMg) : 0;
   const scheduleLabel = formatMeasurementSchedule(scheduleMode, scheduleDetails);
+  const enteredAmountMg = enteredUnit === 'mcg' ? parsePositive(enteredAmount) / 1000 : parsePositive(enteredAmount);
+  const inputIssue = enteredAmountMg > 0 && parsePositive(vialAmount) > 0 && enteredAmountMg > parsePositive(vialAmount)
+    ? 'The entered amount is larger than the total amount in the vial. Check whether mg and mcg were mixed up.'
+    : null;
   const measurementAskContext = useMemo(() => ({
     vialAmountMg: parsePositive(vialAmount) || undefined,
     diluentMl: parsePositive(diluentVolume) || undefined,
@@ -342,9 +347,15 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
         <div>
           <div className="flex items-center gap-2">
             <Calculator className="h-7 w-7 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">Measurement & Evidence</h1>
+            <h1 className="text-2xl font-bold text-foreground">
+              {companionSection === 'measure' ? 'Dose & Reconstitution Calculator' : 'Ask PepSA & Research Companion'}
+            </h1>
           </div>
-          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">Measure a recorded plan, ask the evidence, keep a private journal and learn from moderated community experiences.</p>
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            {companionSection === 'measure'
+              ? 'Calculate concentration, mL and syringe units from exact vial, diluent and established-dose values.'
+              : 'Ask the evidence, keep a private journal and learn from moderated community experiences.'}
+          </p>
         </div>
         {companionSection === 'measure' && <Button type="button" variant="outline" size="sm" onClick={clearMeasurement}><Eraser className="mr-2 h-4 w-4" />Clear measurement</Button>}
       </header>
@@ -352,12 +363,14 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
       <CompanionNav active={companionSection} onChange={changeCompanionSection} />
 
       {companionSection === 'measure' ? <>
+      {guidanceMode === 'beginner' ? <BeginnerReconstitutionPrimer /> : null}
+
       <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-background to-background p-4 sm:p-5">
         <div className="flex gap-3">
           <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <div>
-            <p className="font-semibold text-foreground">Choose how much explanation you want</p>
-            <p className="mt-1 text-sm text-muted-foreground">These modes change the checklist and coaching language only. They never choose a compound, treatment, amount, schedule or syringe.</p>
+            <p className="font-semibold text-foreground">Choose your guidance level</p>
+            <p className="mt-1 text-sm text-muted-foreground">Beginner, advanced and biohacker views use the same calculation. They only change the explanation and checking workflow.</p>
           </div>
         </div>
         <div className="mt-4 grid gap-2 sm:grid-cols-3" role="group" aria-label="Measurement guidance level">
@@ -412,18 +425,24 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
           </Card>
 
           <Card className="space-y-5 p-4 sm:p-5">
-            <SectionHeading number="2" title="Enter the recorded measurement" subtitle="Use the vial label or COA and the amount already established for you." />
+            <SectionHeading number="2" title="Enter vial, diluent and dose values" subtitle="Use the product label or COA plus an amount already established for you." />
             <div className="grid gap-4 sm:grid-cols-2">
-              <FieldWithSuffix id="vial-amount" label="Amount shown on vial or COA" suffix="mg" value={vialAmount} onChange={setVialAmount} />
-              <FieldWithSuffix id="diluent-volume" label="Diluent volume actually added" suffix="mL" value={diluentVolume} onChange={setDiluentVolume} />
+              <FieldWithSuffix id="vial-amount" label="Total amount shown on vial or COA" suffix="mg" value={vialAmount} onChange={setVialAmount} helper="This is the total amount in the vial—not one dose." />
+              <FieldWithSuffix id="diluent-volume" label="Diluent volume stated or actually added" suffix="mL" value={diluentVolume} onChange={setDiluentVolume} helper="This sets the concentration. Use the exact product or professional instruction; do not guess." />
             </div>
             <div className="space-y-2">
-              <Label>Amount from your recorded plan</Label>
+              <Label>Prescribed or already-recorded dose</Label>
               <div className="grid grid-cols-[minmax(0,1fr)_7rem] gap-2">
-                <Input type="number" inputMode="decimal" min="0" step="any" placeholder="Enter amount" value={enteredAmount} onChange={(event) => setEnteredAmount(event.target.value)} aria-label="Amount from recorded plan" />
+                <Input type="number" inputMode="decimal" min="0" step="any" placeholder="Enter amount" value={enteredAmount} onChange={(event) => setEnteredAmount(event.target.value)} aria-label="Prescribed or recorded dose" />
                 <Select value={enteredUnit} onValueChange={(value) => setEnteredUnit(value as MeasurementAmountUnit)}><SelectTrigger aria-label="Amount unit"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="mg">mg</SelectItem><SelectItem value="mcg">mcg</SelectItem></SelectContent></Select>
               </div>
+              <p className="text-xs text-muted-foreground">The app converts an amount you enter. It does not select a personal dose.</p>
             </div>
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm text-foreground">
+              <p className="font-semibold">The calculator uses three simple equations</p>
+              <p className="mt-1 leading-relaxed text-muted-foreground">Concentration = vial mg ÷ diluent mL. Volume = established dose mg ÷ concentration. Syringe units = volume × the units-per-mL printed for that syringe scale.</p>
+            </div>
+            {inputIssue ? <div role="alert" className="flex gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" /><p>{inputIssue}</p></div> : null}
           </Card>
 
           <Card className="space-y-5 p-4 sm:p-5">
@@ -454,10 +473,10 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
 
         <div className="space-y-4 xl:sticky xl:top-4 xl:self-start">
           <Card className="overflow-hidden" aria-live="polite">
-            <div className="border-b border-border bg-muted/30 px-4 py-3 sm:px-5"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Verified measurement</p><p className="mt-1 text-sm font-medium text-foreground">{selectedCompound?.name || 'Custom setup'} · {scheduleLabel}</p></div>
+            <div className="border-b border-border bg-muted/30 px-4 py-3 sm:px-5"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Calculated measurement</p><p className="mt-1 text-sm font-medium text-foreground">{selectedCompound?.name || 'Custom setup'} · {scheduleLabel}</p></div>
             <div className="p-4 sm:p-5">
               {!result || !syringeType ? (
-                <div className="flex min-h-72 flex-col items-center justify-center text-center"><Ruler className="mb-3 h-10 w-10 text-muted-foreground/40" /><h2 className="font-semibold text-foreground">Complete the measurement</h2><p className="mt-1 max-w-sm text-sm text-muted-foreground">Enter positive vial, diluent and amount values, then select the exact syringe scale and barrel capacity in your hand.</p></div>
+                <div className="flex min-h-72 flex-col items-center justify-center text-center"><Ruler className="mb-3 h-10 w-10 text-muted-foreground/40" /><h2 className="font-semibold text-foreground">Complete the calculator</h2><p className="mt-1 max-w-sm text-sm text-muted-foreground">{inputIssue || 'Enter positive vial, diluent and dose values, then select the exact syringe scale and barrel capacity in your hand.'}</p></div>
               ) : (
                 <div className="space-y-5">
                   <div className="grid grid-cols-2 gap-3">
@@ -469,7 +488,7 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
                   <MeasurementSyringeDiagram syringeType={syringeType} barrelCapacityMl={parsePositive(barrelCapacityMl)} units={result.syringeUnits} volumeMl={result.volumeMl} amountLabel={`${enteredAmount} ${enteredUnit}`} fitsSelectedBarrel={result.fitsSelectedBarrel} />
                   <div className="rounded-xl border border-border bg-muted/30 p-3 text-sm"><p className="font-semibold text-foreground">Check the arithmetic</p><p className="mt-1 leading-relaxed text-muted-foreground">{formatNumber(result.targetAmountMg)} mg ÷ {formatNumber(result.concentrationMgPerMl)} mg/mL = {formatNumber(result.volumeMl)} mL × {result.syringeUnitsPerMl} units/mL = <strong className="text-foreground">{formatNumber(result.syringeUnits, 2)} units</strong>.</p></div>
                   {!result.fitsSelectedBarrel && <div className="flex gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-foreground"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" /><p>The result exceeds the selected barrel. Re-check the label, diluent, recorded amount, printed scale and capacity. The app will not choose a replacement.</p></div>}
-                  <div className="space-y-3 border-t border-border pt-4"><Label htmlFor="preset-name">Save this verified setup</Label><div className="flex gap-2"><Input id="preset-name" placeholder={`${selectedCompound?.shortName || 'Custom'} setup`} value={presetName} onChange={(event) => setPresetName(event.target.value)} /><Button type="button" onClick={savePreset}><Save className="mr-2 h-4 w-4" />Save</Button></div><Button type="button" variant="outline" className="w-full" onClick={() => void saveMeasurementToJournal()}><Save className="mr-2 h-4 w-4" />Save measurement to private journal</Button></div>
+                  <div className="space-y-3 border-t border-border pt-4"><Label htmlFor="preset-name">Save this checked setup</Label><div className="flex gap-2"><Input id="preset-name" placeholder={`${selectedCompound?.shortName || 'Custom'} setup`} value={presetName} onChange={(event) => setPresetName(event.target.value)} /><Button type="button" onClick={savePreset}><Save className="mr-2 h-4 w-4" />Save</Button></div><Button type="button" variant="outline" className="w-full" onClick={() => void saveMeasurementToJournal()}><Save className="mr-2 h-4 w-4" />Save measurement to private journal</Button></div>
                 </div>
               )}
             </div>
@@ -484,7 +503,7 @@ export function MeasurementToolScreen({ initialSection, onSectionChange }: Measu
             </ul>
           </Card>
 
-          <div className="flex gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" /><p><strong>Measurement boundary:</strong> this app does not diagnose, prescribe, choose a treatment, or recommend amounts for entry-level, intermediate or athlete users. It explains and checks values supplied by the user or an established professional plan.</p></div>
+          <div className="flex gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" /><p><strong>Important:</strong> “units” are syringe volume markings—not mg or mcg. Different vial concentrations can make the same number of units contain very different amounts. This app checks values you supply; it does not diagnose, prescribe or recommend a personal amount.</p></div>
         </div>
       </div>
       </> : companionSection === 'ask' ? (
@@ -514,8 +533,8 @@ function SectionHeading({ number, title, subtitle }: { number: string; title: st
   return <div className="flex gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{number}</span><div><h2 className="font-semibold text-foreground">{title}</h2><p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p></div></div>;
 }
 
-function FieldWithSuffix({ id, label, suffix, value, onChange }: { id: string; label: string; suffix: string; value: string; onChange: (value: string) => void }) {
-  return <div className="space-y-2"><Label htmlFor={id}>{label}</Label><div className="relative"><Input id={id} type="number" inputMode="decimal" min="0" step="any" placeholder="Enter value" value={value} onChange={(event) => onChange(event.target.value)} /><span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">{suffix}</span></div></div>;
+function FieldWithSuffix({ id, label, suffix, value, onChange, helper }: { id: string; label: string; suffix: string; value: string; onChange: (value: string) => void; helper?: string }) {
+  return <div className="space-y-2"><Label htmlFor={id}>{label}</Label><div className="relative"><Input id={id} type="number" inputMode="decimal" min="0" step="any" placeholder="Enter value" value={value} onChange={(event) => onChange(event.target.value)} aria-describedby={helper ? `${id}-helper` : undefined} /><span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">{suffix}</span></div>{helper ? <p id={`${id}-helper`} className="text-xs leading-relaxed text-muted-foreground">{helper}</p> : null}</div>;
 }
 
 function ResultTile({ label, value, primary = false }: { label: string; value: string; primary?: boolean }) {
@@ -533,4 +552,28 @@ function ModeIcon({ mode }: { mode: MeasurementGuidanceMode }) {
 
 function CompanionLoading() {
   return <Card className="flex min-h-64 items-center justify-center text-sm text-muted-foreground">Loading companion…</Card>;
+}
+
+function BeginnerReconstitutionPrimer() {
+  return (
+    <Card className="border-emerald-500/25 bg-emerald-500/5 p-4 sm:p-5">
+      <div className="flex gap-3">
+        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+        <div>
+          <p className="font-semibold text-foreground">New to reconstitution? Start here.</p>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Reconstitution means adding the exact stated diluent volume to a dry vial so its concentration can be calculated. It does not determine what dose a person should use.</p>
+        </div>
+      </div>
+      <ol className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+        <li className="rounded-xl border border-border bg-background/75 p-3"><strong>1. Verify the product.</strong><span className="mt-1 block text-xs text-muted-foreground">Match the vial/COA, diluent, expiry and product-specific instructions.</span></li>
+        <li className="rounded-xl border border-border bg-background/75 p-3"><strong>2. Keep preparation sterile.</strong><span className="mt-1 block text-xs text-muted-foreground">Use a clean area and a new sterile needle and syringe every time.</span></li>
+        <li className="rounded-xl border border-border bg-background/75 p-3"><strong>3. Enter exact values.</strong><span className="mt-1 block text-xs text-muted-foreground">Never copy a diluent volume or “units” number from another vial concentration.</span></li>
+        <li className="rounded-xl border border-border bg-background/75 p-3"><strong>4. Label and store correctly.</strong><span className="mt-1 block text-xs text-muted-foreground">Follow the product or pharmacist’s storage and discard instructions.</span></li>
+      </ol>
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs">
+        <a className="inline-flex items-center gap-1 font-medium text-primary hover:underline" href="https://www.fda.gov/drugs/human-drug-compounding/fda-alerts-health-care-providers-compounders-and-patients-dosing-errors-associated-compounded" target="_blank" rel="noreferrer">FDA: why unit conversions cause errors <ExternalLink className="h-3 w-3" /></a>
+        <a className="inline-flex items-center gap-1 font-medium text-primary hover:underline" href="https://www.cdc.gov/injection-safety/hcp/clinical-safety/index.html" target="_blank" rel="noreferrer">CDC: safe injection practices <ExternalLink className="h-3 w-3" /></a>
+      </div>
+    </Card>
+  );
 }
