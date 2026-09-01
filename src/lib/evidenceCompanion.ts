@@ -50,6 +50,10 @@ export interface EvidenceAnswer {
 
 const SAFE_SOURCE_HOSTS = new Set([
   'pubmed.ncbi.nlm.nih.gov',
+  'www.niddk.nih.gov',
+  'niddk.nih.gov',
+  'www.thyroid.org',
+  'thyroid.org',
   'www.fda.gov',
   'fda.gov',
   'www.nejm.org',
@@ -57,6 +61,44 @@ const SAFE_SOURCE_HOSTS = new Set([
   'www.nature.com',
   'nature.com',
 ]);
+
+export const GENERAL_HEALTH_TOPIC_ID = 'general-health-question';
+
+const HASHIMOTO_TOPIC_SOURCES: EvidenceSource[] = [
+  {
+    id: 'hashimoto-niddk',
+    label: 'NIDDK / NIH · patient guidance',
+    title: "Hashimoto's Disease",
+    url: 'https://www.niddk.nih.gov/health-information/endocrine-diseases/hashimotos-disease',
+    findings: [
+      'Hashimoto’s is an autoimmune disease that can damage the thyroid and cause hypothyroidism.',
+      'Treatment depends on thyroid function; levothyroxine is the recommended treatment when hypothyroidism is present.',
+      'TSH and thyroid hormone levels are used for diagnosis and follow-up.',
+    ],
+  },
+  {
+    id: 'hashimoto-ata',
+    label: 'American Thyroid Association · patient guidance',
+    title: "Hashimoto’s Thyroiditis",
+    url: 'https://www.thyroid.org/hashimotos-thyroiditis/',
+    findings: [
+      'Repeating and monitoring thyroid-antibody levels is generally not needed after diagnosis; TSH monitoring remains important.',
+      'High antibodies with normal TSH and free T4 do not automatically require thyroid-hormone treatment.',
+      'Clinical hypothyroidism is treated with levothyroxine adjusted using TSH.',
+    ],
+  },
+  {
+    id: 'hashimoto-mots-c-cross-sectional-2026',
+    label: 'Journal of Clinical Medicine · 2026',
+    title: "Reduced Circulating MOTS-c Levels in Hashimoto's Thyroiditis Reflect Integrated Autoimmune and Metabolic Dysregulation: A Cross-Sectional Study",
+    url: 'https://pubmed.ncbi.nlm.nih.gov/42278864/',
+    year: 2026,
+    findings: [
+      'This was a cross-sectional association study, not a trial that administered MOTS-c.',
+      'Lower circulating MOTS-c in people with Hashimoto’s does not establish that taking MOTS-c treats the disease or lowers antibodies.',
+    ],
+  },
+];
 
 const CURATED_BEGINNER_EXPLANATIONS: Record<string, string> = {
   semaglutide: 'It copies a natural GLP-1 signal that helps you feel full, slows how quickly food leaves the stomach and helps the body manage blood sugar.',
@@ -153,6 +195,27 @@ export function buildEvidencePacket(peptideId: string): EvidencePacket | null {
       administration: peptide.administration,
     },
   };
+}
+
+export function buildGeneralHealthEvidencePacket(): EvidencePacket {
+  return {
+    peptideId: GENERAL_HEALTH_TOPIC_ID,
+    peptideName: 'Hashimoto’s / thyroid topic',
+    evidenceLabel: 'Condition-specific answer — clinical guidance comes before compound claims',
+    evidenceNote: 'For Hashimoto’s, authoritative guidance focuses on thyroid function, symptoms and indicated thyroid-hormone replacement. No peptide stack is established as a standard treatment.',
+    lastReviewed: '2026-09-01',
+    sources: HASHIMOTO_TOPIC_SOURCES,
+    beginner: {
+      simpleExplanation: 'Ask about a health condition first. PepSA will explain whether any peptide has credible human evidence for it before discussing compounds or community stories.',
+      discussedFor: ['Hashimoto’s and thyroid questions', 'Autoimmune-condition questions', 'Understanding labs and community experiences'],
+      safetyFlags: ['Do not stop or change prescribed thyroid medicine based on a community protocol.', 'A change in antibodies alone does not show which compound caused it or whether thyroid function improved.'],
+      status: 'Educational condition-level guidance — not a diagnosis or treatment recommendation',
+    },
+  };
+}
+
+export function questionIsThyroidTopic(question: string): boolean {
+  return /\b(hashimoto'?s?|autoimmune thyroid|thyroid (?:issues?|problems?|antibod(?:y|ies)|condition|disease)|anti[- ]?tpo|tpo antibod(?:y|ies)|thyroglobulin antibod(?:y|ies)|hypothyroid)\b/i.test(question);
 }
 
 export function questionRequestsPersonalDose(question: string): boolean {
