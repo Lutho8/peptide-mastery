@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { parseRecordedDose } from '@/lib/recordedDose';
@@ -60,6 +60,7 @@ const Index = ({ dashboardRoute = false }: IndexProps) => {
   useCloudSync();
   const { getDirection, getTransitionVariants } = useScreenTransition();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [activeTab, setActiveTab] = useState<TabId>('home');
   const [measurementSection, setMeasurementSection] = useState<CompanionSection>('measure');
@@ -283,7 +284,12 @@ const Index = ({ dashboardRoute = false }: IndexProps) => {
   if (!user) {
     return (
       <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
-        <LandingPage openSignInOnLoad={dashboardRoute} />
+        <LandingPage
+          openSignInOnLoad={
+            dashboardRoute ||
+            Boolean((location.state as { openAuth?: boolean } | null)?.openAuth)
+          }
+        />
       </Suspense>
     );
   }

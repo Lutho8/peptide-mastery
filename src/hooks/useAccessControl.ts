@@ -14,6 +14,11 @@ export function useAccessControl() {
       return;
     }
 
+    let cancelled = false;
+    // Never carry a previous user's role across an account transition.
+    setIsAdmin(false);
+    setIsLoading(true);
+
     const checkAdmin = async () => {
       try {
         const { data, error } = await supabase
@@ -23,15 +28,19 @@ export function useAccessControl() {
           .eq('role', 'admin')
           .maybeSingle();
 
-        setIsAdmin(!!data && !error);
+        if (!cancelled) setIsAdmin(!!data && !error);
       } catch {
-        setIsAdmin(false);
+        if (!cancelled) setIsAdmin(false);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
-    checkAdmin();
+    void checkAdmin();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   // All authenticated users have access - no paywall

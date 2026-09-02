@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { isAuthCallbackLocation } from "@/lib/authCallback";
+import { AdminRoute, ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 // Lazy load all route pages for better code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -79,12 +80,10 @@ const App = () => {
                   <Routes>
                     <Route path="/welcome" element={<Welcome />} />
                     <Route path="/" element={<Index />} />
-                    <Route path="/dashboard" element={<Index dashboardRoute />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="/disclaimer" element={<Disclaimer />} />
                     <Route path="/terms" element={<TermsOfService />} />
-                    <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/free-course" element={<Navigate to="/" replace />} />
                     <Route path="/coa-verification" element={<COAVerification />} />
                     <Route path="/live-qna" element={<Navigate to="/" replace />} />
@@ -92,7 +91,6 @@ const App = () => {
                     <Route path="/categories/:slug" element={<CategoryHubPage />} />
                     <Route path="/guides/:slug" element={<Navigate to="/" replace />} />
                     <Route path="/bloodwork" element={<BloodworkPage />} />
-                    <Route path="/reminders/today" element={<TodayRemindersScreen />} />
                     <Route path="/cycles" element={<Navigate to="/" replace />} />
                     <Route path="/blog" element={<Navigate to="/" replace />} />
                     <Route path="/blog/:slug" element={<Navigate to="/" replace />} />
@@ -114,11 +112,17 @@ const App = () => {
                     {/* NEW: Premium feature routes */}
                     <Route path="/safety" element={<Navigate to="/" replace />} />
                     <Route path="/injection-sites" element={<Navigate to="/" replace />} />
-                    <Route path="/analytics" element={<Analytics />} />
-                    <Route path="/inventory" element={<Inventory />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="/admin/seo" element={<SEODashboard />} />
-                    <Route path="/admin/seo/verify" element={<SEOVerifyPage />} />
+                    <Route element={<ProtectedRoute />}>
+                      <Route path="/dashboard" element={<Index dashboardRoute />} />
+                      <Route path="/reminders/today" element={<TodayRemindersScreen />} />
+                      <Route path="/analytics" element={<Analytics />} />
+                      <Route path="/inventory" element={<Inventory />} />
+                    </Route>
+                    <Route element={<AdminRoute />}>
+                      <Route path="/admin" element={<AdminDashboard />} />
+                      <Route path="/admin/seo" element={<SEODashboard />} />
+                      <Route path="/admin/seo/verify" element={<SEOVerifyPage />} />
+                    </Route>
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
