@@ -9,6 +9,7 @@ const staticEntries = [
   { path: '/install', changefreq: 'monthly', priority: '0.8' },
   { path: '/live-qna', changefreq: 'monthly', priority: '0.6' },
   { path: '/coa-verification', changefreq: 'monthly', priority: '0.5' },
+  { path: '/research/compare', changefreq: 'monthly', priority: '0.8' },
   { path: '/bloodwork', changefreq: 'monthly', priority: '0.8' },
   { path: '/cycles', changefreq: 'monthly', priority: '0.6' },
   { path: '/blog', changefreq: 'daily', priority: '0.9' },

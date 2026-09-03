@@ -30,7 +30,6 @@ interface ParsedCOA {
 export default function COAUploadManager() {
   const [selectedPeptide, setSelectedPeptide] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [parsing, setParsing] = useState(false);
   const [parsedData, setParsedData] = useState<ParsedCOA | null>(null);
   const [manualMode, setManualMode] = useState(false);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
@@ -52,55 +51,22 @@ export default function COAUploadManager() {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `coa-${Date.now()}.${fileExt}`;
-      const filePath = `coa-documents/${fileName}`;
+      const filePath = `manual/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('progress-photos')
+        .from('coa-pdfs')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from('progress-photos')
-        .getPublicUrl(filePath);
+      const { data: urlData, error: signedUrlError } = await supabase.storage
+        .from('coa-pdfs')
+        .createSignedUrl(filePath, 600);
+      if (signedUrlError) throw signedUrlError;
 
-      setFileUrl(urlData.publicUrl);
-      toast.success('File uploaded successfully');
-
-      // Try AI parsing
-      setParsing(true);
-      try {
-        const response = await supabase.functions.invoke('peptide-ai-agent', {
-          body: {
-            message: `Parse this COA test report image/document. Extract these fields in JSON format: taskNumber (e.g. "#83561"), verifyKey (the unique verification key at bottom), sampleName (e.g. "Retatrutide 20mg"), measuredAmount (e.g. "20.48 mg"), purity (e.g. "99.558%"), testDate (e.g. "21 OCT 2025"), manufacturer (the URL). Return ONLY valid JSON, no markdown.`,
-            imageUrl: urlData.publicUrl,
-          },
-        });
-
-        if (response.data?.response) {
-          try {
-            const cleaned = response.data.response.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
-            const parsed = JSON.parse(cleaned);
-            setParsedData(parsed);
-            setTaskNumber(parsed.taskNumber || '');
-            setVerifyKey(parsed.verifyKey || '');
-            setSampleName(parsed.sampleName || '');
-            setMeasuredAmount(parsed.measuredAmount || '');
-            setPurity(parsed.purity || '');
-            setTestDate(parsed.testDate || '');
-            setManufacturer(parsed.manufacturer || 'https://zztai-tech.com/');
-            toast.success('COA data parsed automatically!');
-          } catch {
-            toast.info('Could not auto-parse. Please enter details manually.');
-            setManualMode(true);
-          }
-        }
-      } catch {
-        toast.info('AI parsing unavailable. Please enter details manually.');
-        setManualMode(true);
-      } finally {
-        setParsing(false);
-      }
+      setFileUrl(urlData.signedUrl);
+      setManualMode(true);
+      toast.success('COA uploaded securely. Record the certificate fields below.');
     } catch (err) {
       console.error('Upload failed:', err);
       toast.error('Failed to upload file');
@@ -162,7 +128,7 @@ export default function COAUploadManager() {
             <Upload className="h-5 w-5 text-primary" />
             COA Upload & Parser
           </CardTitle>
-          <CardDescription>Upload Janoshik COA documents — AI will attempt to auto-parse the data</CardDescription>
+          <CardDescription>Upload Janoshik COA documents to the private admin bucket, then record the verified certificate fields</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Peptide selector */}
@@ -190,18 +156,13 @@ export default function COAUploadManager() {
                 onChange={handleFileUpload}
                 className="hidden"
                 id="coa-upload"
-                disabled={uploading || parsing}
+                disabled={uploading}
               />
               <label htmlFor="coa-upload" className="cursor-pointer">
                 {uploading ? (
                   <div className="flex flex-col items-center gap-2">
                     <Loader2 className="w-8 h-8 text-primary animate-spin" />
                     <span className="text-sm text-muted-foreground">Uploading...</span>
-                  </div>
-                ) : parsing ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                    <span className="text-sm text-muted-foreground">AI parsing document...</span>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-2">

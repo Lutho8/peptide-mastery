@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Menu,
   Search as SearchIcon,
+  Scale,
   ShoppingBag,
   Smartphone,
   X,
@@ -63,6 +64,7 @@ export function LandingHeader({ onSignInClick, onSearch }: LandingHeaderProps) {
     { label: 'Install the tracker', description: 'Add the web app to your phone', icon: Smartphone, href: '/install' },
     { label: 'Bloodwork', description: 'Upload and organize lab reports', icon: Activity, href: '/bloodwork' },
     { label: 'Research library', description: 'Browse evidence and limitations', icon: SearchIcon, action: 'browse' },
+    { label: 'Compare evidence', description: 'Build a best-evidence research stack', icon: Scale, href: '/research/compare' },
     { label: user ? 'Return to tracker' : 'Open dashboard', description: user ? 'Continue tracking' : 'Sign in or create an account', icon: LayoutDashboard, action: 'dashboard' },
   ];
 

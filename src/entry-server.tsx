@@ -23,6 +23,7 @@ import PeptideEntityPage from "./pages/PeptideEntityPage";
 import CategoryHubPage from "./pages/CategoryHubPage";
 import FAQPage from "./pages/FAQPage";
 import ConfessionsPage from "./pages/ConfessionsPage";
+import ResearchComparePage from "./pages/ResearchComparePage";
 
 export interface RenderResult {
   html: string;
@@ -56,6 +57,7 @@ export function render(url: string): RenderResult {
                 <Route path="/blog/:slug" element={<Navigate to="/" replace />} />
                 <Route path="/faq" element={<FAQPage />} />
                 <Route path="/confessions" element={<ConfessionsPage />} />
+                <Route path="/research/compare" element={<ResearchComparePage />} />
                 <Route path="/weight-loss-peptides-south-africa" element={<Navigate to="/" replace />} />
                 <Route path="/healing-peptides-south-africa" element={<Navigate to="/" replace />} />
                 <Route path="/anti-aging-peptides-south-africa" element={<Navigate to="/" replace />} />

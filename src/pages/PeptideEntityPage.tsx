@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, FlaskConical, Clock, Shield, BookOpen, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FlaskConical, Clock, Shield, BookOpen, AlertTriangle, Scale } from 'lucide-react';
 import { corePeptides, categoryConfig } from '@/data/peptides';
 import { topPeptidesSlugs, categorySlugs } from '@/data/entitySlugs';
 import { SEOHead } from '@/components/seo/SEOHead';
@@ -7,6 +7,8 @@ import { JsonLd, buildPeptideSchema } from '@/components/seo/JsonLd';
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { EvidencePassportCard } from '@/components/research/EvidencePassportCard';
 
 const BASE_URL = 'https://peptide-south-africa.co.za';
 
@@ -97,6 +99,15 @@ export default function PeptideEntityPage() {
             </GradientCard>
           )}
         </div>
+
+        <section className="mb-8">
+          <EvidencePassportCard peptide={peptide} />
+          <Button asChild variant="outline" className="mt-3 w-full sm:w-auto">
+            <Link to={`/research/compare?peptides=${peptide.id}`}>
+              <Scale className="mr-2 h-4 w-4" /> Compare the evidence
+            </Link>
+          </Button>
+        </section>
 
         {/* Mechanism of Action */}
         <section className="mb-8">
