@@ -27,6 +27,7 @@ import { useDailyDoses, type DailyDoseEntry } from '@/hooks/useDailyDoses';
 import { getCycleProgress as computeCycleProgress, cycleStatusLabel, validateBackdate } from '@/lib/cycleProgress';
 import { WidgetHint } from '@/components/onboarding/WidgetHint';
 import { useTrackingPeriods } from '@/hooks/useTrackingPeriods';
+import { SavedResearchPlanCard } from '@/components/research/SavedResearchPlanCard';
 
 // --- Stack Item Card ---
 interface StackItemProps {
@@ -511,6 +512,8 @@ export function MyStackScreen() {
           'Start, pause or end a tracking period when your real-world record changes.',
         ]}
       />
+
+      <SavedResearchPlanCard />
 
       {(periodsSyncing || periodsSyncError) && (
         <div className={cn('rounded-xl border px-3 py-2 text-xs', periodsSyncError ? 'border-amber-500/30 bg-amber-500/10 text-amber-200' : 'border-primary/20 bg-primary/5 text-muted-foreground')}>

@@ -32,6 +32,8 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const InstallPage = lazy(() => import("./pages/InstallPage"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const ConfessionsPage = lazy(() => import("./pages/ConfessionsPage"));
+const ResearchComparePage = lazy(() => import("./pages/ResearchComparePage"));
+const COAVaultPage = lazy(() => import("./pages/COAVaultPage"));
 
 // NEW: Premium feature pages
 const Analytics = lazy(() => import("./pages/AnalyticsPage"));
@@ -96,6 +98,7 @@ const App = () => {
                     <Route path="/blog/:slug" element={<Navigate to="/" replace />} />
                     <Route path="/faq" element={<FAQPage />} />
                     <Route path="/confessions" element={<ConfessionsPage />} />
+                    <Route path="/research/compare" element={<ResearchComparePage />} />
                     <Route path="/install" element={<InstallPage />} />
                     {/* Goal-based SEO landing pages */}
                     <Route path="/weight-loss-peptides-south-africa" element={<Navigate to="/" replace />} />
@@ -117,6 +120,7 @@ const App = () => {
                       <Route path="/reminders/today" element={<TodayRemindersScreen />} />
                       <Route path="/analytics" element={<Analytics />} />
                       <Route path="/inventory" element={<Inventory />} />
+                      <Route path="/coa-vault" element={<COAVaultPage />} />
                     </Route>
                     <Route element={<AdminRoute />}>
                       <Route path="/admin" element={<AdminDashboard />} />

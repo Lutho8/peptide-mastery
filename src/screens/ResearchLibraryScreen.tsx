@@ -1,13 +1,14 @@
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { researchReferences } from '@/data/researchReferences';
-import { peptides, getCategoryLabel } from '@/data/peptides';
+import { peptides, getCategoryLabel, type PeptideCategory } from '@/data/peptides';
 import { peptideBlends, peptideStacks } from '@/data/peptideBlends';
 import { evidenceTone, getBlendEvidence, getPeptideEvidence, RESEARCH_LAST_REVIEWED } from '@/data/researchEvidence';
 import { GradientCard } from '@/components/ui/GradientCard';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Search, ExternalLink, BookOpen, FlaskConical, Calendar, Users, Database, Layers, Scale, Stethoscope } from 'lucide-react';
+import { Search, ExternalLink, BookOpen, FlaskConical, Calendar, Users, Database, Layers, Scale, Stethoscope, FileLock2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type FilterOption = 'all' | string;
@@ -46,7 +47,7 @@ export function ResearchLibraryScreen() {
     });
     return Array.from(topics).map(cat => ({
       id: cat,
-      name: getCategoryLabel(cat as any)
+      name: getCategoryLabel(cat as PeptideCategory)
     }));
   }, [primaryReferences]);
 
@@ -119,6 +120,15 @@ export function ResearchLibraryScreen() {
       <p className="text-sm text-muted-foreground">
         {primaryReferences.length} primary-source records · {peptides.length} catalogued compounds · {allBlends.length} blends/stacks
       </p>
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Button asChild className="min-h-12 justify-start">
+          <Link to="/research/compare"><Scale className="mr-2 h-4 w-4" />Build your best-evidence research stack</Link>
+        </Button>
+        <Button asChild variant="outline" className="min-h-12 justify-start">
+          <Link to="/coa-vault"><FileLock2 className="mr-2 h-4 w-4" />Open your private COA vault</Link>
+        </Button>
+      </div>
 
       <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs leading-relaxed text-muted-foreground">
         <div className="mb-2 flex items-center gap-2 font-semibold text-foreground"><Scale size={15} /> Legal and evidence notice</div>

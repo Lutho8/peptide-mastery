@@ -1125,6 +1125,39 @@ type GeneratedDatabase = {
         }
         Relationships: []
       }
+      research_saves: {
+        Row: {
+          created_at: string
+          evidence_snapshot: Json
+          evidence_version: string
+          goal_id: string
+          id: string
+          peptide_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          evidence_snapshot?: Json
+          evidence_version: string
+          goal_id?: string
+          id?: string
+          peptide_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          evidence_snapshot?: Json
+          evidence_version?: string
+          goal_id?: string
+          id?: string
+          peptide_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       research_journal_entries: {
         Row: {
           body: string
@@ -1156,6 +1189,90 @@ type GeneratedDatabase = {
           id?: string
           peptide_id?: string | null
           title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_coa_documents: {
+        Row: {
+          assay_pct: number | null
+          assay_status: string
+          batch_number: string | null
+          created_at: string
+          endotoxin_status: string
+          file_path: string
+          hplc_status: string
+          id: string
+          identity_status: string
+          lab_name: string | null
+          mime_type: string
+          net_content_mg: number | null
+          net_content_status: string
+          notes: string | null
+          original_filename: string
+          peptide_id: string | null
+          purity_pct: number | null
+          report_number: string | null
+          sample_name: string | null
+          status: string
+          sterility_status: string
+          tested_at: string | null
+          traceability_status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assay_pct?: number | null
+          assay_status?: string
+          batch_number?: string | null
+          created_at?: string
+          endotoxin_status?: string
+          file_path: string
+          hplc_status?: string
+          id?: string
+          identity_status?: string
+          lab_name?: string | null
+          mime_type: string
+          net_content_mg?: number | null
+          net_content_status?: string
+          notes?: string | null
+          original_filename: string
+          peptide_id?: string | null
+          purity_pct?: number | null
+          report_number?: string | null
+          sample_name?: string | null
+          status?: string
+          sterility_status?: string
+          tested_at?: string | null
+          traceability_status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assay_pct?: number | null
+          assay_status?: string
+          batch_number?: string | null
+          created_at?: string
+          endotoxin_status?: string
+          file_path?: string
+          hplc_status?: string
+          id?: string
+          identity_status?: string
+          lab_name?: string | null
+          mime_type?: string
+          net_content_mg?: number | null
+          net_content_status?: string
+          notes?: string | null
+          original_filename?: string
+          peptide_id?: string | null
+          purity_pct?: number | null
+          report_number?: string | null
+          sample_name?: string | null
+          status?: string
+          sterility_status?: string
+          tested_at?: string | null
+          traceability_status?: string
           updated_at?: string
           user_id?: string
         }
